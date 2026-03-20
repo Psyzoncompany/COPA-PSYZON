@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COPA PSYZON — Torneio Eliminatório</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Inline SVG Sprite (hidden) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+    <defs>
+      <!-- Soccer Ball -->
+      <symbol id="ico-ball" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M12 2a10 10 0 0 1 0 20 10 10 0 0 1 0-20Zm0 2.5L9.5 7.5 10.5 11l3 0 1-3.5Zm-6.5 5L3 12l2.5 3 2.5-1-1-3.5Zm13 0L17 8l-2.5 2 1 3.5 2.5 1Zm-11 6.5L5.5 15l-1 2 2.5 2.5 2-1.5Zm9 0l1.5-2.5 1 2-2.5 2.5-2-1.5Z" fill="currentColor" opacity=".35"/>
+        <polygon points="12,7 9.5,9.5 10.5,12.5 13.5,12.5 14.5,9.5" fill="currentColor" opacity=".5"/>
+      </symbol>
+      <!-- Gear / Settings -->
+      <symbol id="ico-gear" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+      </symbol>
+      <!-- Stadium / Teams -->
+      <symbol id="ico-shield" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+      </symbol>
+      <!-- Shuffle -->
+      <symbol id="ico-shuffle" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+      </symbol>
+      <!-- Trophy -->
+      <symbol id="ico-trophy" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6m12 5h1.5a2.5 2.5 0 0 0 0-5H18M6 4h12v6a6 6 0 0 1-12 0V4ZM9 21h6m-3-5v5"/>
+        <path fill="currentColor" opacity=".2" d="M6 4h12v6a6 6 0 0 1-12 0V4Z"/>
+      </symbol>
+      <!-- Trash / Reset -->
+      <symbol id="ico-trash" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14ZM10 11v6M14 11v6"/>
+      </symbol>
+      <!-- Target / Drag -->
+      <symbol id="ico-target" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+      </symbol>
+      <!-- Check -->
+      <symbol id="ico-check" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/>
+      </symbol>
+      <!-- Calendar -->
+      <symbol id="ico-calendar" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path stroke="currentColor" stroke-width="1.5" d="M16 2v4M8 2v4M3 10h18"/>
+      </symbol>
+      <!-- Lightning -->
+      <symbol id="ico-bolt" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/>
+      </symbol>
+      <!-- Image placeholder -->
+      <symbol id="ico-image" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" d="m21 15-5-5L5 21"/>
+      </symbol>
+      <!-- Edit / Pencil -->
+      <symbol id="ico-edit" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Header -->
+  <header class="header">
+    <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffdf00"/>
+          <stop offset="100%" stop-color="#009c3b"/>
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="44" fill="none" stroke="url(#logo-grad)" stroke-width="4"/>
+      <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(255,223,0,.2)" stroke-width="1"/>
+      <path d="M50 18 L56 34 L74 34 L60 44 L65 60 L50 50 L35 60 L40 44 L26 34 L44 34 Z" fill="url(#logo-grad)" opacity=".9"/>
+    </svg>
+    <h1>COPA PSYZON<span>Torneio Eliminatório</span></h1>
+  </header>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal glass"></div>
+  </div>
+
+  <!-- App Container -->
+  <div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Tournament Config -->
+      <div class="glass">
+        <h2><svg class="icon"><use href="#ico-gear"/></svg> Configuração</h2>
+        <div class="form-group">
+          <label for="tournament-name">Nome do Torneio</label>
+          <input type="text" id="tournament-name" placeholder="Ex: Copa Psyzon 2026" maxlength="60">
+        </div>
+        <div class="form-group">
+          <label for="team-count">Quantidade de Times</label>
+          <select id="team-count">
+            <option value="4">4 Times</option>
+            <option value="8" selected>8 Times</option>
+            <option value="16">16 Times</option>
+            <option value="32">32 Times</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Teams -->
+      <div class="glass" style="flex:1; display:flex; flex-direction:column;">
+        <h2><svg class="icon"><use href="#ico-shield"/></svg> Times</h2>
+        <div id="team-list" class="team-list"></div>
+        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+          <button id="btn-shuffle" class="btn btn-warning btn-sm" style="flex:1;"><svg class="icon-btn"><use href="#ico-shuffle"/></svg> Embaralhar</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="glass">
+        <button id="btn-generate" class="btn btn-primary btn-block"><svg class="icon-btn"><use href="#ico-ball"/></svg> Gerar Torneio</button>
+        <button id="btn-reset" class="btn btn-danger btn-block mt-10"><svg class="icon-btn"><use href="#ico-trash"/></svg> Novo Torneio</button>
+      </div>
+
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-area">
+      <div id="tournament-title-display" class="tournament-title"></div>
+      <div id="tournament-status" class="tournament-status"></div>
+
+      <!-- Champion Banner -->
+      <div id="champion-banner" class="champion-banner glass"></div>
+
+      <!-- Player Drag Zone -->
+      <div id="player-drag-zone" class="player-drag-zone">
+        <h3><svg class="icon"><use href="#ico-target"/></svg> Arraste os times para definir posições no chaveamento</h3>
+        <div class="glass" style="padding:16px;">
+          <label style="margin-bottom:10px;">Pool de Times (arraste daqui)</label>
+          <div id="drag-pool" class="drag-pool"></div>
+        </div>
+        <div class="glass" style="padding:16px;">
+          <label style="margin-bottom:10px;">Posições no Bracket</label>
+          <div id="drag-slots" class="drag-slots"></div>
+        </div>
+        <button id="btn-confirm-drag" class="btn btn-primary btn-block mt-10"><svg class="icon-btn"><use href="#ico-check"/></svg> Confirmar e Iniciar Torneio</button>
+      </div>
+
+      <!-- Bracket Area -->
+      <div id="bracket-area" class="bracket-wrapper">
+        <div id="empty-state" class="empty-state">
+          <svg class="empty-icon-svg"><use href="#ico-ball"/></svg>
+          <p>Nenhum torneio ativo</p>
+          <p style="font-size:.85rem;">Configure os times e clique em <strong>"Gerar Torneio"</strong></p>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
