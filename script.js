@@ -1352,31 +1352,56 @@
       });
 
       // MOBILE: Touch Drag Drop
+      let touchTimeout = null;
+      let startTouchPos = null;
+
       slot.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 1 || activeTouchGhost) return; // Ignore multi-touch ou araste duplo
-        activeTouchData = { matchId: match.id, teamNum };
-        
-        activeTouchGhost = slot.cloneNode(true);
-        activeTouchGhost.style.position = 'fixed';
-        activeTouchGhost.style.opacity = '0.8';
-        activeTouchGhost.style.pointerEvents = 'none';
-        activeTouchGhost.style.zIndex = '99999';
-        activeTouchGhost.style.transform = 'scale(1.05)';
-        activeTouchGhost.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
+        if (e.touches.length > 1 || activeTouchGhost) return; // Ignore multi-touch ou arrastar duplo
         
         const touch = e.touches[0];
-        activeTouchGhost.style.left = (touch.clientX - (slot.offsetWidth / 2)) + 'px';
-        activeTouchGhost.style.top = (touch.clientY - (slot.offsetHeight / 2)) + 'px';
+        startTouchPos = { x: touch.clientX, y: touch.clientY };
         
-        document.body.appendChild(activeTouchGhost);
-        slot.classList.add('dragging');
-        
-        // Disable scroll behavior temporary for better drag
-        document.body.style.overflow = 'hidden';
+        touchTimeout = setTimeout(() => {
+          // 3 seconds passed without significant movement
+          if (navigator.vibrate) navigator.vibrate(100); // Vibrate!
+          
+          activeTouchData = { matchId: match.id, teamNum };
+          
+          activeTouchGhost = slot.cloneNode(true);
+          activeTouchGhost.style.position = 'fixed';
+          activeTouchGhost.style.opacity = '0.8';
+          activeTouchGhost.style.pointerEvents = 'none';
+          activeTouchGhost.style.zIndex = '99999';
+          activeTouchGhost.style.transform = 'scale(1.05)';
+          activeTouchGhost.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
+          
+          activeTouchGhost.style.left = (startTouchPos.x - (slot.offsetWidth / 2)) + 'px';
+          activeTouchGhost.style.top = (startTouchPos.y - (slot.offsetHeight / 2)) + 'px';
+          
+          document.body.appendChild(activeTouchGhost);
+          slot.classList.add('dragging');
+          
+          // Disable scroll behavior temporary for better drag
+          document.body.style.overflow = 'hidden';
+        }, 3000); // 3 SEGUNDOS como solicitado
       }, { passive: false });
 
       slot.addEventListener('touchmove', (e) => {
-        if (!activeTouchGhost) return;
+        if (!activeTouchGhost) {
+           // Not dragging yet, still measuring for timeout
+           if (touchTimeout && startTouchPos) {
+             const touch = e.touches[0];
+             const dx = touch.clientX - startTouchPos.x;
+             const dy = touch.clientY - startTouchPos.y;
+             if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+               clearTimeout(touchTimeout);
+               touchTimeout = null;
+               startTouchPos = null;
+             }
+           }
+           return;
+        }
+
         e.preventDefault(); // Stop scrolling while dragging
         
         const touch = e.touches[0];
@@ -1394,6 +1419,12 @@
       }, { passive: false });
 
       const handleTouchEndOrCancel = (e) => {
+        if (touchTimeout) {
+          clearTimeout(touchTimeout);
+          touchTimeout = null;
+        }
+        startTouchPos = null;
+
         if (!activeTouchGhost) return;
         
         slot.classList.remove('dragging');
