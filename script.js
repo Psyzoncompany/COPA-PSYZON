@@ -2763,6 +2763,115 @@
   }
 
   /* ==========================================================
+     16h. BRACKET DRAG & DROP AND SHUFFLE
+     ========================================================== */
+
+  /** Shuffle the first round of the bracket */
+  function shuffleBracket() {
+    if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) {
+      showToast('Gere o chaveamento primeiro.', 'info');
+      return;
+    }
+    
+    if (currentViewingBracketId) {
+      showToast('Não é possível embaralhar um torneio do histórico.', 'error');
+      return;
+    }
+    
+    const round0 = state.bracket.rounds[0];
+    let slots = [];
+    round0.matches.forEach(m => {
+      if (m.team1) slots.push(m.team1);
+      if (m.team2) slots.push(m.team2);
+    });
+    
+    if (slots.length === 0) return;
+    
+    slots = shuffleArray(slots);
+    
+    let pointer = 0;
+    round0.matches.forEach(m => {
+      m.team1 = slots[pointer++] || null;
+      m.team2 = slots[pointer++] || null;
+      m.score1 = 0;
+      m.score2 = 0;
+      m.winner = null;
+      m.penalties = null;
+      m.dateTime = null;
+      if (m.team1) m.team1.score = null;
+      if (m.team2) m.team2.score = null;
+    });
+    
+    for (let i = 1; i < state.bracket.rounds.length; i++) {
+      state.bracket.rounds[i].matches.forEach(m => {
+        m.team1 = null;
+        m.team2 = null;
+        m.score1 = 0;
+        m.score2 = 0;
+        m.winner = null;
+        m.penalties = null;
+        m.dateTime = null;
+      });
+    }
+    
+    state.champion = null;
+    saveState();
+    renderBracket();
+    showToast('Chaveamento embaralhado com sucesso!', 'success');
+  }
+
+  /** Swap two teams in the bracket */
+  function swapTeamsInBracket(draggedInfo, dropInfo) {
+    if (currentViewingBracketId) {
+      showToast('Não é possível editar chaveamento do histórico.', 'error');
+      return;
+    }
+    
+    if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) return;
+    
+    const round0 = state.bracket.rounds[0];
+    let sourceMatch = round0.matches.find(m => m.id === draggedInfo.matchId);
+    let targetMatch = round0.matches.find(m => m.id === dropInfo.matchId);
+    
+    if (!sourceMatch || !targetMatch) {
+      showToast('Apenas times da primeira rodada podem ser trocados.', 'warning');
+      return;
+    }
+    
+    let sourceKey = 'team' + draggedInfo.teamNum;
+    let targetKey = 'team' + dropInfo.teamNum;
+    
+    let temp = sourceMatch[sourceKey];
+    sourceMatch[sourceKey] = targetMatch[targetKey];
+    targetMatch[targetKey] = temp;
+    
+    [sourceMatch, targetMatch].forEach(m => {
+      m.score1 = 0;
+      m.score2 = 0;
+      m.winner = null;
+      m.penalties = null;
+      m.dateTime = null;
+      if (m.team1) m.team1.score = null;
+      if (m.team2) m.team2.score = null;
+    });
+    
+    for (let i = 1; i < state.bracket.rounds.length; i++) {
+      state.bracket.rounds[i].matches.forEach(m => {
+        m.team1 = null;
+        m.team2 = null;
+        m.score1 = 0;
+        m.score2 = 0;
+        m.winner = null;
+        m.penalties = null;
+        m.dateTime = null;
+      });
+    }
+    state.champion = null;
+    saveState();
+    renderBracket();
+  }
+
+  /* ==========================================================
      17. EVENT LISTENERS
      ========================================================== */
 
@@ -2778,6 +2887,12 @@
     const loginForm = $('#login-form');
     if (loginForm) {
       loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    // Shuffle bracket button
+    const btnShuffleBracket = $('#btn-shuffle-bracket');
+    if (btnShuffleBracket) {
+      btnShuffleBracket.addEventListener('click', shuffleBracket);
     }
 
     // Visitor button

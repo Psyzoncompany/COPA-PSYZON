@@ -1,4 +1,4 @@
-﻿/* ======================================================
+/* ======================================================
    COPA PSYZON â€” iOS-Inspired Light Theme
    ====================================================== */
 
@@ -673,6 +673,68 @@ textarea::placeholder {
 }
 
 /* ---------- 14. Bracket Container ---------- */
+#bracket-tab {
+  background-image: url('img/IAMGEM-FUNDO.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  border-radius: var(--radius-md);
+  padding-bottom: 24px;
+  min-height: 100%;
+}
+
+/* Destaque das fontes para o fundo escuro */
+#bracket-tab .round-title,
+#bracket-tab .empty-title,
+#bracket-tab .empty-subtitle,
+#bracket-tab .empty-icon {
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.6);
+  font-weight: 800;
+}
+
+#bracket-tab .round-title .icon {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+
+#bracket-tab .match-card {
+  background: rgba(40, 40, 40, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+#bracket-tab .match-header {
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+#bracket-tab .match-id {
+  color: #ccc;
+}
+
+#bracket-tab .match-team {
+  background: transparent;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#bracket-tab .team-name-bracket,
+#bracket-tab .score-display {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+#bracket-tab .bracket-svg line,
+#bracket-tab .connector-col svg line {
+  stroke: #ffffff;
+  stroke-width: 3;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+
 .bracket-container {
   overflow-x: auto;
   padding: 8px 0 24px;
@@ -804,6 +866,16 @@ textarea::placeholder {
   padding: 10px 12px;
   transition: background var(--transition);
   position: relative;
+}
+
+.match-team.dragging {
+  opacity: 0.4;
+  background: rgba(0, 122, 255, 0.05);
+}
+
+.match-team.drag-over {
+  border: 2px dashed var(--accent-blue);
+  background: rgba(0, 122, 255, 0.1);
 }
 
 .match-team + .match-team {
