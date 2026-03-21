@@ -91,6 +91,7 @@
       const cleanState = JSON.parse(JSON.stringify(state));
       db.collection('tournaments').doc('main').set(cleanState).catch((err) => {
         console.error('Erro ao salvar no Firestore:', err);
+        showToast('Erro ao salvar no banco. Verifique as Regras do Firestore!', 'error');
       });
     }
   }
@@ -128,6 +129,7 @@
         }
       }, (error) => {
         console.error('Erro no onSnapshot', error);
+        showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
         if (typeof callback === 'function') callback();
       });
     } else {
