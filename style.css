@@ -1,5 +1,5 @@
-/* ======================================================
-   COPA PSYZON — iOS-Inspired Light Theme
+﻿/* ======================================================
+   COPA PSYZON â€” iOS-Inspired Light Theme
    ====================================================== */
 
 /* ---------- 1. CSS Custom Properties / Variables ---------- */
@@ -2652,3 +2652,12 @@ textarea::placeholder {
   font-weight: 700;
   color: var(--accent-gold);
 }
+
+/* Estilos para aumentar os troféus (Adicionado) */
+.prize-trophy-img { width: 120px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
+.champion-trophy-img { width: 160px; height: auto; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2)); margin-bottom: 20px; }
+
+
+/* Estilos para aumentar os trofeus */
+.prize-trophy-img { width: 120px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
+.champion-trophy-img { width: 160px; height: auto; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2)); margin-bottom: 20px; }

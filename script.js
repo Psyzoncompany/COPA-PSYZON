@@ -1,5 +1,5 @@
 /**
- * COPA PSYZON — Tournament Management Platform
+ * COPA PSYZON â€” Tournament Management Platform
  * Complete IIFE-wrapped application for managing elimination-style tournaments.
  */
 (function () {
@@ -132,7 +132,7 @@
         }
       }, (error) => {
         console.error('Erro no onSnapshot', error);
-        showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
+        showToast('VocÃª nÃ£o tem permissÃ£o de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
         if (typeof callback === 'function') callback();
       });
     } else {
@@ -295,16 +295,16 @@
      4c. RANDOM TEAM NAME GENERATOR
      ========================================================== */
   const RANDOM_TEAM_NAMES = [
-    'Trovões FC', 'Águias Douradas', 'Fúria Negra', 'Dragões de Fogo',
-    'Lobos Selvagens', 'Falcões de Aço', 'Leões do Norte', 'Tubarões Azuis',
-    'Panteras Negras', 'Fênix Renascida', 'Relâmpago FC', 'Guerreiros de Ferro',
-    'Cobras Venenosas', 'Titãs do Sul', 'Cavaleiros da Lua', 'Vulcões FC',
+    'TrovÃµes FC', 'Ãguias Douradas', 'FÃºria Negra', 'DragÃµes de Fogo',
+    'Lobos Selvagens', 'FalcÃµes de AÃ§o', 'LeÃµes do Norte', 'TubarÃµes Azuis',
+    'Panteras Negras', 'FÃªnix Renascida', 'RelÃ¢mpago FC', 'Guerreiros de Ferro',
+    'Cobras Venenosas', 'TitÃ£s do Sul', 'Cavaleiros da Lua', 'VulcÃµes FC',
     'Estrelas Cadentes', 'Tempestade FC', 'Raposas Douradas', 'Condores Reais',
     'Spartanos FC', 'Vikings do Gelo', 'Samurais FC', 'Gladiadores FC',
-    'Cometas FC', 'Furacão Vermelho', 'Bravos de Elite', 'Supremos FC',
-    'Raios de Sol', 'Predadores FC', 'Corsários FC', 'Piratas do Mar',
-    'Tigres de Bengal', 'Escorpiões FC', 'Minotauros FC', 'Pegasus FC',
-    'Netuno FC', 'Hércules FC', 'Atenas FC', 'Apolo FC',
+    'Cometas FC', 'FuracÃ£o Vermelho', 'Bravos de Elite', 'Supremos FC',
+    'Raios de Sol', 'Predadores FC', 'CorsÃ¡rios FC', 'Piratas do Mar',
+    'Tigres de Bengal', 'EscorpiÃµes FC', 'Minotauros FC', 'Pegasus FC',
+    'Netuno FC', 'HÃ©rcules FC', 'Atenas FC', 'Apolo FC',
     'Centauros FC', 'Avalanche FC'
   ];
 
@@ -313,7 +313,7 @@
     const usedNames = state.teams.map(t => t.teamName.toLowerCase());
     const available = RANDOM_TEAM_NAMES.filter(n => !usedNames.includes(n.toLowerCase()));
     if (available.length === 0) {
-      showToast('Todos os nomes aleatórios já foram usados.', 'info');
+      showToast('Todos os nomes aleatÃ³rios jÃ¡ foram usados.', 'info');
       return '';
     }
     return available[Math.floor(Math.random() * available.length)];
@@ -465,14 +465,14 @@
   /** Translate Firebase auth errors to Portuguese messages */
   function authErrorMessage(code) {
     const map = {
-      'auth/invalid-email': 'E-mail inválido.',
+      'auth/invalid-email': 'E-mail invÃ¡lido.',
       'auth/user-disabled': 'Esta conta foi desativada.',
-      'auth/user-not-found': 'Usuário não encontrado.',
+      'auth/user-not-found': 'UsuÃ¡rio nÃ£o encontrado.',
       'auth/wrong-password': 'Senha incorreta.',
       'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
-      'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
-      'auth/invalid-credential': 'Credenciais inválidas. Verifique e-mail e senha.',
-      'auth/invalid-login-credentials': 'Credenciais inválidas. Verifique e-mail e senha.'
+      'auth/network-request-failed': 'Erro de conexÃ£o. Verifique sua internet.',
+      'auth/invalid-credential': 'Credenciais invÃ¡lidas. Verifique e-mail e senha.',
+      'auth/invalid-login-credentials': 'Credenciais invÃ¡lidas. Verifique e-mail e senha.'
     };
     return map[code] || 'Erro ao fazer login. Tente novamente.';
   }
@@ -514,7 +514,7 @@
           currentUser = { email: FALLBACK_EMAIL };
           showMainApp(true);
         } else {
-          if (errorEl) errorEl.textContent = 'Credenciais inválidas. Verifique e-mail e senha.';
+          if (errorEl) errorEl.textContent = 'Credenciais invÃ¡lidas. Verifique e-mail e senha.';
         }
         if (submitBtn) submitBtn.disabled = false;
       }).catch(() => {
@@ -663,7 +663,7 @@
     state.prize = prizeInput.value.trim();
     saveState();
     renderPrize();
-    showToast('Premiação salva com sucesso!', 'success');
+    showToast('PremiaÃ§Ã£o salva com sucesso!', 'success');
   }
 
   /** Render prize display banner */
@@ -703,7 +703,7 @@
       (t) => t.teamName.toLowerCase() === teamName.toLowerCase()
     );
     if (duplicate) {
-      showToast('Já existe um time com esse nome.', 'error');
+      showToast('JÃ¡ existe um time com esse nome.', 'error');
       return;
     }
 
@@ -755,7 +755,7 @@
     // Remover do state.teams
     state.teams = state.teams.filter((t) => t.id !== id);
 
-    // Se estiver no bracket, remover de lá também
+    // Se estiver no bracket, remover de lÃ¡ tambÃ©m
     if (state.bracket && state.bracket.rounds) {
       state.bracket.rounds.forEach(r => {
         r.matches.forEach(m => {
@@ -765,11 +765,11 @@
       });
     }
 
-    // Gerar um novo código no lugar se o time for associado a um código usado
+    // Gerar um novo cÃ³digo no lugar se o time for associado a um cÃ³digo usado
     if (state.codes) {
       const codeIndex = state.codes.findIndex(c => c.participantId === id);
       if (codeIndex !== -1) {
-        // Gerar um código novo que não existe ainda
+        // Gerar um cÃ³digo novo que nÃ£o existe ainda
         let newCode;
         do {
           newCode = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
@@ -787,7 +787,7 @@
     renderTeamList();
     if (state.bracket) renderBracket();
     if (isAdmin) renderCodesList();
-    showToast(`Time "${team.teamName}" removido. Código novo gerado (se era participante).`, 'info');
+    showToast(`Time "${team.teamName}" removido. CÃ³digo novo gerado (se era participante).`, 'info');
   }
 
   /** Render the team list in sidebar */
@@ -877,7 +877,7 @@
 
     const roundNames = getRoundNames(requiredCount);
     if (roundNames.length === 0) {
-      showToast('Quantidade de times inválida. Escolha 4, 8, 16 ou 32.', 'error');
+      showToast('Quantidade de times invÃ¡lida. Escolha 4, 8, 16 ou 32.', 'error');
       return;
     }
 
@@ -958,7 +958,7 @@
      12. BRACKET RENDERING & TIME MACHINE
      ========================================================== */
 
-  /** Retorna a chave atualmente sendo visualizada (Atual ou do Histórico) */
+  /** Retorna a chave atualmente sendo visualizada (Atual ou do HistÃ³rico) */
   function getCurrentBracket() {
     if (currentViewingBracketId) {
       const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
@@ -967,7 +967,7 @@
     return state.bracket;
   }
 
-  /** Retorna o nome do torneio que está sendo visualizado */
+  /** Retorna o nome do torneio que estÃ¡ sendo visualizado */
   function getCurrentBracketName() {
     if (currentViewingBracketId) {
       const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
@@ -995,14 +995,14 @@
 
     if (emptyState) emptyState.style.display = 'none';
     if ($('#btn-finish-tournament')) {
-      // Só mostra o botão de finalizar se for o torneio atual
+      // SÃ³ mostra o botÃ£o de finalizar se for o torneio atual
       $('#btn-finish-tournament').style.display = currentViewingBracketId ? 'none' : '';
     }
 
     const bracketEl = document.createElement('div');
     bracketEl.className = 'bracket';
 
-    // Se for modo máquina do tempo, avisa no topo do chaveamento
+    // Se for modo mÃ¡quina do tempo, avisa no topo do chaveamento
     if (currentViewingBracketId) {
       const timeMachineBar = document.createElement('div');
       timeMachineBar.style.background = 'rgba(255, 149, 0, 0.15)';
@@ -1016,11 +1016,11 @@
       timeMachineBar.style.alignItems = 'center';
       timeMachineBar.innerHTML = `
         <div>
-          <strong style="color: var(--accent-orange);">Modo de Visualização/Edição do Histórico</strong><br>
-          <span style="font-size: 13px;">Você está vendo o chaveamento de: <b>${sanitize(getCurrentBracketName())}</b></span>
+          <strong style="color: var(--accent-orange);">Modo de VisualizaÃ§Ã£o/EdiÃ§Ã£o do HistÃ³rico</strong><br>
+          <span style="font-size: 13px;">VocÃª estÃ¡ vendo o chaveamento de: <b>${sanitize(getCurrentBracketName())}</b></span>
         </div>
         <button type="button" class="btn btn-primary btn-sm btn-return-current">
-          ← Voltar ao Atual
+          â† Voltar ao Atual
         </button>
       `;
       const btnReturn = timeMachineBar.querySelector('.btn-return-current');
@@ -1072,7 +1072,7 @@
 
   /**
    * Create a connector column (SVG lines) between two rounds.
-   * @param {number} prevMatchCount – number of matches in the previous round
+   * @param {number} prevMatchCount â€“ number of matches in the previous round
    * @param {number} roundIndex
    * @returns {HTMLElement}
    */
@@ -1177,8 +1177,8 @@
   /**
    * Create a single match card element.
    * @param {object} match
-   * @param {number} rIdx – round index
-   * @param {number} mIdx – match index
+   * @param {number} rIdx â€“ round index
+   * @param {number} mIdx â€“ match index
    * @returns {HTMLElement}
    */
   function createMatchCard(match, rIdx, mIdx) {
@@ -1242,7 +1242,7 @@
     if (match.penalties) {
       const penDiv = document.createElement('div');
       penDiv.className = 'match-penalty-info';
-      penDiv.innerHTML = `Pênaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
+      penDiv.innerHTML = `PÃªnaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
       card.appendChild(penDiv);
     }
 
@@ -1253,7 +1253,7 @@
     const slot = document.createElement('div');
     slot.className = 'match-team';
     
-    // Configurações de Drag and Drop se for organizador e não tiver vencedor ainda
+    // ConfiguraÃ§Ãµes de Drag and Drop se for organizador e nÃ£o tiver vencedor ainda
     if (isAdmin) {
       slot.classList.add('droppable-slot');
       
@@ -1328,7 +1328,7 @@
     const nameSpan = document.createElement('span');
     nameSpan.className = 'team-name-bracket';
     nameSpan.textContent = team.playerName || team.teamName;
-    nameSpan.title = `${team.teamName} — ${team.playerName}`;
+    nameSpan.title = `${team.teamName} â€” ${team.playerName}`;
 
     // Make player name clickable to show profile
     const teamRecord = state.teams.find(t => t.playerName === team.playerName && t.teamName === team.teamName);
@@ -1473,7 +1473,7 @@
     const score2 = parseInt(($('#modal-team2-score') || {}).value, 10);
 
     if (isNaN(score1) || isNaN(score2) || score1 < 0 || score2 < 0) {
-      showToast('Insira placares válidos (números >= 0).', 'error');
+      showToast('Insira placares vÃ¡lidos (nÃºmeros >= 0).', 'error');
       return;
     }
 
@@ -1487,7 +1487,7 @@
       // Draw: must have penalties
       const penCheck = $('#penalties-check');
       if (!penCheck || !penCheck.checked) {
-        showToast('Empate! Marque os pênaltis para decidir o vencedor.', 'error');
+        showToast('Empate! Marque os pÃªnaltis para decidir o vencedor.', 'error');
         return;
       }
 
@@ -1495,12 +1495,12 @@
       const pen2 = parseInt(($('#penalty-team2-score') || {}).value, 10);
 
       if (isNaN(pen1) || isNaN(pen2) || pen1 < 0 || pen2 < 0) {
-        showToast('Insira placares de pênaltis válidos.', 'error');
+        showToast('Insira placares de pÃªnaltis vÃ¡lidos.', 'error');
         return;
       }
 
       if (pen1 === pen2) {
-        showToast('Pênaltis não podem terminar empatados.', 'error');
+        showToast('PÃªnaltis nÃ£o podem terminar empatados.', 'error');
         return;
       }
 
@@ -1594,7 +1594,7 @@
       const p = state.participants.find(x => x.name === matchTeam.playerName && x.nick === matchTeam.teamName);
       if (p) return p.id;
     }
-    return null; // Impossível rastrear se era antigo e não tinha ID
+    return null; // ImpossÃ­vel rastrear se era antigo e nÃ£o tinha ID
   }
 
   /** Revert applied match stats */
@@ -1662,7 +1662,7 @@
     }
   }
 
-  /** Troca dois times de posição no chaveamento (Drag and Drop) */
+  /** Troca dois times de posiÃ§Ã£o no chaveamento (Drag and Drop) */
   function swapTeamsInBracket(source, target) {
     if (!state.bracket || !state.bracket.rounds) return;
     
@@ -1678,7 +1678,7 @@
 
     if (!sourceMatch || !targetMatch) return;
 
-    // Obter referências aos times
+    // Obter referÃªncias aos times
     const teamA = source.teamNum === 1 ? sourceMatch.team1 : sourceMatch.team2;
     const teamB = target.teamNum === 1 ? targetMatch.team1 : targetMatch.team2;
 
@@ -1689,7 +1689,7 @@
     if (target.teamNum === 1) targetMatch.team1 = teamA;
     else targetMatch.team2 = teamA;
 
-    // Resetar os resultados se alguém foi movido (opcional)
+    // Resetar os resultados se alguÃ©m foi movido (opcional)
     sourceMatch.winner = null;
     sourceMatch.penalties = null;
     if (sourceMatch.team1) sourceMatch.team1.score = null;
@@ -1727,7 +1727,7 @@
     }
 
     startConfetti();
-    showToast(`Campeão: ${state.champion.playerName}!`, 'success');
+    showToast(`CampeÃ£o: ${state.champion.playerName}!`, 'success');
   }
 
   /** Show champion banner if champion exists (on page load) */
@@ -1851,11 +1851,11 @@
   function handleReset() {
     const pwd = prompt('Para DESCARTAR/CANCELAR este torneio atual, digite a senha:');
     if (pwd !== '451021') {
-      if (pwd !== null) showToast('Senha incorreta. Procedimento de exclusão cancelado.', 'error');
+      if (pwd !== null) showToast('Senha incorreta. Procedimento de exclusÃ£o cancelado.', 'error');
       return;
     }
 
-    if (!confirm('Tem certeza que deseja DELETAR o torneio? O chaveamento e resultados ativos vão sumir!')) {
+    if (!confirm('Tem certeza que deseja DELETAR o torneio? O chaveamento e resultados ativos vÃ£o sumir!')) {
       return;
     }
 
@@ -1981,7 +1981,7 @@
   function openPlayerProfile(teamId) {
     let team = state.teams.find(t => t.id === teamId);
     
-    // Se o time não for do torneio atual, procura direto nos cadastros de usuários globais
+    // Se o time nÃ£o for do torneio atual, procura direto nos cadastros de usuÃ¡rios globais
     if (!team && state.participants) {
       const p = state.participants.find(p => p.id === teamId);
       if (p) team = { id: p.id, playerName: p.name, teamName: p.nick, photo: p.photo };
@@ -2088,7 +2088,7 @@
 
     card.style.display = '';
     const posColors = ['gold', 'silver', 'bronze'];
-    const posLabels = ['1º', '2º', '3º'];
+    const posLabels = ['1Âº', '2Âº', '3Âº'];
 
     let html = '';
     ranked.forEach((r, i) => {
@@ -2101,7 +2101,7 @@
           <span class="top3-position ${posColors[i]}">${posLabels[i]}</span>
           <div class="top3-avatar">${avatar}</div>
           <span class="top3-name">${sanitize(r.team.playerName)}</span>
-          <span class="top3-trophies">${r.trophies} troféu${r.trophies !== 1 ? 's' : ''}</span>
+          <span class="top3-trophies">${r.trophies} trofÃ©u${r.trophies !== 1 ? 's' : ''}</span>
         </li>`;
     });
 
@@ -2122,23 +2122,23 @@
   function handleFinishTournament() {
     if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) return;
 
-    const pwd = prompt('Para ENCERRAR E SALVAR o torneio no histórico, digite a senha:');
+    const pwd = prompt('Para ENCERRAR E SALVAR o torneio no histÃ³rico, digite a senha:');
     if (pwd !== '451021') {
-      if (pwd !== null) showToast('Senha incorreta. Não foi possível encerrar.', 'error');
+      if (pwd !== null) showToast('Senha incorreta. NÃ£o foi possÃ­vel encerrar.', 'error');
       return;
     }
 
     if (!state.champion) {
-      if (!confirm('Este torneio ainda NÃO tem um Campeão definido. Tem certeza que deseja encerrar de forma incompleta e salvar no histórico?')) return;
+      if (!confirm('Este torneio ainda NÃƒO tem um CampeÃ£o definido. Tem certeza que deseja encerrar de forma incompleta e salvar no histÃ³rico?')) return;
     } else {
-      if (!confirm('Deseja oficializar o fim deste torneio e movê-lo para o seu Histórico? A seção de chaveamentos ficará livre para o próximo torneio.')) return;
+      if (!confirm('Deseja oficializar o fim deste torneio e movÃª-lo para o seu HistÃ³rico? A seÃ§Ã£o de chaveamentos ficarÃ¡ livre para o prÃ³ximo torneio.')) return;
     }
 
     if (!state.tournamentsHistory) state.tournamentsHistory = [];
 
     // Save snapshot
     const editionNumber = state.tournamentsHistory.length + 1;
-    const defaultName = 'Torneio Edição ' + editionNumber;
+    const defaultName = 'Torneio EdiÃ§Ã£o ' + editionNumber;
     let tName = state.tournamentName && state.tournamentName.trim() !== '' ? state.tournamentName : defaultName;
 
     const record = {
@@ -2156,7 +2156,7 @@
     state.champion = null;
     state.teams = [];
     
-    // Reseta os códigos de participação apenas quando o torneio for ENCERRADO
+    // Reseta os cÃ³digos de participaÃ§Ã£o apenas quando o torneio for ENCERRADO
     state.codes = [];
     
     state.tournamentName = ''; // reset name
@@ -2175,7 +2175,7 @@
     const prizeDisp = $('#prize-display');
     if (prizeDisp) prizeDisp.style.display = 'none';
 
-    showToast('Torneio salvo com sucesso no Histórico!', 'success');
+    showToast('Torneio salvo com sucesso no HistÃ³rico!', 'success');
 
     // Switch to history tab
     const historyBtn = document.querySelector('.tab-btn[data-tab="history-tab"]');
@@ -2187,14 +2187,14 @@
     if (!container) return;
 
     if (!state.tournamentsHistory || state.tournamentsHistory.length === 0) {
-      container.innerHTML = '<div class="empty-state"><span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg></span><p class="empty-title">Nenhum torneio finalizado</p><p class="empty-subtitle">Encerre um torneio na aba Chaveamento para organizá-lo aqui.</p></div>';
+      container.innerHTML = '<div class="empty-state"><span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg></span><p class="empty-title">Nenhum torneio finalizado</p><p class="empty-subtitle">Encerre um torneio na aba Chaveamento para organizÃ¡-lo aqui.</p></div>';
       return;
     }
 
     let html = '';
     state.tournamentsHistory.forEach(record => {
       const dateStr = new Date(record.date).toLocaleDateString();
-      let champHtml = '<span class="history-date">Sem campeão declarado</span>';
+      let champHtml = '<span class="history-date">Sem campeÃ£o declarado</span>';
       
       if (record.champion) {
         const cNome = record.champion.playerName || record.champion.teamName;
@@ -2207,7 +2207,7 @@
       html += '<div class="history-card" data-history-id="' + record.id + '" style="cursor:pointer;" title="Clique para Visualizar e Editar a Chave">' +
                 '<div class="history-info">' +
                   '<div class="history-title">' + sanitize(record.name) + ' (' + record.teamsCount + ' Times)</div>' +
-                  '<div class="history-date">Concluído em: ' + dateStr + '</div>' +
+                  '<div class="history-date">ConcluÃ­do em: ' + dateStr + '</div>' +
                   champHtml +
                 '</div>' +
                 '<div class="history-actions" onclick="event.stopPropagation()">' + // prevent row click from triggering when deleting
@@ -2243,7 +2243,7 @@
 
   function deleteHistory(id) {
     if (!isAdmin) return;
-    if (!confirm('Você está prestes a DELETAR um torneio antigo. Todos os títulos, gols e finais que os jogadores ganharam nele serão descontados dos seus Rankings Globais! Tem certeza?')) return;
+    if (!confirm('VocÃª estÃ¡ prestes a DELETAR um torneio antigo. Todos os tÃ­tulos, gols e finais que os jogadores ganharam nele serÃ£o descontados dos seus Rankings Globais! Tem certeza?')) return;
     
     const histIdx = state.tournamentsHistory.findIndex(h => h.id === id);
     if (histIdx === -1) return;
@@ -2268,7 +2268,7 @@
     
     saveState();
     renderHistory();
-    showToast('Torneio e suas estatísticas foram deletados do Histórico.', 'success');
+    showToast('Torneio e suas estatÃ­sticas foram deletados do HistÃ³rico.', 'success');
   }
 
   /* ==========================================================
@@ -2343,7 +2343,7 @@
         : '<span class="av-placeholder" style="font-size:12px;">' + sanitize(initials(r.name)) + '</span>';
 
       html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
-        '<td class="col-pos">' + (i + 1) + 'º</td>' +
+        '<td class="col-pos">' + (i + 1) + 'Âº</td>' +
         '<td class="col-player">' +
         '<div class="ranking-avatar">' + avatarHtml + '</div>' +
         '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
@@ -2358,7 +2358,7 @@
 
     tbody.innerHTML = html;
 
-    // Vincula o evento localmente (pois métodos não estão no window/escopo global)
+    // Vincula o evento localmente (pois mÃ©todos nÃ£o estÃ£o no window/escopo global)
     const rows = tbody.querySelectorAll('tr[data-team-id]');
     rows.forEach(row => {
       row.addEventListener('click', () => {
@@ -2369,7 +2369,7 @@
   }
 
   /* ==========================================================
-     16f. PARTICIPANT FLOW — CODE VALIDATION & REGISTRATION
+     16f. PARTICIPANT FLOW â€” CODE VALIDATION & REGISTRATION
      ========================================================== */
 
   /** Show participant code entry screen */
@@ -2445,7 +2445,7 @@
 
     // Load state to check for codes
     if (state.codes.length === 0) {
-      showToast('Nenhum código disponível no momento. Aguarde o organizador.', 'info');
+      showToast('Nenhum cÃ³digo disponÃ­vel no momento. Aguarde o organizador.', 'info');
       return;
     }
     showParticipantCodeScreen();
@@ -2462,22 +2462,22 @@
     errorEl.textContent = '';
 
     if (!/^\d{4}$/.test(code)) {
-      errorEl.textContent = 'O código deve ter exatamente 4 dígitos numéricos.';
+      errorEl.textContent = 'O cÃ³digo deve ter exatamente 4 dÃ­gitos numÃ©ricos.';
       return;
     }
 
     const codeEntry = state.codes.find(c => c.code === code);
     if (!codeEntry) {
-      errorEl.textContent = 'Código inválido. Verifique e tente novamente.';
+      errorEl.textContent = 'CÃ³digo invÃ¡lido. Verifique e tente novamente.';
       return;
     }
 
     if (codeEntry.status === 'used') {
-      errorEl.textContent = 'Este código já foi utilizado.';
+      errorEl.textContent = 'Este cÃ³digo jÃ¡ foi utilizado.';
       return;
     }
 
-    // Valid code — store and show CPF check
+    // Valid code â€” store and show CPF check
     currentParticipantCode = code;
     showParticipantCPFCheckScreen();
   }
@@ -2495,27 +2495,27 @@
 
     const cpf = cpfRaw.replace(/\D/g, '');
     if (!isValidCPF(cpf)) {
-      errorEl.textContent = 'CPF inválido.';
+      errorEl.textContent = 'CPF invÃ¡lido.';
       return;
     }
 
     if (!state.participants) state.participants = [];
     const existing = state.participants.find(p => p.cpf === cpf);
     if (!existing) {
-      errorEl.textContent = 'Participante não encontrado com este CPF.';
+      errorEl.textContent = 'Participante nÃ£o encontrado com este CPF.';
       return;
     }
 
-    // Verifica se já não tá no torneio
+    // Verifica se jÃ¡ nÃ£o tÃ¡ no torneio
     if (state.teams.some(t => t.id === existing.id)) {
-      errorEl.textContent = 'Este jogador já está registrado na etapa atual.';
+      errorEl.textContent = 'Este jogador jÃ¡ estÃ¡ registrado na etapa atual.';
       return;
     }
 
     // Verify code still valid
     const codeEntry = state.codes.find(c => c.code === currentParticipantCode);
     if (!codeEntry || codeEntry.status === 'used') {
-      errorEl.textContent = 'Código expirado ou já utilizado.';
+      errorEl.textContent = 'CÃ³digo expirado ou jÃ¡ utilizado.';
       return;
     }
 
@@ -2562,13 +2562,13 @@
     const nick = ($('#participant-nick') || {}).value ? $('#participant-nick').value.trim() : '';
 
     if (!name || !cpfRaw || !whatsapp || !nick) {
-      if (errorEl) errorEl.textContent = 'Preencha todos os campos obrigatórios.';
+      if (errorEl) errorEl.textContent = 'Preencha todos os campos obrigatÃ³rios.';
       return;
     }
 
     const cpf = cpfRaw.replace(/\D/g, '');
     if (!isValidCPF(cpf)) {
-      if (errorEl) errorEl.textContent = 'CPF inválido. Verifique e tente novamente.';
+      if (errorEl) errorEl.textContent = 'CPF invÃ¡lido. Verifique e tente novamente.';
       return;
     }
 
@@ -2576,21 +2576,21 @@
     if (!state.participants) state.participants = [];
     const existingCPF = state.participants.find(p => p.cpf === cpf);
     if (existingCPF) {
-      if (errorEl) errorEl.textContent = 'Este CPF já está cadastrado no torneio.';
+      if (errorEl) errorEl.textContent = 'Este CPF jÃ¡ estÃ¡ cadastrado no torneio.';
       return;
     }
 
     // Check duplicate nick in teams
     const existingNick = state.teams.some(t => t.teamName.toLowerCase() === nick.toLowerCase());
     if (existingNick) {
-      if (errorEl) errorEl.textContent = 'Este nick já está em uso. Escolha outro.';
+      if (errorEl) errorEl.textContent = 'Este nick jÃ¡ estÃ¡ em uso. Escolha outro.';
       return;
     }
 
     // Verify the code is still valid
     const codeEntry = state.codes.find(c => c.code === currentParticipantCode);
     if (!codeEntry || codeEntry.status === 'used') {
-      if (errorEl) errorEl.textContent = 'Código expirado ou já utilizado. Tente novamente.';
+      if (errorEl) errorEl.textContent = 'CÃ³digo expirado ou jÃ¡ utilizado. Tente novamente.';
       currentParticipantCode = null;
       return;
     }
@@ -2674,10 +2674,10 @@
     if (state.codes.length > 0) {
       const usedCodes = state.codes.filter(c => c.status === 'used');
       if (usedCodes.length > 0) {
-        showToast('Não é possível regerar. Existem ' + usedCodes.length + ' código(s) já utilizado(s).', 'error');
+        showToast('NÃ£o Ã© possÃ­vel regerar. Existem ' + usedCodes.length + ' cÃ³digo(s) jÃ¡ utilizado(s).', 'error');
         return;
       }
-      if (!confirm('Já existem códigos gerados. Deseja substituí-los por novos?')) {
+      if (!confirm('JÃ¡ existem cÃ³digos gerados. Deseja substituÃ­-los por novos?')) {
         return;
       }
     }
@@ -2696,7 +2696,7 @@
 
     saveState();
     renderCodesList();
-    showToast('32 códigos gerados com sucesso!', 'success');
+    showToast('32 cÃ³digos gerados com sucesso!', 'success');
   }
 
   /** Render the codes list in the admin sidebar */
@@ -2706,7 +2706,7 @@
     if (!list) return;
 
     if (!state.codes || state.codes.length === 0) {
-      list.innerHTML = '<p style="text-align:center;color:var(--text-tertiary);font-size:13px;padding:12px 0;">Nenhum código gerado</p>';
+      list.innerHTML = '<p style="text-align:center;color:var(--text-tertiary);font-size:13px;padding:12px 0;">Nenhum cÃ³digo gerado</p>';
       if (summary) summary.innerHTML = '';
       return;
     }
@@ -2716,7 +2716,7 @@
 
     if (summary) {
       summary.innerHTML = '<div class="codes-summary-row">' +
-        '<span class="codes-stat available">' + available + ' disponíveis</span>' +
+        '<span class="codes-stat available">' + available + ' disponÃ­veis</span>' +
         '<span class="codes-stat used">' + used + ' utilizados</span>' +
         '</div>';
     }
@@ -2732,11 +2732,34 @@
       html += '<div class="code-item ' + statusClass + '">' +
         '<span class="code-value">' + sanitize(c.code) + '</span>' +
         '<span class="code-status">' + statusText + '</span>' +
+        // removed
         (participant ? '<span class="code-participant" title="' + sanitize(participant.name) + '">' + sanitize(participant.nick) + '</span>' : '') +
+        '<button type="button" class="btn-refresh-code" data-code="' + sanitize(c.code) + '" title="Atualizar e resetar acesso associado a este código" style="background:none;border:none;cursor:pointer;color:var(--text-tertiary);font-size:22px;margin-left:auto;padding:0 8px;font-weight:bold;">&#x21bb;</button>' +
         '</div>';
     });
 
     list.innerHTML = html;
+
+    const refreshBtns = list.querySelectorAll('.btn-refresh-code');
+    refreshBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const oldCode = btn.getAttribute('data-code');
+        if (confirm('Deseja inutilizar o código ' + oldCode + ' e gerar N° novo no lugar?\nO cliente que já usou este código perderá o acesso e você poderá passar o novo código para outra pessoa.')) {
+          const idx = state.codes.findIndex(function(c) { return c.code === oldCode; });
+          if (idx !== -1) {
+            let newCode;
+            do {
+              newCode = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+            } while (state.codes.some(function(c) { return c.code === newCode; }));
+            
+            state.codes[idx] = { code: newCode, status: 'available', participantId: null };
+            saveState();
+            renderCodesList();
+            showToast('Código revogado! Novo código disponível.', 'success');
+          }
+        }
+      });
+    });
   }
 
   /* ==========================================================
@@ -2817,13 +2840,13 @@
     const btnResetAll = $('#btn-reset-all');
     if (btnResetAll) {
       btnResetAll.addEventListener('click', () => {
-        const codePrompt = prompt('ALERTA MÁXIMO: Isto apagará todos os cadastros, históricos, times e stats do Database inteiro.\n\nDigite o código de segurança para confirmar:');
+        const codePrompt = prompt('ALERTA MÃXIMO: Isto apagarÃ¡ todos os cadastros, histÃ³ricos, times e stats do Database inteiro.\n\nDigite o cÃ³digo de seguranÃ§a para confirmar:');
         if (codePrompt !== '153090') {
-          if (codePrompt) showToast('Código incorreto. Reset cancelado.', 'error');
+          if (codePrompt) showToast('CÃ³digo incorreto. Reset cancelado.', 'error');
           return;
         }
 
-        if (confirm('Tem CERTEZA MESMO? Isso apagará a Tabela inteira do Brasileirão e reseta o site pra fábrica.')) {
+        if (confirm('Tem CERTEZA MESMO? Isso apagarÃ¡ a Tabela inteira do BrasileirÃ£o e reseta o site pra fÃ¡brica.')) {
           state = defaultState();
           saveState();
           showToast('Site formatado com sucesso! Recarregando...', 'success');
@@ -2959,7 +2982,7 @@
     const tabBtns = document.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        // Remover classe ativa de todos botões e abas
+        // Remover classe ativa de todos botÃµes e abas
         tabBtns.forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
         
@@ -2969,7 +2992,7 @@
         const target = $('#' + targetId);
         if (target) target.style.display = 'block';
 
-        // Renderizar dinamicamente se for para aba de Histórico/Ranking
+        // Renderizar dinamicamente se for para aba de HistÃ³rico/Ranking
         if (targetId === 'ranking-tab') {
           renderRankingTable();
         } else if (targetId === 'history-tab') {
