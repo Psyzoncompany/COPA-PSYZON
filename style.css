@@ -1385,6 +1385,47 @@ svg line {
   font-weight: 600;
 }
 
+/* ---------- 21b. Mobile Hamburger Menu ---------- */
+.btn-mobile-menu {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition: background var(--transition);
+  padding: 0;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.btn-mobile-menu:hover {
+  background: var(--bg-tertiary);
+}
+
+/* ---------- 21c. Sidebar Overlay ---------- */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  top: var(--header-height);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 49;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+
 /* ---------- 22. Responsive ---------- */
 @media (max-width: 1024px) {
   .sidebar {
@@ -1751,47 +1792,6 @@ svg line {
     transform: scale(1.08);
     filter: drop-shadow(0 8px 24px rgba(175, 138, 46, 0.6));
   }
-}
-
-/* ---------- 29. Mobile Hamburger Menu ---------- */
-.btn-mobile-menu {
-  display: none;
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-primary);
-  border-radius: 8px;
-  transition: background var(--transition);
-  padding: 0;
-  margin-right: 8px;
-  flex-shrink: 0;
-}
-
-.btn-mobile-menu:hover {
-  background: var(--bg-tertiary);
-}
-
-/* ---------- 30. Sidebar Overlay ---------- */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  top: var(--header-height);
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 49;
-  transition: opacity 0.3s ease;
-  opacity: 0;
-}
-
-.sidebar-overlay.active {
-  display: block;
-  opacity: 1;
 }
 
 /* ---------- 23. Utility Classes ---------- */

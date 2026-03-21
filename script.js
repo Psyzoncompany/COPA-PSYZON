@@ -157,8 +157,7 @@
     checkCircle: '<svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
     success: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
     error: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
-    info: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-yellow, #ffcc00)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
-    trophyText: '\u{1F3C6}'
+    info: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-yellow, #ffcc00)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>'
   };
 
 
@@ -586,7 +585,7 @@
               <div style="font-size:12px;color:var(--text-secondary);">${sanitize(team.playerName)}</div>
             </div>
           </div>
-          ${canDelete ? `<button type="button" class="btn-remove-team icon-btn" data-team-id="${sanitize(team.id)}" title="Remover time" aria-label="Remover time">✕</button>` : ''}
+          ${canDelete ? `<button type="button" class="btn-remove-team icon-btn" data-team-id="${sanitize(team.id)}" title="Remover time" aria-label="Remover time"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>` : ''}
         </div>`;
     });
 
@@ -928,7 +927,7 @@
     if (match.penalties) {
       const penDiv = document.createElement('div');
       penDiv.className = 'match-penalty-info';
-      penDiv.textContent = `Pênaltis: ${match.penalties.team1} ✕ ${match.penalties.team2}`;
+      penDiv.innerHTML = `Pênaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
       card.appendChild(penDiv);
     }
 
