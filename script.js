@@ -58,6 +58,7 @@
   /* ==========================================================
      2. STATE MANAGEMENT
      ========================================================== */
+  const REMEMBER_KEY = 'copaPsyzonRemember'; // UI state only, NOT main data
 
   let isAdmin = false;
   let currentUser = null;
@@ -105,6 +106,9 @@
           state = defaultState();
           saveState(); // Initialize document with default state
         }
+
+        // Auto-generate bracket if it doesn't exist
+        ensureBracketExists();
         
         // Re-render UI immediately if we are in the main app
         const mainApp = $('#main-app');
@@ -133,6 +137,49 @@
     } else {
       if (typeof callback === 'function') callback();
     }
+  }
+
+  /**
+   * Ensure a bracket always exists. If not, auto-create one with empty slots.
+   */
+  function ensureBracketExists() {
+    if (state.bracket && state.bracket.rounds && state.bracket.rounds.length > 0) return;
+
+    const count = state.teamCount || 8;
+    const roundNames = getRoundNames(count);
+    if (roundNames.length === 0) return;
+
+    let matchesInRound = count / 2;
+    const rounds = [];
+    const existingTeams = [...(state.teams || [])];
+
+    roundNames.forEach((name, rIdx) => {
+      const matches = [];
+      for (let m = 0; m < matchesInRound; m++) {
+        const match = {
+          id: `r${rIdx}m${m}`,
+          team1: null,
+          team2: null,
+          winner: null,
+          penalties: null,
+          dateTime: null
+        };
+        // Fill first round with existing teams in order
+        if (rIdx === 0) {
+          const idx1 = m * 2;
+          const idx2 = m * 2 + 1;
+          if (idx1 < existingTeams.length) match.team1 = makeTeamSlotData(existingTeams[idx1]);
+          if (idx2 < existingTeams.length) match.team2 = makeTeamSlotData(existingTeams[idx2]);
+        }
+        matches.push(match);
+      }
+      rounds.push({ name, matches });
+      matchesInRound = Math.floor(matchesInRound / 2);
+    });
+
+    state.bracket = { rounds };
+    state.champion = null;
+    saveState();
   }
 
   /* ==========================================================
@@ -476,6 +523,15 @@
   function handleVisitor() {
     isAdmin = false;
     currentUser = null;
+
+    // Save remember choice (UI state only)
+    const rememberCheck = $('#remember-choice');
+    if (rememberCheck && rememberCheck.checked) {
+      try { localStorage.setItem(REMEMBER_KEY, 'visitor'); } catch (_) { /* ignore */ }
+    } else {
+      try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+    }
+
     showGameSelection();
   }
 
@@ -500,11 +556,13 @@
 
   /** Handle back from game selection */
   function handleGameBack() {
+    try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
     showLoginScreen();
   }
 
   /** Handle logout */
   function handleLogout() {
+    try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
     isParticipant = false;
     currentParticipantCode = null;
     if (firebaseAvailable && auth) {
@@ -2332,7 +2390,18 @@
         });
       }
 
-      // 4. Default: show login screen (auth callback above may override)
+      // 4. Check for remembered choice (UI state via localStorage)
+      try {
+        const remembered = localStorage.getItem(REMEMBER_KEY);
+        if (remembered === 'visitor') {
+          isAdmin = false;
+          currentUser = null;
+          showGameSelection();
+          return;
+        }
+      } catch (_) { /* ignore */ }
+
+      // 5. Default: show login screen (auth callback above may override)
       showLoginScreen();
     });
   }
