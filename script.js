@@ -56,6 +56,7 @@
      2. STATE MANAGEMENT
      ========================================================== */
   const STORAGE_KEY = 'copaPsyzonState';
+  const REMEMBER_KEY = 'copaPsyzonRemember';
 
   let isAdmin = false;
   let currentUser = null;
@@ -71,7 +72,8 @@
       teams: [],
       prize: '',
       bracket: null,
-      champion: null
+      champion: null,
+      playerStats: {}
     };
   }
 
@@ -260,8 +262,10 @@
   function showLoginScreen() {
     const loginScreen = $('#login-screen');
     const mainApp = $('#main-app');
+    const gameScreen = $('#game-selection-screen');
     if (loginScreen) loginScreen.style.display = '';
     if (mainApp) mainApp.style.display = 'none';
+    if (gameScreen) gameScreen.style.display = 'none';
     // Reset login form
     const loginForm = $('#login-form');
     if (loginForm) loginForm.style.display = 'none';
@@ -277,8 +281,10 @@
     isAdmin = admin;
     const loginScreen = $('#login-screen');
     const mainApp = $('#main-app');
+    const gameScreen = $('#game-selection-screen');
     if (loginScreen) loginScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = '';
+    if (gameScreen) gameScreen.style.display = 'none';
 
     // Role badge
     const badge = $('#role-badge');
@@ -305,6 +311,10 @@
     renderPrize();
     renderTournamentTitle();
     renderBracket();
+    renderTop3();
+    if (admin) {
+      populateClientSelect();
+    }
   }
 
   /** Translate Firebase auth errors to Portuguese messages */
@@ -369,15 +379,46 @@
     }
   }
 
-  /** Handle visitor button */
+  /** Handle visitor button - show game selection screen */
   function handleVisitor() {
     isAdmin = false;
     currentUser = null;
+
+    // Save remember choice
+    const rememberCheck = $('#remember-choice');
+    if (rememberCheck && rememberCheck.checked) {
+      try { localStorage.setItem(REMEMBER_KEY, 'visitor'); } catch (_) { /* ignore */ }
+    } else {
+      try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+    }
+
+    showGameSelection();
+  }
+
+  /** Show game selection screen */
+  function showGameSelection() {
+    const loginScreen = $('#login-screen');
+    const mainApp = $('#main-app');
+    const gameScreen = $('#game-selection-screen');
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (mainApp) mainApp.style.display = 'none';
+    if (gameScreen) gameScreen.style.display = '';
+  }
+
+  /** Handle FIFA game selection */
+  function handleGameFifa() {
     showMainApp(false);
+  }
+
+  /** Handle back from game selection */
+  function handleGameBack() {
+    try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+    showLoginScreen();
   }
 
   /** Handle logout */
   function handleLogout() {
+    try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
     if (firebaseAvailable && auth) {
       auth.signOut().then(() => {
         isAdmin = false;
@@ -600,6 +641,11 @@
         removeTeam(btn.dataset.teamId);
       });
     });
+
+    // Update client select if admin
+    if (isAdmin) {
+      populateClientSelect();
+    }
   }
 
   /* ==========================================================
@@ -985,6 +1031,17 @@
     nameSpan.className = 'team-name-bracket';
     nameSpan.textContent = team.playerName || team.teamName;
     nameSpan.title = `${team.teamName} — ${team.playerName}`;
+
+    // Make player name clickable to show profile
+    const teamRecord = state.teams.find(t => t.playerName === team.playerName && t.teamName === team.teamName);
+    if (teamRecord) {
+      nameSpan.classList.add('clickable');
+      nameSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openPlayerProfile(teamRecord.id);
+      });
+    }
+
     slot.appendChild(nameSpan);
 
     // Score
@@ -1382,6 +1439,208 @@
   }
 
   /* ==========================================================
+     16c. CLIENT / PLAYER STATS MANAGEMENT
+     ========================================================== */
+
+  /** Populate the client select dropdown with team players */
+  function populateClientSelect() {
+    const select = $('#client-select');
+    if (!select) return;
+
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- Selecione --</option>';
+
+    state.teams.forEach((team) => {
+      const option = document.createElement('option');
+      option.value = team.id;
+      option.textContent = team.playerName + ' (' + team.teamName + ')';
+      select.appendChild(option);
+    });
+
+    // Restore previous selection if still valid
+    if (currentVal && state.teams.some(t => t.id === currentVal)) {
+      select.value = currentVal;
+    }
+  }
+
+  /** Handle client select change */
+  function handleClientSelect() {
+    const select = $('#client-select');
+    const fields = $('#client-fields');
+    if (!select || !fields) return;
+
+    const teamId = select.value;
+    if (!teamId) {
+      fields.style.display = 'none';
+      return;
+    }
+
+    fields.style.display = '';
+
+    // Load existing stats
+    const stats = (state.playerStats && state.playerStats[teamId]) || {};
+    const igInput = $('#client-instagram');
+    const trInput = $('#client-trophies');
+    const fiInput = $('#client-finals');
+    const sfInput = $('#client-semifinals');
+    if (igInput) igInput.value = stats.instagram || '';
+    if (trInput) trInput.value = stats.trophies || 0;
+    if (fiInput) fiInput.value = stats.finals || 0;
+    if (sfInput) sfInput.value = stats.semifinals || 0;
+  }
+
+  /** Save client stats */
+  function handleSaveClient() {
+    const select = $('#client-select');
+    if (!select || !select.value) {
+      showToast('Selecione um jogador primeiro.', 'error');
+      return;
+    }
+
+    const teamId = select.value;
+    if (!state.playerStats) state.playerStats = {};
+
+    state.playerStats[teamId] = {
+      instagram: ($('#client-instagram') || {}).value || '',
+      trophies: parseInt(($('#client-trophies') || {}).value, 10) || 0,
+      finals: parseInt(($('#client-finals') || {}).value, 10) || 0,
+      semifinals: parseInt(($('#client-semifinals') || {}).value, 10) || 0
+    };
+
+    saveState();
+    renderTop3();
+    showToast('Dados do jogador salvos!', 'success');
+  }
+
+  /* ==========================================================
+     16d. PLAYER PROFILE MODAL
+     ========================================================== */
+
+  /** Open player profile modal */
+  function openPlayerProfile(teamId) {
+    const team = state.teams.find(t => t.id === teamId);
+    if (!team) return;
+
+    const stats = (state.playerStats && state.playerStats[teamId]) || {};
+    const modal = $('#player-profile-modal');
+    if (!modal) return;
+
+    // Avatar
+    const avatarEl = $('#profile-avatar');
+    if (avatarEl) {
+      if (team.photo) {
+        avatarEl.innerHTML = '<img src="' + sanitize(team.photo) + '" alt="">';
+      } else {
+        avatarEl.textContent = initials(team.playerName);
+      }
+    }
+
+    // Names
+    const playerNameEl = $('#profile-player-name');
+    const teamNameEl = $('#profile-team-name');
+    if (playerNameEl) playerNameEl.textContent = team.playerName;
+    if (teamNameEl) teamNameEl.textContent = team.teamName;
+
+    // Instagram
+    const igLink = $('#profile-instagram');
+    const igText = $('#profile-instagram-text');
+    if (igLink && igText) {
+      if (stats.instagram) {
+        const handle = stats.instagram.replace(/^@/, '');
+        igLink.href = 'https://instagram.com/' + encodeURIComponent(handle);
+        igText.textContent = '@' + handle;
+        igLink.style.display = '';
+      } else {
+        igLink.style.display = 'none';
+      }
+    }
+
+    // Stats
+    const trEl = $('#profile-trophies');
+    const fiEl = $('#profile-finals');
+    const sfEl = $('#profile-semifinals');
+    if (trEl) trEl.textContent = stats.trophies || 0;
+    if (fiEl) fiEl.textContent = stats.finals || 0;
+    if (sfEl) sfEl.textContent = stats.semifinals || 0;
+
+    modal.style.display = 'flex';
+  }
+
+  /** Close player profile modal */
+  function closePlayerProfile() {
+    const modal = $('#player-profile-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  /* ==========================================================
+     16e. TOP 3 RENDERING
+     ========================================================== */
+
+  /** Render the Top 3 players card */
+  function renderTop3() {
+    const card = $('#top3-card');
+    const list = $('#top3-list');
+    if (!card || !list) return;
+
+    if (!state.playerStats || !state.teams || state.teams.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+
+    // Build ranked list by trophies, then finals, then semifinals
+    const ranked = state.teams
+      .map(t => {
+        const stats = state.playerStats[t.id] || {};
+        return {
+          team: t,
+          trophies: stats.trophies || 0,
+          finals: stats.finals || 0,
+          semifinals: stats.semifinals || 0
+        };
+      })
+      .filter(r => r.trophies > 0 || r.finals > 0 || r.semifinals > 0)
+      .sort((a, b) => {
+        if (b.trophies !== a.trophies) return b.trophies - a.trophies;
+        if (b.finals !== a.finals) return b.finals - a.finals;
+        return b.semifinals - a.semifinals;
+      })
+      .slice(0, 3);
+
+    if (ranked.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+
+    card.style.display = '';
+    const posColors = ['gold', 'silver', 'bronze'];
+    const posLabels = ['1º', '2º', '3º'];
+
+    let html = '';
+    ranked.forEach((r, i) => {
+      const avatar = r.team.photo
+        ? '<img src="' + sanitize(r.team.photo) + '" alt="">'
+        : '<span class="av-placeholder" style="font-size:14px;">' + sanitize(initials(r.team.playerName)) + '</span>';
+
+      html += `
+        <div class="top3-item" data-team-id="${sanitize(r.team.id)}">
+          <span class="top3-position ${posColors[i]}">${posLabels[i]}</span>
+          <div class="top3-avatar">${avatar}</div>
+          <span class="top3-name">${sanitize(r.team.playerName)}</span>
+          <span class="top3-trophies">${r.trophies} troféu${r.trophies !== 1 ? 's' : ''}</span>
+        </div>`;
+    });
+
+    list.innerHTML = html;
+
+    // Click handlers for top 3 items
+    list.querySelectorAll('.top3-item').forEach(item => {
+      item.addEventListener('click', () => {
+        openPlayerProfile(item.dataset.teamId);
+      });
+    });
+  }
+
+  /* ==========================================================
      17. EVENT LISTENERS
      ========================================================== */
 
@@ -1537,6 +1796,48 @@
         canvas.height = window.innerHeight;
       }
     });
+
+    // Game selection buttons
+    const btnGameFifa = $('#btn-game-fifa');
+    if (btnGameFifa) {
+      btnGameFifa.addEventListener('click', handleGameFifa);
+    }
+
+    const btnGameBack = $('#btn-game-back');
+    if (btnGameBack) {
+      btnGameBack.addEventListener('click', handleGameBack);
+    }
+
+    // Client management
+    const clientSelect = $('#client-select');
+    if (clientSelect) {
+      clientSelect.addEventListener('change', handleClientSelect);
+    }
+
+    const btnSaveClient = $('#btn-save-client');
+    if (btnSaveClient) {
+      btnSaveClient.addEventListener('click', handleSaveClient);
+    }
+
+    // Player profile modal close
+    const btnCloseProfile = $('#btn-close-profile');
+    if (btnCloseProfile) {
+      btnCloseProfile.addEventListener('click', closePlayerProfile);
+    }
+
+    // Player profile modal backdrop
+    const profileBackdrop = $('.modal-backdrop[data-dismiss="profile-modal"]');
+    if (profileBackdrop) {
+      profileBackdrop.addEventListener('click', closePlayerProfile);
+    }
+
+    // Re-populate client select when teams change
+    const teamCountSelectForClients = $('#team-count');
+    if (teamCountSelectForClients) {
+      teamCountSelectForClients.addEventListener('change', () => {
+        populateClientSelect();
+      });
+    }
   }
 
   /* ==========================================================
@@ -1568,7 +1869,18 @@
       });
     }
 
-    // 4. Default: show login screen (auth callback above may override)
+    // 4. Check for remembered choice
+    try {
+      const remembered = localStorage.getItem(REMEMBER_KEY);
+      if (remembered === 'visitor') {
+        isAdmin = false;
+        currentUser = null;
+        showGameSelection();
+        return;
+      }
+    } catch (_) { /* ignore */ }
+
+    // 5. Default: show login screen (auth callback above may override)
     showLoginScreen();
   }
 
