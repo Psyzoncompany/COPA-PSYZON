@@ -9,12 +9,13 @@
      1. FIREBASE INITIALIZATION
      ========================================================== */
   const firebaseConfig = {
-    apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    apiKey: "AIzaSyDPH-ltsHg4nYeoZpDPq_80sfvcMaS-oXs",
     authDomain: "copa-psyzon.firebaseapp.com",
     projectId: "copa-psyzon",
-    storageBucket: "copa-psyzon.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:0000000000000000000000"
+    storageBucket: "copa-psyzon.firebasestorage.app",
+    messagingSenderId: "74729053927",
+    appId: "1:74729053927:web:ec295dcc38c640256d8c42",
+    measurementId: "G-KH01335LK1"
   };
 
   /** @type {boolean} Whether Firebase is available */
@@ -42,6 +43,9 @@
     if (typeof firebase !== 'undefined' && firebase.initializeApp) {
       firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
+      if (firebase.analytics) {
+        firebase.analytics();
+      }
       firebaseAvailable = true;
     }
   } catch (_) {
