@@ -2948,6 +2948,7 @@
     
     let pointer = 0;
     round0.matches.forEach(m => {
+      if (m.statsApplied) revertMatchStats(m);
       m.team1 = slots[pointer++] || null;
       m.team2 = slots[pointer++] || null;
       m.score1 = 0;
@@ -2961,6 +2962,7 @@
     
     for (let i = 1; i < state.bracket.rounds.length; i++) {
       state.bracket.rounds[i].matches.forEach(m => {
+        if (m.statsApplied) revertMatchStats(m);
         m.team1 = null;
         m.team2 = null;
         m.score1 = 0;
@@ -3003,6 +3005,7 @@
     targetMatch[targetKey] = temp;
     
     [sourceMatch, targetMatch].forEach(m => {
+      if (m.statsApplied) revertMatchStats(m);
       m.score1 = 0;
       m.score2 = 0;
       m.winner = null;
@@ -3014,6 +3017,7 @@
     
     for (let i = 1; i < state.bracket.rounds.length; i++) {
       state.bracket.rounds[i].matches.forEach(m => {
+        if (m.statsApplied) revertMatchStats(m);
         m.team1 = null;
         m.team2 = null;
         m.score1 = 0;
