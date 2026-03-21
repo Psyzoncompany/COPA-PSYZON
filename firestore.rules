@@ -2,6 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Tournaments collection (main state)
+    match /tournaments/{document} {
+      allow read: if true;
+      allow write: if true; // Allows unauthenticated participants to register and update status
+    }
+
     // Codes collection: authenticated admin can read/write, others can read
     match /codes/{codeId} {
       allow read: if true;

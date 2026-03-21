@@ -22,6 +22,8 @@
   let firebaseAvailable = false;
   /** @type {object|null} Firebase auth instance */
   let auth = null;
+  /** @type {object|null} Firebase firestore instance */
+  let db = null;
 
   // Fallback credentials for when Firebase is not available.
   // Password is stored as a SHA-256 hash to avoid exposing plaintext in source.
@@ -43,6 +45,7 @@
     if (typeof firebase !== 'undefined' && firebase.initializeApp) {
       firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
+      db = firebase.firestore();
       if (firebase.analytics) {
         firebase.analytics();
       }
@@ -81,23 +84,54 @@
     };
   }
 
-  /** Persist current state to localStorage */
+  /** Persist current state to Firestore */
   function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (_) { /* quota exceeded – silently fail */ }
+    if (firebaseAvailable && db) {
+      // Remover valores undefined para evitar erros no Firestore
+      const cleanState = JSON.parse(JSON.stringify(state));
+      db.collection('tournaments').doc('main').set(cleanState).catch((err) => {
+        console.error('Erro ao salvar no Firestore:', err);
+      });
+    }
   }
 
-  /** Load state from localStorage (or use defaults) */
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        state = Object.assign(defaultState(), parsed);
-      }
-    } catch (_) {
-      state = defaultState();
+  /** Subscribe to real-time state from Firestore */
+  function subscribeToState(callback) {
+    if (firebaseAvailable && db) {
+      let firstLoad = true;
+      db.collection('tournaments').doc('main').onSnapshot((doc) => {
+        if (doc.exists) {
+          state = Object.assign(defaultState(), doc.data());
+        } else {
+          state = defaultState();
+          saveState(); // Initialize document with default state
+        }
+        
+        // Re-render UI immediately if we are in the main app
+        const mainApp = $('#main-app');
+        if (mainApp && mainApp.style.display !== 'none') {
+          populateFormFromState();
+          renderTeamList();
+          renderPrize();
+          renderTournamentTitle();
+          renderBracket();
+          renderTop3();
+          if (isAdmin) {
+            populateClientSelect();
+            renderCodesList();
+          }
+        }
+        
+        if (firstLoad) {
+          firstLoad = false;
+          if (typeof callback === 'function') callback();
+        }
+      }, (error) => {
+        console.error('Erro no onSnapshot', error);
+        if (typeof callback === 'function') callback();
+      });
+    } else {
+      if (typeof callback === 'function') callback();
     }
   }
 
@@ -2248,42 +2282,42 @@
 
   /** Main initialization function */
   function init() {
-    // 1. Load persisted state
-    loadState();
-
-    // 2. Set up event listeners
+    // 1. Set up event listeners (do this first so buttons work if needed)
     setupEventListeners();
 
-    // 3. Listen for Firebase auth state changes (if available)
-    if (firebaseAvailable && auth) {
-      auth.onAuthStateChanged((user) => {
-        currentUser = user;
-        if (user) {
-          // User is signed in: show as admin
-          showMainApp(true);
-        } else {
-          // Not signed in: only show login if we haven't already entered as visitor
-          const mainApp = document.getElementById('main-app');
-          if (!mainApp || mainApp.style.display === 'none') {
-            showLoginScreen();
+    // 2. Subscribe to real-time state, then proceed with auth
+    subscribeToState(() => {
+      // 3. Listen for Firebase auth state changes (if available)
+      if (firebaseAvailable && auth) {
+        auth.onAuthStateChanged((user) => {
+          currentUser = user;
+          if (user) {
+            // User is signed in: show as admin
+            showMainApp(true);
+          } else {
+            // Not signed in: only show login if we haven't already entered as visitor
+            const mainApp = document.getElementById('main-app');
+            if (!mainApp || mainApp.style.display === 'none') {
+              showLoginScreen();
+            }
           }
-        }
-      });
-    }
-
-    // 4. Check for remembered choice
-    try {
-      const remembered = localStorage.getItem(REMEMBER_KEY);
-      if (remembered === 'visitor') {
-        isAdmin = false;
-        currentUser = null;
-        showGameSelection();
-        return;
+        });
       }
-    } catch (_) { /* ignore */ }
 
-    // 5. Default: show login screen (auth callback above may override)
-    showLoginScreen();
+      // 4. Check for remembered choice
+      try {
+        const remembered = localStorage.getItem(REMEMBER_KEY);
+        if (remembered === 'visitor') {
+          isAdmin = false;
+          currentUser = null;
+          showGameSelection();
+          return;
+        }
+      } catch (_) { /* ignore */ }
+
+      // 5. Default: show login screen (auth callback above may override)
+      showLoginScreen();
+    });
   }
 
   // Run initialization when DOM is ready
