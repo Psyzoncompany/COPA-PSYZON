@@ -22,9 +22,21 @@
   /** @type {object|null} Firebase auth instance */
   let auth = null;
 
-  // Fallback credentials for when Firebase is not available
+  // Fallback credentials for when Firebase is not available.
+  // Password is stored as a SHA-256 hash to avoid exposing plaintext in source.
   const FALLBACK_EMAIL = 'copa-psyzon@email.com';
-  const FALLBACK_PASSWORD = '451021';
+  const EXPECTED_HASH = '4c5c37fa864741cb705483c370095dbf5d14fa0ffa76de4b5f11a8f897160fb2';
+
+  /**
+   * Compute SHA-256 hash of a string using the Web Crypto API.
+   * @param {string} str
+   * @returns {Promise<string>} hex-encoded hash
+   */
+  async function sha256(str) {
+    const buf = new TextEncoder().encode(str);
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
   try {
     if (typeof firebase !== 'undefined' && firebase.initializeApp) {
@@ -255,15 +267,20 @@
           if (submitBtn) submitBtn.disabled = false;
         });
     } else {
-      // Fallback authentication (local credential check)
-      if (email.trim() === FALLBACK_EMAIL && password === FALLBACK_PASSWORD) {
-        isAdmin = true;
-        currentUser = { email: FALLBACK_EMAIL };
-        showMainApp(true);
-      } else {
-        if (errorEl) errorEl.textContent = 'Credenciais inválidas. Verifique e-mail e senha.';
-      }
-      if (submitBtn) submitBtn.disabled = false;
+      // Fallback authentication (local credential check with hashed password)
+      sha256(password).then((hash) => {
+        if (email.trim() === FALLBACK_EMAIL && hash === EXPECTED_HASH) {
+          isAdmin = true;
+          currentUser = { email: FALLBACK_EMAIL };
+          showMainApp(true);
+        } else {
+          if (errorEl) errorEl.textContent = 'Credenciais inválidas. Verifique e-mail e senha.';
+        }
+        if (submitBtn) submitBtn.disabled = false;
+      }).catch(() => {
+        if (errorEl) errorEl.textContent = 'Erro ao verificar credenciais.';
+        if (submitBtn) submitBtn.disabled = false;
+      });
     }
   }
 
@@ -1341,7 +1358,8 @@
           showMainApp(true);
         } else {
           // Not signed in: only show login if we haven't already entered as visitor
-          if (!document.getElementById('main-app') || document.getElementById('main-app').style.display === 'none') {
+          const mainApp = document.getElementById('main-app');
+          if (!mainApp || mainApp.style.display === 'none') {
             showLoginScreen();
           }
         }
