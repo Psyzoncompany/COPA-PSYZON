@@ -60,6 +60,8 @@
 
   let isAdmin = false;
   let currentUser = null;
+  let isParticipant = false;
+  let currentParticipantCode = null;
 
   /** @type {{ tournamentName: string, teamCount: number, teams: Array<{id:string, teamName:string, playerName:string}>, prize: string, bracket: null|{rounds: Array}, champion: null|{teamName:string, playerName:string} }} */
   let state = defaultState();
@@ -73,7 +75,9 @@
       prize: '',
       bracket: null,
       champion: null,
-      playerStats: {}
+      playerStats: {},
+      codes: [],
+      participants: []
     };
   }
 
@@ -146,6 +150,48 @@
     const parts = name.trim().split(/\s+/);
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  /**
+   * Validate a Brazilian CPF number.
+   * @param {string} cpf - raw or formatted CPF
+   * @returns {boolean}
+   */
+  function isValidCPF(cpf) {
+    cpf = cpf.replace(/\D/g, '');
+    if (cpf.length !== 11) return false;
+    if (/^(\d)\1+$/.test(cpf)) return false;
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i), 10) * (10 - i);
+    let check = 11 - (sum % 11);
+    if (check >= 10) check = 0;
+    if (parseInt(cpf.charAt(9), 10) !== check) return false;
+    sum = 0;
+    for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i), 10) * (11 - i);
+    check = 11 - (sum % 11);
+    if (check >= 10) check = 0;
+    if (parseInt(cpf.charAt(10), 10) !== check) return false;
+    return true;
+  }
+
+  /** Format CPF as 000.000.000-00 */
+  function formatCPF(value) {
+    value = value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 9) return value.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    if (value.length > 6) return value.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    if (value.length > 3) return value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    return value;
+  }
+
+  /** Format phone as (00) 00000-0000 */
+  function formatPhone(value) {
+    value = value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 10) return value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    if (value.length > 6) return value.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+    if (value.length > 2) return value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    return value;
   }
 
 
@@ -266,6 +312,10 @@
     if (loginScreen) loginScreen.style.display = '';
     if (mainApp) mainApp.style.display = 'none';
     if (gameScreen) gameScreen.style.display = 'none';
+    const codeScreen = $('#participant-code-screen');
+    const formScreen = $('#participant-form-screen');
+    if (codeScreen) codeScreen.style.display = 'none';
+    if (formScreen) formScreen.style.display = 'none';
     // Reset login form
     const loginForm = $('#login-form');
     if (loginForm) loginForm.style.display = 'none';
@@ -285,6 +335,10 @@
     if (loginScreen) loginScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = '';
     if (gameScreen) gameScreen.style.display = 'none';
+    const codeScreen = $('#participant-code-screen');
+    const formScreen = $('#participant-form-screen');
+    if (codeScreen) codeScreen.style.display = 'none';
+    if (formScreen) formScreen.style.display = 'none';
 
     // Role badge
     const badge = $('#role-badge');
@@ -293,6 +347,10 @@
         badge.textContent = 'DONO';
         badge.style.background = 'rgba(0,122,255,0.12)';
         badge.style.color = '#007aff';
+      } else if (isParticipant) {
+        badge.textContent = 'PARTICIPANTE';
+        badge.style.background = 'rgba(52,199,89,0.12)';
+        badge.style.color = '#34c759';
       } else {
         badge.textContent = 'VISITANTE';
         badge.style.background = '';
@@ -314,6 +372,7 @@
     renderTop3();
     if (admin) {
       populateClientSelect();
+      renderCodesList();
     }
   }
 
@@ -403,6 +462,10 @@
     if (loginScreen) loginScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'none';
     if (gameScreen) gameScreen.style.display = '';
+    const codeScreen = $('#participant-code-screen');
+    const formScreen = $('#participant-form-screen');
+    if (codeScreen) codeScreen.style.display = 'none';
+    if (formScreen) formScreen.style.display = 'none';
   }
 
   /** Handle FIFA game selection */
@@ -419,6 +482,8 @@
   /** Handle logout */
   function handleLogout() {
     try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+    isParticipant = false;
+    currentParticipantCode = null;
     if (firebaseAvailable && auth) {
       auth.signOut().then(() => {
         isAdmin = false;
@@ -1641,6 +1706,268 @@
   }
 
   /* ==========================================================
+     16f. PARTICIPANT FLOW — CODE VALIDATION & REGISTRATION
+     ========================================================== */
+
+  /** Show participant code entry screen */
+  function showParticipantCodeScreen() {
+    const screens = ['login-screen', 'game-selection-screen', 'participant-form-screen'];
+    screens.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const mainApp = $('#main-app');
+    if (mainApp) mainApp.style.display = 'none';
+
+    const codeScreen = $('#participant-code-screen');
+    if (codeScreen) codeScreen.style.display = '';
+
+    const codeInput = $('#participant-code');
+    if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+    const errorEl = $('#code-error');
+    if (errorEl) errorEl.textContent = '';
+  }
+
+  /** Show participant registration form */
+  function showParticipantFormScreen() {
+    const screens = ['login-screen', 'game-selection-screen', 'participant-code-screen'];
+    screens.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const mainApp = $('#main-app');
+    if (mainApp) mainApp.style.display = 'none';
+
+    const formScreen = $('#participant-form-screen');
+    if (formScreen) formScreen.style.display = '';
+
+    // Clear form
+    const form = $('#participant-form');
+    if (form) form.reset();
+    const errorEl = $('#participant-form-error');
+    if (errorEl) errorEl.textContent = '';
+  }
+
+  /** Handle PARTICIPANTE button click on login screen */
+  function handleParticipantButton() {
+    // Load state to check for codes
+    if (state.codes.length === 0) {
+      showToast('Nenhum código disponível no momento. Aguarde o organizador.', 'info');
+      return;
+    }
+    showParticipantCodeScreen();
+  }
+
+  /** Handle code form submission */
+  function handleCodeValidation(e) {
+    e.preventDefault();
+    const codeInput = $('#participant-code');
+    const errorEl = $('#code-error');
+    if (!codeInput || !errorEl) return;
+
+    const code = codeInput.value.trim();
+    errorEl.textContent = '';
+
+    if (!/^\d{4}$/.test(code)) {
+      errorEl.textContent = 'O código deve ter exatamente 4 dígitos numéricos.';
+      return;
+    }
+
+    const codeEntry = state.codes.find(c => c.code === code);
+    if (!codeEntry) {
+      errorEl.textContent = 'Código inválido. Verifique e tente novamente.';
+      return;
+    }
+
+    if (codeEntry.status === 'used') {
+      errorEl.textContent = 'Este código já foi utilizado.';
+      return;
+    }
+
+    // Valid code — store and show form
+    currentParticipantCode = code;
+    showParticipantFormScreen();
+  }
+
+  /** Handle participant registration form submission */
+  function handleParticipantFormSubmit(e) {
+    e.preventDefault();
+    const errorEl = $('#participant-form-error');
+    if (errorEl) errorEl.textContent = '';
+
+    const name = ($('#participant-name') || {}).value ? $('#participant-name').value.trim() : '';
+    const cpfRaw = ($('#participant-cpf') || {}).value ? $('#participant-cpf').value.trim() : '';
+    const instagram = ($('#participant-instagram') || {}).value ? $('#participant-instagram').value.trim() : '';
+    const whatsapp = ($('#participant-whatsapp') || {}).value ? $('#participant-whatsapp').value.trim() : '';
+    const nick = ($('#participant-nick') || {}).value ? $('#participant-nick').value.trim() : '';
+
+    if (!name || !cpfRaw || !whatsapp || !nick) {
+      if (errorEl) errorEl.textContent = 'Preencha todos os campos obrigatórios.';
+      return;
+    }
+
+    const cpf = cpfRaw.replace(/\D/g, '');
+    if (!isValidCPF(cpf)) {
+      if (errorEl) errorEl.textContent = 'CPF inválido. Verifique e tente novamente.';
+      return;
+    }
+
+    // Check duplicate CPF
+    if (!state.participants) state.participants = [];
+    const existingCPF = state.participants.find(p => p.cpf === cpf);
+    if (existingCPF) {
+      if (errorEl) errorEl.textContent = 'Este CPF já está cadastrado no torneio.';
+      return;
+    }
+
+    // Check duplicate nick in teams
+    const existingNick = state.teams.some(t => t.teamName.toLowerCase() === nick.toLowerCase());
+    if (existingNick) {
+      if (errorEl) errorEl.textContent = 'Este nick já está em uso. Escolha outro.';
+      return;
+    }
+
+    // Verify the code is still valid
+    const codeEntry = state.codes.find(c => c.code === currentParticipantCode);
+    if (!codeEntry || codeEntry.status === 'used') {
+      if (errorEl) errorEl.textContent = 'Código expirado ou já utilizado. Tente novamente.';
+      currentParticipantCode = null;
+      return;
+    }
+
+    const photoInput = $('#participant-photo');
+    const photoFile = photoInput && photoInput.files && photoInput.files[0];
+
+    // Disable submit to prevent double submission
+    const submitBtn = $('#participant-form button[type=\"submit\"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    function finishRegistration(photoData) {
+      const participantId = generateId();
+
+      // Save participant record
+      const participant = {
+        id: participantId,
+        code: currentParticipantCode,
+        name: name,
+        cpf: cpf,
+        instagram: instagram,
+        whatsapp: whatsapp,
+        nick: nick,
+        photo: photoData || null,
+        registeredAt: new Date().toISOString()
+      };
+      state.participants.push(participant);
+
+      // Mark code as used
+      codeEntry.status = 'used';
+      codeEntry.participantId = participantId;
+
+      // Auto-add to team list
+      const team = {
+        id: participantId,
+        teamName: nick,
+        playerName: name
+      };
+      if (photoData) team.photo = photoData;
+      state.teams.push(team);
+
+      // Save state
+      saveState();
+      currentParticipantCode = null;
+
+      if (submitBtn) submitBtn.disabled = false;
+      showToast('Cadastro realizado com sucesso! Bem-vindo ao torneio.', 'success');
+
+      // Enter as participant (viewer mode)
+      isParticipant = true;
+      showGameSelection();
+    }
+
+    if (photoFile) {
+      resizeImageToBase64(photoFile).then(finishRegistration).catch(() => finishRegistration(null));
+    } else {
+      finishRegistration(null);
+    }
+  }
+
+  /* ==========================================================
+     16g. CODE GENERATION & MANAGEMENT (ADMIN)
+     ========================================================== */
+
+  /** Generate 32 unique 4-digit codes */
+  function handleGenerateCodes() {
+    if (!state.codes) state.codes = [];
+
+    if (state.codes.length > 0) {
+      const usedCodes = state.codes.filter(c => c.status === 'used');
+      if (usedCodes.length > 0) {
+        showToast('Não é possível regerar. Existem ' + usedCodes.length + ' código(s) já utilizado(s).', 'error');
+        return;
+      }
+      if (!confirm('Já existem códigos gerados. Deseja substituí-los por novos?')) {
+        return;
+      }
+    }
+
+    const codes = new Set();
+    while (codes.size < 32) {
+      const code = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      codes.add(code);
+    }
+
+    state.codes = Array.from(codes).map(code => ({
+      code: code,
+      status: 'available',
+      participantId: null
+    }));
+
+    saveState();
+    renderCodesList();
+    showToast('32 códigos gerados com sucesso!', 'success');
+  }
+
+  /** Render the codes list in the admin sidebar */
+  function renderCodesList() {
+    const list = $('#codes-list');
+    const summary = $('#codes-summary');
+    if (!list) return;
+
+    if (!state.codes || state.codes.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--text-tertiary);font-size:13px;padding:12px 0;">Nenhum código gerado</p>';
+      if (summary) summary.innerHTML = '';
+      return;
+    }
+
+    const available = state.codes.filter(c => c.status === 'available').length;
+    const used = state.codes.filter(c => c.status === 'used').length;
+
+    if (summary) {
+      summary.innerHTML = '<div class="codes-summary-row">' +
+        '<span class="codes-stat available">' + available + ' disponíveis</span>' +
+        '<span class="codes-stat used">' + used + ' utilizados</span>' +
+        '</div>';
+    }
+
+    let html = '';
+    state.codes.forEach(function (c) {
+      const statusClass = c.status === 'used' ? 'code-used' : 'code-available';
+      const statusText = c.status === 'used' ? 'Utilizado' : 'Disponível';
+      const participant = c.participantId && state.participants
+        ? state.participants.find(function (p) { return p.id === c.participantId; })
+        : null;
+
+      html += '<div class="code-item ' + statusClass + '">' +
+        '<span class="code-value">' + sanitize(c.code) + '</span>' +
+        '<span class="code-status">' + statusText + '</span>' +
+        (participant ? '<span class="code-participant" title="' + sanitize(participant.name) + '">' + sanitize(participant.nick) + '</span>' : '') +
+        '</div>';
+    });
+
+    list.innerHTML = html;
+  }
+
+  /* ==========================================================
      17. EVENT LISTENERS
      ========================================================== */
 
@@ -1829,6 +2156,81 @@
     const profileBackdrop = $('.modal-backdrop[data-dismiss="profile-modal"]');
     if (profileBackdrop) {
       profileBackdrop.addEventListener('click', closePlayerProfile);
+    }
+
+    // ---------- PARTICIPANT FLOW ----------
+
+    // Participant button on login screen
+    const btnParticipant = $('#btn-participant');
+    if (btnParticipant) {
+      btnParticipant.addEventListener('click', handleParticipantButton);
+    }
+
+    // Code form submission
+    const codeForm = $('#code-form');
+    if (codeForm) {
+      codeForm.addEventListener('submit', handleCodeValidation);
+    }
+
+    // Code input: only allow digits
+    const codeInput = $('#participant-code');
+    if (codeInput) {
+      codeInput.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '');
+      });
+    }
+
+    // Code screen back button
+    const btnCodeBack = $('#btn-code-back');
+    if (btnCodeBack) {
+      btnCodeBack.addEventListener('click', showLoginScreen);
+    }
+
+    // Participant registration form
+    const participantForm = $('#participant-form');
+    if (participantForm) {
+      participantForm.addEventListener('submit', handleParticipantFormSubmit);
+    }
+
+    // Form screen back button
+    const btnFormBack = $('#btn-form-back');
+    if (btnFormBack) {
+      btnFormBack.addEventListener('click', function () {
+        currentParticipantCode = null;
+        showParticipantCodeScreen();
+      });
+    }
+
+    // CPF formatting
+    const cpfInput = $('#participant-cpf');
+    if (cpfInput) {
+      cpfInput.addEventListener('input', function () {
+        const pos = this.selectionStart;
+        const oldLen = this.value.length;
+        this.value = formatCPF(this.value);
+        const newLen = this.value.length;
+        this.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
+      });
+    }
+
+    // WhatsApp formatting
+    const whatsappInput = $('#participant-whatsapp');
+    if (whatsappInput) {
+      whatsappInput.addEventListener('input', function () {
+        const pos = this.selectionStart;
+        const oldLen = this.value.length;
+        this.value = formatPhone(this.value);
+        const newLen = this.value.length;
+        this.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
+      });
+    }
+
+    // ---------- CODE MANAGEMENT (ADMIN) ----------
+
+    // Generate codes button
+    const btnGenerateCodes = $('#btn-generate-codes');
+    if (btnGenerateCodes) {
+      btnGenerateCodes.addEventListener('click', handleGenerateCodes);
     }
 
     // Re-populate client select when teams change

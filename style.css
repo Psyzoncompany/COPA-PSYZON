@@ -2139,3 +2139,186 @@ svg line {
   background: rgba(0, 122, 255, 0.2);
   color: var(--text-primary);
 }
+
+/* ---------- 34. Participant Button ---------- */
+.btn-accent {
+  background: var(--accent-green);
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.btn-accent:hover {
+  background: #2db84e;
+}
+
+/* ---------- 35. Code Input ---------- */
+.code-input-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.code-input {
+  width: 200px;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.code-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+}
+
+.code-input::placeholder {
+  color: var(--text-tertiary);
+  letter-spacing: 8px;
+  font-size: 28px;
+}
+
+/* ---------- 36. Participant Form Card ---------- */
+.participant-form-card {
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ---------- 37. Codes Management ---------- */
+.codes-summary {
+  margin-top: 12px;
+}
+
+.codes-summary-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.codes-stat {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.codes-stat.available {
+  background: rgba(52, 199, 89, 0.12);
+  color: var(--accent-green);
+}
+
+.codes-stat.used {
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--accent-red);
+}
+
+.codes-list {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding-right: 4px;
+}
+
+.codes-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.codes-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.codes-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.code-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  transition: background var(--transition);
+}
+
+.code-item.code-used {
+  opacity: 0.55;
+}
+
+.code-value {
+  font-weight: 700;
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  letter-spacing: 2px;
+  min-width: 50px;
+}
+
+.code-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.code-available .code-status {
+  background: rgba(52, 199, 89, 0.12);
+  color: var(--accent-green);
+}
+
+.code-used .code-status {
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--accent-red);
+}
+
+.code-participant {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+/* ---------- 38. Participant Role Badge ---------- */
+.role-badge.participant,
+.role-badge[data-role='participant'] {
+  background: rgba(52, 199, 89, 0.12);
+  color: var(--accent-green);
+}
+
+@media (max-width: 768px) {
+  .code-input {
+    width: 180px;
+    font-size: 28px;
+    letter-spacing: 10px;
+    padding: 14px 16px;
+  }
+
+  .participant-form-card {
+    max-height: 85vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .code-input {
+    width: 160px;
+    font-size: 24px;
+    letter-spacing: 8px;
+    padding: 12px 14px;
+  }
+}
