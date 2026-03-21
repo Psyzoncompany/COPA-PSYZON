@@ -767,7 +767,7 @@ textarea::placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 220px;
+  min-width: 250px;
 }
 
 .round:not(.connector-col) {
@@ -810,7 +810,48 @@ textarea::placeholder {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition), transform var(--transition);
-  width: 220px;
+  width: 250px;
+}
+
+.match-datetime-bar {
+  display: flex;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 12px;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+#bracket-tab .match-datetime-bar {
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.match-datetime-bar.readonly {
+  justify-content: flex-start;
+  padding: 6px 12px;
+}
+
+.card-date-input,
+.card-time-input {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  font-size: 11px;
+  padding: 4px 6px;
+  outline: none;
+  font-family: inherit;
+  flex: 1;
+}
+
+#bracket-tab .card-date-input,
+#bracket-tab .card-time-input {
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  border: none;
 }
 
 .match-card:hover {

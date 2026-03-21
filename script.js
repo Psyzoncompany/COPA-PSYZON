@@ -1195,27 +1195,10 @@
     matchLabel.textContent = `Jogo ${mIdx + 1}`;
     header.appendChild(matchLabel);
 
-    // Date/time display
-    if (match.dateTime) {
-      const dtSpan = document.createElement('span');
-      dtSpan.className = 'match-datetime';
-      try {
-        const [datePart, timePart] = match.dateTime.split('T');
-        if (datePart) {
-          const [y, mo, d] = datePart.split('-');
-          const formatted = d + '/' + mo + (timePart ? ' ' + timePart : '');
-          dtSpan.textContent = formatted;
-        }
-      } catch (_) {
-        dtSpan.textContent = match.dateTime;
-      }
-      header.appendChild(dtSpan);
-    }
-
-    // Edit button (admin only, even if there's a winner)
     const bothTeams = match.team1 && match.team2;
     const canEdit = isAdmin && bothTeams;
 
+    // Edit button (admin only, even if there's a winner)
     if (canEdit) {
       const editBtn = document.createElement('button');
       editBtn.className = 'match-schedule icon-btn';
@@ -1231,6 +1214,69 @@
     }
 
     card.appendChild(header);
+
+    // DATE/TIME BAR DIRECTLY INTO CARD
+    if (canEdit && !match.winner) {
+      const dtBar = document.createElement('div');
+      dtBar.className = 'match-datetime-bar';
+      
+      const dateInp = document.createElement('input');
+      dateInp.type = 'date';
+      dateInp.className = 'card-date-input';
+      
+      const timeInp = document.createElement('input');
+      timeInp.type = 'time';
+      timeInp.className = 'card-time-input';
+
+      if (match.dateTime) {
+        const parts = match.dateTime.split('T');
+        if (parts[0] && parts[0] !== 'HOJE') dateInp.value = parts[0];
+        if (parts[1]) timeInp.value = parts[1];
+      }
+
+      const saveDateTime = () => {
+        const dVal = dateInp.value || 'HOJE';
+        const tVal = timeInp.value;
+        if (dateInp.value || timeInp.value) {
+           match.dateTime = dVal + (tVal ? 'T' + tVal : '');
+        } else {
+           match.dateTime = null;
+        }
+        saveState();
+      };
+
+      dateInp.addEventListener('change', saveDateTime);
+      // Fallback para preencher data caso digite apenas o tempo primeiro
+      timeInp.addEventListener('change', () => {
+         if (!dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
+         saveDateTime();
+      });
+
+      dtBar.appendChild(dateInp);
+      dtBar.appendChild(timeInp);
+      card.appendChild(dtBar);
+    } else if (match.dateTime) {
+      const dtBar = document.createElement('div');
+      dtBar.className = 'match-datetime-bar readonly';
+      
+      try {
+        const [datePart, timePart] = match.dateTime.split('T');
+        let formatted = '';
+        if (datePart && datePart !== 'HOJE') {
+          const parts = datePart.split('-');
+          formatted = parts.length === 3 ? `${parts[2]}/${parts[1]}` : datePart;
+        } else if (datePart === 'HOJE') {
+          formatted = 'Hoje';
+        }
+        if (timePart) {
+          formatted += (formatted ? ' às ' : '') + timePart;
+        }
+        dtBar.innerHTML = `<span style="font-size:11px;font-weight:700;color:inherit;display:flex;align-items:center;gap:4px;"><svg class="svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${formatted}</span>`;
+      } catch (_) {
+        dtBar.textContent = match.dateTime;
+      }
+      card.appendChild(dtBar);
+    }
 
     // Team 1 slot
     card.appendChild(createTeamSlot(match.team1, match, 1));
@@ -1491,7 +1537,7 @@
     const timeInput = $('#modal-match-time');
     if (match.dateTime) {
       const parts = match.dateTime.split('T');
-      if (dateInput) dateInput.value = parts[0] || '';
+      if (dateInput) dateInput.value = (parts[0] === 'HOJE') ? '' : (parts[0] || '');
       if (timeInput) timeInput.value = parts[1] || '';
     } else {
       if (dateInput) dateInput.value = '';
@@ -1589,8 +1635,10 @@
     // Save date/time
     const matchDateVal = ($('#modal-match-date') || {}).value || '';
     const matchTimeVal = ($('#modal-match-time') || {}).value || '';
-    if (matchDateVal) {
-      match.dateTime = matchDateVal + (matchTimeVal ? 'T' + matchTimeVal : '');
+    if (matchDateVal || matchTimeVal) {
+      match.dateTime = (matchDateVal || 'HOJE') + (matchTimeVal ? 'T' + matchTimeVal : '');
+    } else {
+      match.dateTime = null;
     }
 
     // --- REVERT OLD STATS IF EDITING ---
