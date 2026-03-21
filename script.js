@@ -593,6 +593,13 @@
 
   /** Toggle login form visibility with slide animation */
   function toggleLoginForm() {
+    const rememberCheck = $('#remember-choice');
+    if (rememberCheck && rememberCheck.checked) {
+      try { localStorage.setItem(REMEMBER_KEY, 'admin_form'); } catch (_) { /* ignore */ }
+    } else {
+      try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+    }
+
     const form = $('#login-form');
     if (!form) return;
     if (form.style.display === 'none' || !form.style.display) {
@@ -2325,7 +2332,7 @@
         ? '<img src="' + sanitize(r.photo) + '" alt="">'
         : '<span class="av-placeholder" style="font-size:12px;">' + sanitize(initials(r.name)) + '</span>';
 
-      html += '<tr class="' + posClass + '" onclick="openPlayerProfile(\'' + sanitize(r.id) + '\')">' +
+      html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
         '<td class="col-pos">' + (i + 1) + 'º</td>' +
         '<td class="col-player">' +
         '<div class="ranking-avatar">' + avatarHtml + '</div>' +
@@ -2340,6 +2347,15 @@
     });
 
     tbody.innerHTML = html;
+
+    // Vincula o evento localmente (pois métodos não estão no window/escopo global)
+    const rows = tbody.querySelectorAll('tr[data-team-id]');
+    rows.forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.getAttribute('data-team-id');
+        openPlayerProfile(id);
+      });
+    });
   }
 
   /* ==========================================================
@@ -2410,6 +2426,13 @@
 
   /** Handle PARTICIPANTE button click on login screen */
   function handleParticipantButton() {
+    const rememberCheck = $('#remember-choice');
+    if (rememberCheck && rememberCheck.checked) {
+      try { localStorage.setItem(REMEMBER_KEY, 'participant'); } catch (_) { /* ignore */ }
+    } else {
+      try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+    }
+
     // Load state to check for codes
     if (state.codes.length === 0) {
       showToast('Nenhum código disponível no momento. Aguarde o organizador.', 'info');
@@ -2960,6 +2983,16 @@
     if (codeForm) {
       codeForm.addEventListener('submit', handleCodeValidation);
     }
+    
+    // Back button in Code Screen
+    const btnCodeBack = $('#btn-code-back');
+    if (btnCodeBack) {
+      btnCodeBack.addEventListener('click', () => {
+        try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+        currentParticipantCode = null;
+        showLoginScreen();
+      });
+    }
 
     // Code input: only allow digits
     const codeInput = $('#participant-code');
@@ -2969,11 +3002,6 @@
       });
     }
 
-    // Code screen back button
-    const btnCodeBack = $('#btn-code-back');
-    if (btnCodeBack) {
-      btnCodeBack.addEventListener('click', showLoginScreen);
-    }
 
     // Participant registration form
     const participantForm = $('#participant-form');
@@ -3105,6 +3133,21 @@
           isAdmin = false;
           currentUser = null;
           showGameSelection();
+          return;
+        } else if (remembered === 'participant') {
+          isAdmin = false;
+          currentUser = null;
+          showParticipantCodeScreen();
+          return;
+        } else if (remembered === 'admin_form') {
+          isAdmin = false;
+          currentUser = null;
+          showLoginScreen();
+          const form = $('#login-form');
+          if (form) {
+            form.style.display = 'block';
+            form.style.animation = 'none';
+          }
           return;
         }
       } catch (_) { /* ignore */ }
