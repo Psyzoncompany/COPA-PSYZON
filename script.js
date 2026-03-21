@@ -1117,8 +1117,7 @@
     const nextCards = nextRound.querySelectorAll('.match-card');
     if (prevCards.length === 0 || nextCards.length === 0) return;
 
-    const bracketRect = bracket.getBoundingClientRect();
-    const colRect = col.getBoundingClientRect();
+    const svgWrapRect = svgWrap.getBoundingClientRect();
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'bracket-svg');
@@ -1126,11 +1125,10 @@
     svg.style.top = '0';
     svg.style.left = '0';
     svg.style.width = '100%';
-    svg.style.height = col.offsetHeight + 'px';
+    svg.style.height = svgWrap.offsetHeight + 'px';
     svg.style.overflow = 'visible';
 
-    const colLeft = colRect.left;
-    const colWidth = colRect.width;
+    const colWidth = svgWrap.offsetWidth;
 
     for (let i = 0; i < prevCards.length; i += 2) {
       const nextIdx = Math.floor(i / 2);
@@ -1146,10 +1144,10 @@
       const r2 = card2.getBoundingClientRect();
       const rt = target.getBoundingClientRect();
 
-      // Y positions relative to the column
-      const y1 = r1.top + r1.height / 2 - colRect.top;
-      const y2 = r2.top + r2.height / 2 - colRect.top;
-      const yt = rt.top + rt.height / 2 - colRect.top;
+      // Y positions relative to the svg container
+      const y1 = r1.top + r1.height / 2 - svgWrapRect.top;
+      const y2 = r2.top + r2.height / 2 - svgWrapRect.top;
+      const yt = rt.top + rt.height / 2 - svgWrapRect.top;
 
       const midX = colWidth / 2;
 
@@ -1851,7 +1849,13 @@
 
   /** Reset tournament (bracket + champion only, keep teams) */
   function handleReset() {
-    if (!confirm('Tem certeza que deseja resetar o torneio? O chaveamento e resultados serão apagados.')) {
+    const pwd = prompt('Para DESCARTAR/CANCELAR este torneio atual, digite a senha:');
+    if (pwd !== '451021') {
+      if (pwd !== null) showToast('Senha incorreta. Procedimento de exclusão cancelado.', 'error');
+      return;
+    }
+
+    if (!confirm('Tem certeza que deseja DELETAR o torneio? O chaveamento e resultados ativos vão sumir!')) {
       return;
     }
 
@@ -2117,6 +2121,12 @@
 
   function handleFinishTournament() {
     if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) return;
+
+    const pwd = prompt('Para ENCERRAR E SALVAR o torneio no histórico, digite a senha:');
+    if (pwd !== '451021') {
+      if (pwd !== null) showToast('Senha incorreta. Não foi possível encerrar.', 'error');
+      return;
+    }
 
     if (!state.champion) {
       if (!confirm('Este torneio ainda NÃO tem um Campeão definido. Tem certeza que deseja encerrar de forma incompleta e salvar no histórico?')) return;

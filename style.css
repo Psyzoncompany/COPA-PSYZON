@@ -696,7 +696,7 @@ textarea::placeholder {
 .bracket {
   display: flex;
   gap: 0;
-  align-items: flex-start;
+  align-items: stretch;
   min-width: fit-content;
   padding: 0 12px 20px;
 }
@@ -941,10 +941,10 @@ textarea::placeholder {
 }
 
 .bracket-svg line,
-.connector-col svg line,
-svg line {
-  stroke: var(--border-color);
-  stroke-width: 1.5;
+.connector-col svg line {
+  stroke: var(--text-tertiary);
+  stroke-width: 2;
+  opacity: 0.6;
 }
 
 /* ---------- 16. Modal ---------- */
