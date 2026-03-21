@@ -421,6 +421,10 @@
     if (codeScreen) codeScreen.style.display = 'none';
     if (formScreen) formScreen.style.display = 'none';
 
+    // Show main tabs
+    const mainTabs = $('#main-tabs');
+    if (mainTabs) mainTabs.style.display = 'flex';
+
     // Role badge
     const badge = $('#role-badge');
     if (badge) {
@@ -737,17 +741,45 @@
    * @param {string} id
    */
   function removeTeam(id) {
-    if (state.bracket) {
-      showToast('Não é possível remover times com torneio ativo.', 'error');
-      return;
-    }
     const team = state.teams.find((t) => t.id === id);
+    if (!team) return;
+
+    // Remover do state.teams
     state.teams = state.teams.filter((t) => t.id !== id);
+
+    // Se estiver no bracket, remover de lá também
+    if (state.bracket && state.bracket.rounds) {
+      state.bracket.rounds.forEach(r => {
+        r.matches.forEach(m => {
+          if (m.team1 && m.team1.playerName === team.playerName) m.team1 = null;
+          if (m.team2 && m.team2.playerName === team.playerName) m.team2 = null;
+        });
+      });
+    }
+
+    // Gerar um novo código no lugar se o time for associado a um código usado
+    if (state.codes) {
+      const codeIndex = state.codes.findIndex(c => c.participantId === id);
+      if (codeIndex !== -1) {
+        // Gerar um código novo que não existe ainda
+        let newCode;
+        do {
+          newCode = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        } while (state.codes.some(c => c.code === newCode));
+
+        state.codes[codeIndex] = {
+          code: newCode,
+          status: 'available',
+          participantId: null
+        };
+      }
+    }
+
     saveState();
     renderTeamList();
-    if (team) {
-      showToast(`Time "${team.teamName}" removido.`, 'info');
-    }
+    if (state.bracket) renderBracket();
+    if (isAdmin) renderCodesList();
+    showToast(`Time "${team.teamName}" removido. Código novo gerado (se era participante).`, 'info');
   }
 
   /** Render the team list in sidebar */
@@ -765,7 +797,7 @@
     let html = `<p style="font-size:12px;color:var(--text-tertiary);margin-bottom:8px;font-weight:600;">${state.teams.length}/${maxTeams} times cadastrados</p>`;
 
     state.teams.forEach((team) => {
-      const canDelete = !state.bracket;
+      // Sempre pode deletar agora
       html += `
         <div class="team-item" data-id="${sanitize(team.id)}">
           <div class="team-item-info">
@@ -775,7 +807,7 @@
               <div style="font-size:12px;color:var(--text-secondary);">${sanitize(team.playerName)}</div>
             </div>
           </div>
-          ${canDelete ? `<button type="button" class="btn-remove-team icon-btn" data-team-id="${sanitize(team.id)}" title="Remover time" aria-label="Remover time"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>` : ''}
+          <button type="button" class="btn-remove-team icon-btn" data-team-id="${sanitize(team.id)}" title="Remover time" aria-label="Remover time"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>`;
     });
 
@@ -1119,18 +1151,18 @@
       header.appendChild(dtSpan);
     }
 
-    // Edit button (admin only, both teams present, no winner yet)
+    // Edit button (admin only, even if there's a winner)
     const bothTeams = match.team1 && match.team2;
-    const canEdit = isAdmin && bothTeams && !match.winner;
+    const canEdit = isAdmin && bothTeams;
 
     if (canEdit) {
       const editBtn = document.createElement('button');
       editBtn.className = 'match-schedule icon-btn';
       editBtn.type = 'button';
-      editBtn.innerHTML = SVG.pencil + ' Resultado';
+      editBtn.innerHTML = SVG.pencil + (match.winner ? ' Editar' : ' Resultado');
       editBtn.addEventListener('click', () => openScoreModal(rIdx, mIdx));
       header.appendChild(editBtn);
-    } else if (match.winner) {
+    } else if (match.winner && !isAdmin) {
       const doneSpan = document.createElement('span');
       doneSpan.style.cssText = 'font-size:11px;color:var(--accent-green);font-weight:600;';
       doneSpan.innerHTML = SVG.checkCircle + ' Finalizado';
@@ -1156,16 +1188,36 @@
     return card;
   }
 
-  /**
-   * Create a team slot inside a match card.
-   * @param {object|null} team
-   * @param {object} match
-   * @param {1|2} teamNum
-   * @returns {HTMLElement}
-   */
   function createTeamSlot(team, match, teamNum) {
     const slot = document.createElement('div');
     slot.className = 'match-team';
+    
+    // Configurações de Drag and Drop se for organizador e não tiver vencedor ainda
+    if (isAdmin) {
+      slot.classList.add('droppable-slot');
+      
+      slot.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        slot.classList.add('drag-over');
+      });
+      slot.addEventListener('dragleave', (e) => {
+        slot.classList.remove('drag-over');
+      });
+      slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        const draggedDataStr = e.dataTransfer.getData('application/json');
+        if (!draggedDataStr) return;
+        
+        try {
+          const draggedInfo = JSON.parse(draggedDataStr);
+          // Efetuar a troca de times
+          swapTeamsInBracket(draggedInfo, { matchId: match.id, teamNum });
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
 
     if (!team) {
       // TBD slot
@@ -1174,6 +1226,18 @@
       nameSpan.textContent = 'A definir';
       slot.appendChild(nameSpan);
       return slot;
+    }
+
+    if (isAdmin) {
+      slot.draggable = true;
+      slot.addEventListener('dragstart', (e) => {
+        const dragData = { matchId: match.id, teamNum };
+        e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+        setTimeout(() => slot.classList.add('dragging'), 0);
+      });
+      slot.addEventListener('dragend', () => {
+        slot.classList.remove('dragging');
+      });
     }
 
     // Winner/loser styling
@@ -1384,15 +1448,26 @@
       match.dateTime = matchDateVal + (matchTimeVal ? 'T' + matchTimeVal : '');
     }
 
-    // Update match
+    // --- REVERT OLD STATS IF EDITING ---
+    if (match.statsApplied) {
+      revertMatchStats(match);
+    }
+
+    // --- UPDATE MATCH ---
     match.team1.score = score1;
     match.team2.score = score2;
     match.winner = winnerNum;
     match.penalties = penalties;
 
+    const totalRounds = state.bracket.rounds.length;
+
+    // --- APPLY NEW STATS ---
+    const isFinal = rIdx === totalRounds - 1;
+    const isSemi = rIdx === totalRounds - 2;
+    applyMatchStats(match, isSemi, isFinal);
+
     // Advance winner to next round
     const winnerTeam = winnerNum === 1 ? match.team1 : match.team2;
-    const totalRounds = state.bracket.rounds.length;
 
     if (rIdx < totalRounds - 1) {
       // Determine slot in next round
@@ -1407,8 +1482,6 @@
     }
 
     // Check if this was the final
-    const isFinal = rIdx === totalRounds - 1;
-
     saveState();
     closeScoreModal();
     renderBracket();
@@ -1418,11 +1491,134 @@
         teamName: winnerTeam.teamName,
         playerName: winnerTeam.playerName
       };
-      saveState();
+      
       showChampionCelebration();
     } else {
       showToast('Resultado registrado!', 'success');
     }
+  }
+
+  /** Initialize missing stats for a team ID */
+  function ensureStats(teamId) {
+    if (!state.playerStats) state.playerStats = {};
+    if (!state.playerStats[teamId]) {
+      state.playerStats[teamId] = { trophies: 0, finals: 0, semifinals: 0, goals: 0, goalsTaken: 0, goalDiff: 0 };
+    } else {
+      if (typeof state.playerStats[teamId].goals === 'undefined') state.playerStats[teamId].goals = 0;
+      if (typeof state.playerStats[teamId].goalsTaken === 'undefined') state.playerStats[teamId].goalsTaken = 0;
+      if (typeof state.playerStats[teamId].goalDiff === 'undefined') state.playerStats[teamId].goalDiff = 0;
+    }
+  }
+
+  /** Revert applied match stats */
+  function revertMatchStats(match) {
+    const s = match.statsApplied;
+    if (!s) return;
+    
+    // Finds teamID based on playerName and teamName in state.teams
+    const t1 = state.teams.find(t => match.team1 && t.playerName === match.team1.playerName && t.teamName === match.team1.teamName);
+    const t2 = state.teams.find(t => match.team2 && t.playerName === match.team2.playerName && t.teamName === match.team2.teamName);
+
+    if (t1) {
+      ensureStats(t1.id);
+      state.playerStats[t1.id].goals -= s.t1Score;
+      state.playerStats[t1.id].goalsTaken -= s.t2Score;
+      state.playerStats[t1.id].goalDiff = state.playerStats[t1.id].goals - state.playerStats[t1.id].goalsTaken;
+      if (s.isSemi) state.playerStats[t1.id].semifinals = Math.max(0, state.playerStats[t1.id].semifinals - 1);
+      if (s.isFinal) state.playerStats[t1.id].finals = Math.max(0, state.playerStats[t1.id].finals - 1);
+      if (s.isFinal && s.winner === 1) state.playerStats[t1.id].trophies = Math.max(0, state.playerStats[t1.id].trophies - 1);
+    }
+    
+    if (t2) {
+      ensureStats(t2.id);
+      state.playerStats[t2.id].goals -= s.t2Score;
+      state.playerStats[t2.id].goalsTaken -= s.t1Score;
+      state.playerStats[t2.id].goalDiff = state.playerStats[t2.id].goals - state.playerStats[t2.id].goalsTaken;
+      if (s.isSemi) state.playerStats[t2.id].semifinals = Math.max(0, state.playerStats[t2.id].semifinals - 1);
+      if (s.isFinal) state.playerStats[t2.id].finals = Math.max(0, state.playerStats[t2.id].finals - 1);
+      if (s.isFinal && s.winner === 2) state.playerStats[t2.id].trophies = Math.max(0, state.playerStats[t2.id].trophies - 1);
+    }
+
+    match.statsApplied = null;
+  }
+
+  /** Apply match stats */
+  function applyMatchStats(match, isSemi, isFinal) {
+    const t1 = state.teams.find(t => match.team1 && t.playerName === match.team1.playerName && t.teamName === match.team1.teamName);
+    const t2 = state.teams.find(t => match.team2 && t.playerName === match.team2.playerName && t.teamName === match.team2.teamName);
+
+    match.statsApplied = {
+      t1Score: match.team1.score,
+      t2Score: match.team2.score,
+      isSemi: isSemi,
+      isFinal: isFinal,
+      winner: match.winner
+    };
+
+    if (t1) {
+      ensureStats(t1.id);
+      state.playerStats[t1.id].goals += match.team1.score;
+      state.playerStats[t1.id].goalsTaken += match.team2.score;
+      state.playerStats[t1.id].goalDiff = state.playerStats[t1.id].goals - state.playerStats[t1.id].goalsTaken;
+      if (isSemi) state.playerStats[t1.id].semifinals += 1;
+      if (isFinal) state.playerStats[t1.id].finals += 1;
+      if (isFinal && match.winner === 1) state.playerStats[t1.id].trophies += 1;
+    }
+
+    if (t2) {
+      ensureStats(t2.id);
+      state.playerStats[t2.id].goals += match.team2.score;
+      state.playerStats[t2.id].goalsTaken += match.team1.score;
+      state.playerStats[t2.id].goalDiff = state.playerStats[t2.id].goals - state.playerStats[t2.id].goalsTaken;
+      if (isSemi) state.playerStats[t2.id].semifinals += 1;
+      if (isFinal) state.playerStats[t2.id].finals += 1;
+      if (isFinal && match.winner === 2) state.playerStats[t2.id].trophies += 1;
+    }
+  }
+
+  /** Troca dois times de posição no chaveamento (Drag and Drop) */
+  function swapTeamsInBracket(source, target) {
+    if (!state.bracket || !state.bracket.rounds) return;
+    
+    let sourceMatch = null;
+    let targetMatch = null;
+
+    state.bracket.rounds.forEach(r => {
+      r.matches.forEach(m => {
+        if (m.id === source.matchId) sourceMatch = m;
+        if (m.id === target.matchId) targetMatch = m;
+      });
+    });
+
+    if (!sourceMatch || !targetMatch) return;
+
+    // Obter referências aos times
+    const teamA = source.teamNum === 1 ? sourceMatch.team1 : sourceMatch.team2;
+    const teamB = target.teamNum === 1 ? targetMatch.team1 : targetMatch.team2;
+
+    // Realizar a troca
+    if (source.teamNum === 1) sourceMatch.team1 = teamB;
+    else sourceMatch.team2 = teamB;
+
+    if (target.teamNum === 1) targetMatch.team1 = teamA;
+    else targetMatch.team2 = teamA;
+
+    // Resetar os resultados se alguém foi movido (opcional)
+    sourceMatch.winner = null;
+    sourceMatch.penalties = null;
+    if (sourceMatch.team1) sourceMatch.team1.score = null;
+    if (sourceMatch.team2) sourceMatch.team2.score = null;
+
+    if (sourceMatch !== targetMatch) {
+      targetMatch.winner = null;
+      targetMatch.penalties = null;
+      if (targetMatch.team1) targetMatch.team1.score = null;
+      if (targetMatch.team2) targetMatch.team2.score = null;
+    }
+
+    saveState();
+    renderBracket();
+    showToast('Times trocados com sucesso!', 'info');
   }
 
   /* ==========================================================
@@ -1732,9 +1928,16 @@
     const trEl = $('#profile-trophies');
     const fiEl = $('#profile-finals');
     const sfEl = $('#profile-semifinals');
+    const glEl = $('#profile-goals');
+    const gTakenEl = $('#profile-goals-taken');
+    const gDiffEl = $('#profile-goal-diff');
+
     if (trEl) trEl.textContent = stats.trophies || 0;
     if (fiEl) fiEl.textContent = stats.finals || 0;
     if (sfEl) sfEl.textContent = stats.semifinals || 0;
+    if (glEl) glEl.textContent = stats.goals || 0;
+    if (gTakenEl) gTakenEl.textContent = stats.goalsTaken || 0;
+    if (gDiffEl) gDiffEl.textContent = stats.goalDiff || 0;
 
     modal.style.display = 'flex';
   }
@@ -1814,6 +2017,94 @@
   }
 
   /* ==========================================================
+     16fa. RANKING TABLE RENDERING
+     ========================================================== */
+
+  function renderRankingTable() {
+    const tbody = $('#ranking-tbody');
+    if (!tbody) return;
+
+    if (!state.playerStats) state.playerStats = {};
+    const ranked = [];
+
+    // Participants from invitations
+    if (state.participants) {
+      state.participants.forEach(p => {
+        const stats = state.playerStats[p.id] || {};
+        ranked.push({
+          id: p.id,
+          name: p.name,
+          nick: p.nick,
+          photo: p.photo,
+          trophies: stats.trophies || 0,
+          finals: stats.finals || 0,
+          semifinals: stats.semifinals || 0,
+          goals: stats.goals || 0,
+          goalDiff: stats.goalDiff || 0
+        });
+      });
+    }
+
+    // Teams created manually
+    if (state.teams) {
+      state.teams.forEach(t => {
+        if (!ranked.some(r => r.id === t.id)) {
+          const stats = state.playerStats[t.id] || {};
+          ranked.push({
+            id: t.id,
+            name: t.playerName,
+            nick: t.teamName,
+            photo: t.photo,
+            trophies: stats.trophies || 0,
+            finals: stats.finals || 0,
+            semifinals: stats.semifinals || 0,
+            goals: stats.goals || 0,
+            goalDiff: stats.goalDiff || 0
+          });
+        }
+      });
+    }
+
+    if (ranked.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-tertiary);">Nenhum jogador registrado ainda.</td></tr>';
+      return;
+    }
+
+    // Sorting algorithm: Trophies > Finals > Semifinals > GoalDiff > Goals > Alphabetic
+    ranked.sort((a, b) => {
+      if (b.trophies !== a.trophies) return b.trophies - a.trophies;
+      if (b.finals !== a.finals) return b.finals - a.finals;
+      if (b.semifinals !== a.semifinals) return b.semifinals - a.semifinals;
+      if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+      if (b.goals !== a.goals) return b.goals - a.goals;
+      return a.name.localeCompare(b.name);
+    });
+
+    let html = '';
+    ranked.forEach((r, i) => {
+      const posClass = i < 3 ? 'pos-' + (i + 1) : '';
+      const avatarHtml = r.photo
+        ? '<img src="' + sanitize(r.photo) + '" alt="">'
+        : '<span class="av-placeholder" style="font-size:12px;">' + sanitize(initials(r.name)) + '</span>';
+
+      html += '<tr class="' + posClass + '" onclick="openPlayerProfile(\'' + sanitize(r.id) + '\')">' +
+        '<td class="col-pos">' + (i + 1) + 'º</td>' +
+        '<td class="col-player">' +
+        '<div class="ranking-avatar">' + avatarHtml + '</div>' +
+        '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
+        '</td>' +
+        '<td class="col-titulos">' + r.trophies + '</td>' +
+        '<td class="col-stats">' + r.finals + '</td>' +
+        '<td class="col-stats">' + r.semifinals + '</td>' +
+        '<td class="col-stats">' + r.goals + '</td>' +
+        '<td class="col-stats">' + r.goalDiff + '</td>' +
+        '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  /* ==========================================================
      16f. PARTICIPANT FLOW — CODE VALIDATION & REGISTRATION
      ========================================================== */
 
@@ -1836,9 +2127,32 @@
     if (errorEl) errorEl.textContent = '';
   }
 
+  /** Show participant CPF check screen */
+  function showParticipantCPFCheckScreen() {
+    const screens = ['login-screen', 'game-selection-screen', 'participant-code-screen', 'participant-form-screen'];
+    screens.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const mainApp = $('#main-app');
+    if (mainApp) mainApp.style.display = 'none';
+
+    const checkScreen = $('#participant-cpf-check-screen');
+    if (checkScreen) checkScreen.style.display = '';
+
+    const cpfSec = $('#returning-cpf-section');
+    if (cpfSec) cpfSec.style.display = 'none';
+
+    const cpfInput = $('#returning-cpf');
+    if (cpfInput) { cpfInput.value = ''; }
+    
+    const errorEl = $('#returning-cpf-error');
+    if (errorEl) errorEl.textContent = '';
+  }
+
   /** Show participant registration form */
   function showParticipantFormScreen() {
-    const screens = ['login-screen', 'game-selection-screen', 'participant-code-screen'];
+    const screens = ['login-screen', 'game-selection-screen', 'participant-code-screen', 'participant-cpf-check-screen'];
     screens.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -1892,9 +2206,69 @@
       return;
     }
 
-    // Valid code — store and show form
+    // Valid code — store and show CPF check
     currentParticipantCode = code;
-    showParticipantFormScreen();
+    showParticipantCPFCheckScreen();
+  }
+
+  /** Handle Returning Participant Search */
+  function handleReturningCpfSearch(e) {
+    e.preventDefault();
+    const input = $('#returning-cpf');
+    const errorEl = $('#returning-cpf-error');
+    if (!input || !errorEl) return;
+    
+    errorEl.textContent = '';
+    const cpfRaw = input.value.trim();
+    if (!cpfRaw) return;
+
+    const cpf = cpfRaw.replace(/\D/g, '');
+    if (!isValidCPF(cpf)) {
+      errorEl.textContent = 'CPF inválido.';
+      return;
+    }
+
+    if (!state.participants) state.participants = [];
+    const existing = state.participants.find(p => p.cpf === cpf);
+    if (!existing) {
+      errorEl.textContent = 'Participante não encontrado com este CPF.';
+      return;
+    }
+
+    // Verifica se já não tá no torneio
+    if (state.teams.some(t => t.id === existing.id)) {
+      errorEl.textContent = 'Este jogador já está registrado na etapa atual.';
+      return;
+    }
+
+    // Verify code still valid
+    const codeEntry = state.codes.find(c => c.code === currentParticipantCode);
+    if (!codeEntry || codeEntry.status === 'used') {
+      errorEl.textContent = 'Código expirado ou já utilizado.';
+      return;
+    }
+
+    // Link the returning player as a team
+    state.teams.push({
+      id: existing.id,
+      teamName: existing.nick,
+      playerName: existing.name,
+      photo: existing.photo || null
+    });
+
+    // Update code to used
+    codeEntry.status = 'used';
+    codeEntry.participantId = existing.id;
+
+    saveState();
+    renderTeamList();
+    
+    // Hide registration and show main screen in view mode
+    const checkScreen = $('#participant-cpf-check-screen');
+    if (checkScreen) checkScreen.style.display = 'none';
+    startMainApp();
+    
+    showToast(`Bem-vindo de volta, ${existing.name}!`, 'success');
   }
 
   /** Handle participant registration form submission */
@@ -2278,6 +2652,27 @@
       profileBackdrop.addEventListener('click', closePlayerProfile);
     }
 
+    // ---------- MAIN TABS NAVIGATION ----------
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Remover classe ativa de todos botões e abas
+        tabBtns.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        
+        // Adicionar classe ativa
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        const target = $('#' + targetId);
+        if (target) target.style.display = 'block';
+
+        // Renderizar dinamicamente se for para aba de Ranking
+        if (targetId === 'ranking-tab') {
+          renderRankingTable();
+        }
+      });
+    });
+
     // ---------- PARTICIPANT FLOW ----------
 
     // Participant button on login screen
@@ -2316,12 +2711,51 @@
     const btnFormBack = $('#btn-form-back');
     if (btnFormBack) {
       btnFormBack.addEventListener('click', function () {
+        showParticipantCPFCheckScreen();
+      });
+    }
+
+    // ---------- NOVO: PARTICIPANT CPF FLOW ----------
+    const btnReturningPlayer = $('#btn-returning-player');
+    if (btnReturningPlayer) {
+      btnReturningPlayer.addEventListener('click', () => {
+        const cpfSec = $('#returning-cpf-section');
+        if (cpfSec) cpfSec.style.display = '';
+        const rfInput = $('#returning-cpf');
+        if (rfInput) rfInput.focus();
+      });
+    }
+
+    const btnNewPlayer = $('#btn-new-player');
+    if (btnNewPlayer) {
+      btnNewPlayer.addEventListener('click', showParticipantFormScreen);
+    }
+
+    const btnCpfCheckBack = $('#btn-cpf-check-back');
+    if (btnCpfCheckBack) {
+      btnCpfCheckBack.addEventListener('click', () => {
         currentParticipantCode = null;
         showParticipantCodeScreen();
       });
     }
 
-    // CPF formatting
+    const returningCpfForm = $('#returning-cpf-form');
+    if (returningCpfForm) {
+      returningCpfForm.addEventListener('submit', handleReturningCpfSearch);
+    }
+    
+    const returningCpfInput = $('#returning-cpf');
+    if (returningCpfInput) {
+      returningCpfInput.addEventListener('input', function () {
+        const pos = this.selectionStart;
+        const oldLen = this.value.length;
+        this.value = formatCPF(this.value);
+        const newLen = this.value.length;
+        this.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
+      });
+    }
+
+    // CPF formatting (New Participant Form)
     const cpfInput = $('#participant-cpf');
     if (cpfInput) {
       cpfInput.addEventListener('input', function () {

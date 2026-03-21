@@ -24,19 +24,9 @@
     <div class="login-card">
       <!-- Branding -->
       <div class="login-branding">
-        <span class="login-emoji"><svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-            <path d="M2 12h20" />
-          </svg><svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-            <path d="M4 22h16" />
-            <path
-              d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-          </svg></span>
+        <div class="login-logo-circle">
+          <img src="img/psyzon-logo.png" alt="Logo COPA PSYZON">
+        </div>
         <h1 class="login-title">COPA PSYZON</h1>
         <p class="login-subtitle">Torneio Eliminatório</p>
       </div>
@@ -105,6 +95,9 @@
   <section id="game-selection-screen" class="login-screen" style="display:none;">
     <div class="login-card game-selection-card">
       <div class="login-branding">
+        <div class="login-logo-circle login-logo-sm">
+          <img src="img/psyzon-logo.png" alt="Logo COPA PSYZON">
+        </div>
         <h1 class="login-title">COPA PSYZON</h1>
         <p class="login-subtitle">Escolha o jogo</p>
       </div>
@@ -182,18 +175,56 @@
   <!-- ============================================
        1d. PARTICIPANT REGISTRATION FORM
        ============================================ -->
+  <!-- 1d-a. PARTICIPANT CPF CHECK SCREEN -->
+  <section id="participant-cpf-check-screen" class="login-screen" style="display:none;">
+    <div class="login-card">
+      <div class="login-branding">
+        <div class="login-logo-circle login-logo-sm">
+          <img src="img/psyzon-logo.png" alt="Logo COPA PSYZON">
+        </div>
+        <h1 class="login-title">Participante</h1>
+        <p class="login-subtitle">Você já participou de um torneio anterior?</p>
+      </div>
+      <div class="cpf-check-options">
+        <button type="button" id="btn-returning-player" class="btn btn-primary btn-block">
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          </svg> JÁ PARTICIPEI
+        </button>
+        <button type="button" id="btn-new-player" class="btn btn-accent btn-block">
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>
+          </svg> SOU NOVO
+        </button>
+      </div>
+      <!-- Returning player CPF input -->
+      <div id="returning-cpf-section" style="display:none;margin-top:20px;">
+        <form id="returning-cpf-form" autocomplete="off">
+          <div class="form-group">
+            <label for="returning-cpf">Digite seu CPF</label>
+            <input type="text" id="returning-cpf" placeholder="000.000.000-00" required maxlength="14" inputmode="numeric">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">BUSCAR CADASTRO</button>
+          <p id="returning-cpf-error" class="login-error" role="alert"></p>
+        </form>
+      </div>
+      <button type="button" id="btn-cpf-check-back" class="btn btn-outline btn-block" style="margin-top:12px;">
+        <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg> Voltar
+      </button>
+    </div>
+  </section>
+
+  <!-- 1d-b. PARTICIPANT REGISTRATION FORM -->
   <section id="participant-form-screen" class="login-screen" style="display:none;">
     <div class="login-card participant-form-card">
       <div class="login-branding">
-        <span class="login-emoji">
-          <svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <line x1="19" x2="19" y1="8" y2="14" />
-            <line x1="22" x2="16" y1="11" y2="11" />
-          </svg>
-        </span>
+        <div class="login-logo-circle login-logo-sm">
+          <img src="img/psyzon-logo.png" alt="Logo COPA PSYZON">
+        </div>
         <h1 class="login-title">Cadastro</h1>
         <p class="login-subtitle">Preencha seus dados para participar do torneio</p>
       </div>
@@ -263,12 +294,7 @@
             <line x1="4" x2="20" y1="12" y2="12" />
             <line x1="4" x2="20" y1="18" y2="18" />
           </svg></button>
-        <h1 class="header-logo"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-            <path d="M2 12h20" />
-          </svg> COPA PSYZON</h1>
+        <h1 class="header-logo"><img src="img/psyzon-logo.png" alt="Logo" class="header-logo-img"> COPA PSYZON</h1>
       </div>
       <div class="header-right">
         <span id="role-badge" class="role-badge">VISITANTE</span>
@@ -469,14 +495,7 @@
 
         <!-- Prize Display Banner -->
         <div id="prize-display" class="prize-display" style="display:none;">
-          <span class="prize-icon"><svg class="svg-icon svg-icon-prize" width="40" height="40" viewBox="0 0 24 24"
-              fill="none" stroke="#af8a2e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path
-                d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
-              <path d="M11 12 5.12 2.2M13 12l5.88-9.8M8 7h8" />
-              <circle cx="12" cy="17" r="5" fill="#FFD700" stroke="#af8a2e" />
-              <path d="M12 18v-2h-.5" />
-            </svg></span>
+          <span class="prize-icon"><img src="img/trofeu.png.png" alt="Troféu" class="prize-trophy-img"></span>
           <p id="prize-text" class="prize-text"></p>
         </div>
 
@@ -496,19 +515,51 @@
           <ol id="top3-list" class="top3-list"></ol>
         </div>
 
-        <!-- Bracket -->
-        <div id="bracket-container" class="bracket-container"></div>
+        <!-- Main Tabs -->
+        <div id="main-tabs" class="tabs-container" style="display:none;">
+          <button type="button" class="tab-btn active" data-tab="bracket-tab">Chaveamento</button>
+          <button type="button" class="tab-btn" data-tab="ranking-tab">Tabela de Ranking</button>
+        </div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="empty-state">
-          <span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              <path d="M2 12h20" />
-            </svg></span>
-          <p class="empty-title">Nenhum torneio ativo</p>
-          <p class="empty-subtitle">Configure os times e gere o chaveamento para começar.</p>
+        <!-- Tab Contents -->
+        <div id="bracket-tab" class="tab-content active">
+          <!-- Bracket -->
+          <div id="bracket-container" class="bracket-container"></div>
+          
+          <!-- Empty State -->
+          <div id="empty-state" class="empty-state" style="display:none;">
+            <span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                <path d="M2 12h20" />
+              </svg></span>
+            <p class="empty-title">Nenhum torneio ativo</p>
+            <p class="empty-subtitle">Configure os times e gere o chaveamento para começar.</p>
+          </div>
+        </div>
+
+        <div id="ranking-tab" class="tab-content" style="display:none;">
+          <div class="ranking-card">
+            <div class="table-responsive">
+              <table class="ranking-table">
+                <thead>
+                  <tr>
+                    <th class="col-pos">POS</th>
+                    <th class="col-player">JOGADOR</th>
+                    <th class="col-titulos" title="Títulos">TIT</th>
+                    <th class="col-stats" title="Finais Alcançadas">FIN</th>
+                    <th class="col-stats" title="Semifinais">SEM</th>
+                    <th class="col-stats" title="Gols Marcados">GP</th>
+                    <th class="col-stats" title="Saldo de Gols">SG</th>
+                  </tr>
+                </thead>
+                <tbody id="ranking-tbody">
+                  <!-- Rows generated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
       </main>
@@ -619,6 +670,20 @@
           <span class="profile-stat-label">Semifinais</span>
         </div>
       </div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <span class="profile-stat-value" id="profile-goals">0</span>
+          <span class="profile-stat-label">Gols</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-value" id="profile-goals-taken">0</span>
+          <span class="profile-stat-label">Gols Tomados</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-value" id="profile-goal-diff">0</span>
+          <span class="profile-stat-label">Saldo Gols</span>
+        </div>
+      </div>
       <div class="modal-actions" style="justify-content:center;">
         <button type="button" id="btn-close-profile" class="btn btn-outline btn-sm">Fechar</button>
       </div>
@@ -640,15 +705,7 @@
        ============================================ -->
   <div id="champion-banner" class="champion-banner" style="display:none;">
     <div class="champion-content">
-      <span class="champion-emoji"><svg class="champion-trophy-svg" width="96" height="96" viewBox="0 0 24 24"
-          fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18" stroke="#af8a2e" stroke-width="1.5" />
-          <path d="M4 22h16" stroke="#af8a2e" stroke-width="1.5" />
-          <path
-            d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"
-            stroke="#af8a2e" stroke-width="1.5" />
-          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="#FFD700" stroke="#af8a2e" stroke-width="1.5" />
-        </svg></span>
+      <span class="champion-emoji"><img src="img/trofeu.png.png" alt="Troféu Campeão" class="champion-trophy-img"></span>
       <h2 id="champion-team-name" class="champion-title"></h2>
       <p class="champion-subtitle">Campeão do Torneio!</p>
       <button type="button" id="btn-close-champion" class="btn btn-outline btn-sm">Fechar</button>
