@@ -1237,21 +1237,25 @@
 
     // Team 2 slot
     card.appendChild(createTeamSlot(match.team2, match, 2));
+      // Penalty info
+      if (match.penalties) {
+        const penDiv = document.createElement('div');
+        penDiv.className = 'match-penalty-info';
+        penDiv.innerHTML = `PÃªnaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
+        card.appendChild(penDiv);
+      }
 
-    // Penalty info
-    if (match.penalties) {
-      const penDiv = document.createElement('div');
-      penDiv.className = 'match-penalty-info';
-      penDiv.innerHTML = `PÃªnaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
-      card.appendChild(penDiv);
+      return card;
     }
 
-    return card;
-  }
+  let activeTouchGhost = null;
+  let activeTouchData = null;
 
   function createTeamSlot(team, match, teamNum) {
     const slot = document.createElement('div');
     slot.className = 'match-team';
+    slot.dataset.matchId = match.id;
+    slot.dataset.teamNum = teamNum;
     
     // ConfiguraÃ§Ãµes de Drag and Drop se for organizador e nÃ£o tiver vencedor ainda
     if (isAdmin) {
@@ -1290,6 +1294,7 @@
     }
 
     if (isAdmin) {
+      // PC: Mouse Drag Drop
       slot.draggable = true;
       slot.addEventListener('dragstart', (e) => {
         const dragData = { matchId: match.id, teamNum };
@@ -1299,6 +1304,79 @@
       slot.addEventListener('dragend', () => {
         slot.classList.remove('dragging');
       });
+
+      // MOBILE: Touch Drag Drop
+      slot.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1 || activeTouchGhost) return; // Ignore multi-touch ou araste duplo
+        activeTouchData = { matchId: match.id, teamNum };
+        
+        activeTouchGhost = slot.cloneNode(true);
+        activeTouchGhost.style.position = 'fixed';
+        activeTouchGhost.style.opacity = '0.8';
+        activeTouchGhost.style.pointerEvents = 'none';
+        activeTouchGhost.style.zIndex = '99999';
+        activeTouchGhost.style.transform = 'scale(1.05)';
+        activeTouchGhost.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
+        
+        const touch = e.touches[0];
+        activeTouchGhost.style.left = (touch.clientX - (slot.offsetWidth / 2)) + 'px';
+        activeTouchGhost.style.top = (touch.clientY - (slot.offsetHeight / 2)) + 'px';
+        
+        document.body.appendChild(activeTouchGhost);
+        slot.classList.add('dragging');
+        
+        // Disable scroll behavior temporary for better drag
+        document.body.style.overflow = 'hidden';
+      }, { passive: false });
+
+      slot.addEventListener('touchmove', (e) => {
+        if (!activeTouchGhost) return;
+        e.preventDefault(); // Stop scrolling while dragging
+        
+        const touch = e.touches[0];
+        activeTouchGhost.style.left = (touch.clientX - (slot.offsetWidth / 2)) + 'px';
+        activeTouchGhost.style.top = (touch.clientY - (slot.offsetHeight / 2)) + 'px';
+        
+        // Find which slot we are hovering
+        const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        
+        const targetSlot = elem && elem.closest('.match-team.droppable-slot');
+        if (targetSlot && targetSlot !== slot) {
+          targetSlot.classList.add('drag-over');
+        }
+      }, { passive: false });
+
+      const handleTouchEndOrCancel = (e) => {
+        if (!activeTouchGhost) return;
+        
+        slot.classList.remove('dragging');
+        document.body.style.overflow = ''; // Restore smooth scrolling
+        
+        if (e.type === 'touchend' && e.changedTouches && e.changedTouches.length > 0) {
+          const touch = e.changedTouches[0];
+          const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+          const targetSlot = elem && elem.closest('.match-team.droppable-slot');
+          
+          if (targetSlot && targetSlot !== slot) {
+            const targetMatchId = targetSlot.dataset.matchId;
+            const targetTeamNum = parseInt(targetSlot.dataset.teamNum);
+            if (targetMatchId && targetTeamNum) {
+               swapTeamsInBracket(activeTouchData, { matchId: targetMatchId, teamNum: targetTeamNum });
+            }
+          }
+        }
+        
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        if (activeTouchGhost) {
+          activeTouchGhost.remove();
+          activeTouchGhost = null;
+        }
+        activeTouchData = null;
+      };
+
+      slot.addEventListener('touchend', handleTouchEndOrCancel);
+      slot.addEventListener('touchcancel', handleTouchEndOrCancel);
     }
 
     // Winner/loser styling

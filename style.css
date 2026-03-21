@@ -2733,3 +2733,11 @@ textarea::placeholder {
 /* Estilos para aumentar os trofeus */
 .prize-trophy-img { width: 120px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
 .champion-trophy-img { width: 160px; height: auto; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2)); margin-bottom: 20px; }
+
+/* Mobile Bracket Background Fix */
+@media (max-width: 768px) {
+  #bracket-tab {
+    background-attachment: scroll;
+    background-size: 100% 100%;
+  }
+}
