@@ -267,9 +267,13 @@ textarea::placeholder {
 
 .login-emoji {
   font-size: 56px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   margin-bottom: 12px;
   line-height: 1.2;
+  color: var(--text-primary);
 }
 
 .login-title {
@@ -613,6 +617,8 @@ textarea::placeholder {
   font-size: 40px;
   flex-shrink: 0;
   line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .prize-text {
@@ -648,6 +654,7 @@ textarea::placeholder {
   margin-bottom: 16px;
   line-height: 1;
   opacity: 0.8;
+  color: var(--text-tertiary);
 }
 
 .empty-title {
@@ -719,6 +726,8 @@ textarea::placeholder {
 
 .round-title .icon {
   font-size: 14px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .round-matches {
@@ -1148,6 +1157,8 @@ svg line {
   font-size: 20px;
   flex-shrink: 0;
   line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .toast.fade-out {
@@ -1181,10 +1192,11 @@ svg line {
 
 .champion-emoji {
   font-size: 96px;
-  display: block;
-  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
   line-height: 1;
-  animation: pulse 2s ease infinite;
 }
 
 .champion-title {
@@ -1382,26 +1394,42 @@ svg line {
 }
 
 @media (max-width: 768px) {
+  .btn-mobile-menu {
+    display: flex;
+  }
+
   .content-wrapper {
-    flex-direction: column;
+    position: relative;
   }
 
   .sidebar {
-    width: 100%;
-    min-width: 100%;
-    height: auto;
-    position: static;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-    max-height: none;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    bottom: 0;
+    width: 320px;
+    min-width: 320px;
+    height: calc(100vh - var(--header-height));
+    z-index: 50;
+    border-right: 1px solid var(--border-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+    overflow-y: auto;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
   }
 
   .main-content {
     padding: 20px 16px;
+    width: 100%;
   }
 
   .app-header {
-    padding: 0 16px;
+    padding: 0 12px;
   }
 
   .header-logo {
@@ -1415,6 +1443,11 @@ svg line {
 
   .login-emoji {
     font-size: 48px;
+  }
+
+  .login-emoji .svg-icon {
+    width: 40px;
+    height: 40px;
   }
 
   .login-title {
@@ -1452,8 +1485,9 @@ svg line {
     font-size: 28px;
   }
 
-  .champion-emoji {
-    font-size: 72px;
+  .champion-emoji .champion-trophy-svg {
+    width: 72px;
+    height: 72px;
   }
 
   .toast-container {
@@ -1464,6 +1498,35 @@ svg line {
   .toast {
     min-width: auto;
     max-width: none;
+  }
+
+  /* Touch-friendly targets */
+  .btn {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 40px;
+  }
+
+  .icon-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .btn-remove-team {
+    width: 44px;
+    height: 44px;
+  }
+
+  .match-schedule {
+    min-height: 44px;
+    padding: 4px 8px;
+  }
+
+  .sidebar-section {
+    padding-bottom: 24px;
+    margin-bottom: 24px;
   }
 }
 
@@ -1535,13 +1598,200 @@ svg line {
     font-size: 22px;
   }
 
-  .champion-emoji {
-    font-size: 60px;
+  .champion-emoji .champion-trophy-svg {
+    width: 60px;
+    height: 60px;
   }
 
   .champion-subtitle {
     font-size: 15px;
   }
+}
+
+
+
+/* ---------- 24. SVG Icon System ---------- */
+.svg-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.svg-icon-empty {
+  opacity: 0.6;
+}
+
+.svg-icon-prize {
+  flex-shrink: 0;
+}
+
+/* ---------- 25. Input with Action Button ---------- */
+.input-with-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-with-action input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-icon-action {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  flex-shrink: 0;
+}
+
+.btn-icon-action:hover {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--accent-blue);
+}
+
+.btn-icon-action:active {
+  transform: scale(0.95);
+}
+
+/* ---------- 26. Photo Upload ---------- */
+.photo-upload-label {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.photo-upload-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.photo-upload-input:hover {
+  border-color: var(--accent-blue);
+  background: rgba(0, 122, 255, 0.04);
+}
+
+.photo-upload-input::file-selector-button {
+  padding: 4px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: background var(--transition);
+}
+
+.photo-upload-input::file-selector-button:hover {
+  background: var(--bg-tertiary);
+}
+
+.team-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ---------- 27. Match Card DateTime ---------- */
+.match-datetime {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.modal-datetime {
+  margin-bottom: 20px;
+}
+
+.datetime-row {
+  display: flex;
+  gap: 8px;
+}
+
+.datetime-row .datetime-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- 28. Champion Trophy SVG ---------- */
+.champion-trophy-svg {
+  display: block;
+  margin: 0 auto 20px;
+  animation: trophyPulse 2s ease infinite;
+  filter: drop-shadow(0 4px 12px rgba(175, 138, 46, 0.4));
+}
+
+@keyframes trophyPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 4px 12px rgba(175, 138, 46, 0.4));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 8px 24px rgba(175, 138, 46, 0.6));
+  }
+}
+
+/* ---------- 29. Mobile Hamburger Menu ---------- */
+.btn-mobile-menu {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition: background var(--transition);
+  padding: 0;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.btn-mobile-menu:hover {
+  background: var(--bg-tertiary);
+}
+
+/* ---------- 30. Sidebar Overlay ---------- */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  top: var(--header-height);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 49;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
 }
 
 /* ---------- 23. Utility Classes ---------- */

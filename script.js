@@ -146,6 +146,85 @@
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 
+
+  /* ==========================================================
+     4b. SVG ICON CONSTANTS
+     ========================================================== */
+  const SVG = {
+    soccer: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>',
+    trophy: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+    pencil: '<svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',
+    checkCircle: '<svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
+    success: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
+    error: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
+    info: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-yellow, #ffcc00)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+    trophyText: '\u{1F3C6}'
+  };
+
+
+  /* ==========================================================
+     4c. RANDOM TEAM NAME GENERATOR
+     ========================================================== */
+  const RANDOM_TEAM_NAMES = [
+    'Trovões FC', 'Águias Douradas', 'Fúria Negra', 'Dragões de Fogo',
+    'Lobos Selvagens', 'Falcões de Aço', 'Leões do Norte', 'Tubarões Azuis',
+    'Panteras Negras', 'Fênix Renascida', 'Relâmpago FC', 'Guerreiros de Ferro',
+    'Cobras Venenosas', 'Titãs do Sul', 'Cavaleiros da Lua', 'Vulcões FC',
+    'Estrelas Cadentes', 'Tempestade FC', 'Raposas Douradas', 'Condores Reais',
+    'Spartanos FC', 'Vikings do Gelo', 'Samurais FC', 'Gladiadores FC',
+    'Cometas FC', 'Furacão Vermelho', 'Bravos de Elite', 'Supremos FC',
+    'Raios de Sol', 'Predadores FC', 'Corsários FC', 'Piratas do Mar',
+    'Tigres de Bengal', 'Escorpiões FC', 'Minotauros FC', 'Pegasus FC',
+    'Netuno FC', 'Hércules FC', 'Atenas FC', 'Apolo FC',
+    'Centauros FC', 'Avalanche FC'
+  ];
+
+  /** Generate a random team name not already in use */
+  function generateRandomTeamName() {
+    const usedNames = state.teams.map(t => t.teamName.toLowerCase());
+    const available = RANDOM_TEAM_NAMES.filter(n => !usedNames.includes(n.toLowerCase()));
+    if (available.length === 0) return RANDOM_TEAM_NAMES[Math.floor(Math.random() * RANDOM_TEAM_NAMES.length)];
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  /* ==========================================================
+     4d. PHOTO RESIZE HELPER
+     ========================================================== */
+
+  /**
+   * Resize an image file to max 80x80 and return as base64 data URL.
+   * @param {File} file
+   * @returns {Promise<string>}
+   */
+  function resizeImageToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const maxSize = 80;
+          let w = img.width;
+          let h = img.height;
+          if (w > h) {
+            if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
+          } else {
+            if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   /* ==========================================================
      5. TOAST NOTIFICATIONS
      ========================================================== */
@@ -159,7 +238,7 @@
     const container = $('#toast-container');
     if (!container) return;
 
-    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const icons = { success: SVG.success, error: SVG.error, info: SVG.info };
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${sanitize(message)}</span>`;
@@ -434,20 +513,34 @@
       return;
     }
 
-    state.teams.push({
-      id: generateId(),
-      teamName,
-      playerName
-    });
-    saveState();
+    const photoInput = $('#player-photo-input');
+    const photoFile = photoInput && photoInput.files && photoInput.files[0];
 
-    // Clear inputs
-    teamInput.value = '';
-    playerInput.value = '';
-    teamInput.focus();
+    function finishAddTeam(photoData) {
+      const team = {
+        id: generateId(),
+        teamName,
+        playerName
+      };
+      if (photoData) team.photo = photoData;
+      state.teams.push(team);
+      saveState();
 
-    renderTeamList();
-    showToast(`Time "${teamName}" adicionado!`, 'success');
+      // Clear inputs
+      teamInput.value = '';
+      playerInput.value = '';
+      if (photoInput) photoInput.value = '';
+      teamInput.focus();
+
+      renderTeamList();
+      showToast(`Time "${teamName}" adicionado!`, 'success');
+    }
+
+    if (photoFile) {
+      resizeImageToBase64(photoFile).then(finishAddTeam).catch(() => finishAddTeam(null));
+      return;
+    }
+    finishAddTeam(null);
   }
 
   /**
@@ -487,7 +580,7 @@
       html += `
         <div class="team-item" data-id="${sanitize(team.id)}">
           <div class="team-item-info">
-            <div class="team-avatar"><span class="av-placeholder">${sanitize(initials(team.playerName))}</span></div>
+            <div class="team-avatar">${team.photo ? '<img src="' + sanitize(team.photo) + '" alt="">' : '<span class="av-placeholder">' + sanitize(initials(team.playerName)) + '</span>'}</div>
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${sanitize(team.teamName)}</div>
               <div style="font-size:12px;color:var(--text-secondary);">${sanitize(team.playerName)}</div>
@@ -511,6 +604,13 @@
      11. TOURNAMENT GENERATION
      ========================================================== */
 
+  /** Build a team slot data object from a team record */
+  function makeTeamSlotData(t) {
+    const slot = { teamName: t.teamName, playerName: t.playerName, score: null };
+    if (t.photo) slot.photo = t.photo;
+    return slot;
+  }
+
   /**
    * Determine round names based on total number of teams.
    * @param {number} teamCount
@@ -518,6 +618,8 @@
    */
   function getRoundNames(teamCount) {
     switch (teamCount) {
+      case 32:
+        return ['Primeira Fase', 'Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Final'];
       case 16:
         return ['Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Final'];
       case 8:
@@ -549,7 +651,7 @@
 
     const roundNames = getRoundNames(requiredCount);
     if (roundNames.length === 0) {
-      showToast('Quantidade de times inválida. Escolha 4, 8 ou 16.', 'error');
+      showToast('Quantidade de times inválida. Escolha 4, 8, 16 ou 32.', 'error');
       return;
     }
     let matchesInRound = requiredCount / 2;
@@ -564,15 +666,16 @@
           team1: null,
           team2: null,
           winner: null,
-          penalties: null
+          penalties: null,
+          dateTime: null
         };
 
         // First round: populate with shuffled teams
         if (rIdx === 0) {
           const t1 = shuffled[m * 2];
           const t2 = shuffled[m * 2 + 1];
-          match.team1 = { teamName: t1.teamName, playerName: t1.playerName, score: null };
-          match.team2 = { teamName: t2.teamName, playerName: t2.playerName, score: null };
+          match.team1 = makeTeamSlotData(t1);
+          match.team2 = makeTeamSlotData(t2);
         }
 
         matches.push(match);
@@ -624,7 +727,7 @@
       roundEl.className = 'round';
 
       // Round header
-      const roundIcon = rIdx === bracket.rounds.length - 1 ? '🏆' : '⚽';
+      const roundIcon = rIdx === bracket.rounds.length - 1 ? SVG.trophy : SVG.soccer;
       const header = document.createElement('div');
       header.className = 'round-title';
       header.innerHTML = `<span class="icon">${roundIcon}</span> ${sanitize(round.name)}`;
@@ -778,6 +881,23 @@
     matchLabel.textContent = `Jogo ${mIdx + 1}`;
     header.appendChild(matchLabel);
 
+    // Date/time display
+    if (match.dateTime) {
+      const dtSpan = document.createElement('span');
+      dtSpan.className = 'match-datetime';
+      try {
+        const [datePart, timePart] = match.dateTime.split('T');
+        if (datePart) {
+          const [y, mo, d] = datePart.split('-');
+          const formatted = d + '/' + mo + (timePart ? ' ' + timePart : '');
+          dtSpan.textContent = formatted;
+        }
+      } catch (_) {
+        dtSpan.textContent = match.dateTime;
+      }
+      header.appendChild(dtSpan);
+    }
+
     // Edit button (admin only, both teams present, no winner yet)
     const bothTeams = match.team1 && match.team2;
     const canEdit = isAdmin && bothTeams && !match.winner;
@@ -786,13 +906,13 @@
       const editBtn = document.createElement('button');
       editBtn.className = 'match-schedule icon-btn';
       editBtn.type = 'button';
-      editBtn.innerHTML = '✏️ Resultado';
+      editBtn.innerHTML = SVG.pencil + ' Resultado';
       editBtn.addEventListener('click', () => openScoreModal(rIdx, mIdx));
       header.appendChild(editBtn);
     } else if (match.winner) {
       const doneSpan = document.createElement('span');
       doneSpan.style.cssText = 'font-size:11px;color:var(--accent-green);font-weight:600;';
-      doneSpan.textContent = '✓ Finalizado';
+      doneSpan.innerHTML = SVG.checkCircle + ' Finalizado';
       header.appendChild(doneSpan);
     }
 
@@ -845,10 +965,17 @@
     // Avatar
     const avatar = document.createElement('div');
     avatar.className = 'team-avatar';
-    const avPlaceholder = document.createElement('span');
-    avPlaceholder.className = 'av-placeholder';
-    avPlaceholder.textContent = initials(team.playerName);
-    avatar.appendChild(avPlaceholder);
+    if (team.photo) {
+      const avImg = document.createElement('img');
+      avImg.src = team.photo;
+      avImg.alt = '';
+      avatar.appendChild(avImg);
+    } else {
+      const avPlaceholder = document.createElement('span');
+      avPlaceholder.className = 'av-placeholder';
+      avPlaceholder.textContent = initials(team.playerName);
+      avatar.appendChild(avPlaceholder);
+    }
     slot.appendChild(avatar);
 
     // Player name (primary display in bracket)
@@ -920,6 +1047,18 @@
     const ps2 = $('#penalty-team2-score');
     if (ps1) ps1.value = match.penalties ? match.penalties.team1 : 0;
     if (ps2) ps2.value = match.penalties ? match.penalties.team2 : 0;
+
+    // Date/time fields
+    const dateInput = $('#modal-match-date');
+    const timeInput = $('#modal-match-time');
+    if (match.dateTime) {
+      const parts = match.dateTime.split('T');
+      if (dateInput) dateInput.value = parts[0] || '';
+      if (timeInput) timeInput.value = parts[1] || '';
+    } else {
+      if (dateInput) dateInput.value = '';
+      if (timeInput) timeInput.value = '';
+    }
 
     // Modal title
     const title = $('#modal-title');
@@ -1006,6 +1145,13 @@
       winnerNum = pen1 > pen2 ? 1 : 2;
     }
 
+    // Save date/time
+    const matchDateVal = ($('#modal-match-date') || {}).value || '';
+    const matchTimeVal = ($('#modal-match-time') || {}).value || '';
+    if (matchDateVal) {
+      match.dateTime = matchDateVal + (matchTimeVal ? 'T' + matchTimeVal : '');
+    }
+
     // Update match
     match.team1.score = score1;
     match.team2.score = score2;
@@ -1024,11 +1170,7 @@
 
       if (nextMatch) {
         const slot = mIdx % 2 === 0 ? 'team1' : 'team2';
-        nextMatch[slot] = {
-          teamName: winnerTeam.teamName,
-          playerName: winnerTeam.playerName,
-          score: null
-        };
+        nextMatch[slot] = makeTeamSlotData(winnerTeam);
       }
     }
 
@@ -1071,7 +1213,7 @@
     }
 
     startConfetti();
-    showToast(`🏆 Campeão: ${state.champion.playerName}!`, 'success');
+    showToast(`Campeão: ${state.champion.playerName}!`, 'success');
   }
 
   /** Show champion banner if champion exists (on page load) */
@@ -1208,6 +1350,36 @@
   }
 
   /* ==========================================================
+     16b. MOBILE SIDEBAR
+     ========================================================== */
+
+  /** Toggle mobile sidebar */
+  function toggleMobileSidebar() {
+    const sidebar = $('#admin-sidebar');
+    const overlay = $('#sidebar-overlay');
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.contains('sidebar-open');
+    if (isOpen) {
+      sidebar.classList.remove('sidebar-open');
+      if (overlay) overlay.classList.remove('active');
+      document.body.classList.remove('sidebar-is-open');
+    } else {
+      sidebar.classList.add('sidebar-open');
+      if (overlay) overlay.classList.add('active');
+      document.body.classList.add('sidebar-is-open');
+    }
+  }
+
+  /** Close mobile sidebar */
+  function closeMobileSidebar() {
+    const sidebar = $('#admin-sidebar');
+    const overlay = $('#sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('sidebar-open');
+    if (overlay) overlay.classList.remove('active');
+    document.body.classList.remove('sidebar-is-open');
+  }
+
+  /* ==========================================================
      17. EVENT LISTENERS
      ========================================================== */
 
@@ -1328,6 +1500,30 @@
         state.teamCount = parseInt(teamCountSelect.value, 10);
         saveState();
         renderTeamList();
+      });
+    }
+
+    // Mobile menu toggle
+    const btnMobileMenu = $('#btn-mobile-menu');
+    if (btnMobileMenu) {
+      btnMobileMenu.addEventListener('click', toggleMobileSidebar);
+    }
+
+    // Sidebar overlay click
+    const sidebarOverlay = $('#sidebar-overlay');
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', closeMobileSidebar);
+    }
+
+    // Random team name generator
+    const btnRandomName = $('#btn-random-name');
+    if (btnRandomName) {
+      btnRandomName.addEventListener('click', () => {
+        const nameInput = $('#team-name-input');
+        if (nameInput) {
+          nameInput.value = generateRandomTeamName();
+          nameInput.focus();
+        }
       });
     }
 
