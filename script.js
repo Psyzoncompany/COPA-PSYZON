@@ -1529,7 +1529,7 @@
     const avatarEl = $('#profile-avatar');
     if (avatarEl) {
       if (team.photo) {
-        avatarEl.innerHTML = '<img src="' + sanitize(team.photo) + '" alt="">';
+        avatarEl.innerHTML = '<img src="' + sanitize(team.photo) + '" alt="' + sanitize(team.playerName) + '">';
       } else {
         avatarEl.textContent = initials(team.playerName);
       }
@@ -1618,16 +1618,16 @@
     let html = '';
     ranked.forEach((r, i) => {
       const avatar = r.team.photo
-        ? '<img src="' + sanitize(r.team.photo) + '" alt="">'
-        : '<span class="av-placeholder" style="font-size:14px;">' + sanitize(initials(r.team.playerName)) + '</span>';
+        ? '<img src="' + sanitize(r.team.photo) + '" alt="' + sanitize(r.team.playerName) + '">'
+        : '<span class="av-placeholder top3-av-placeholder">' + sanitize(initials(r.team.playerName)) + '</span>';
 
       html += `
-        <div class="top3-item" data-team-id="${sanitize(r.team.id)}">
+        <li class="top3-item" data-team-id="${sanitize(r.team.id)}">
           <span class="top3-position ${posColors[i]}">${posLabels[i]}</span>
           <div class="top3-avatar">${avatar}</div>
           <span class="top3-name">${sanitize(r.team.playerName)}</span>
           <span class="top3-trophies">${r.trophies} troféu${r.trophies !== 1 ? 's' : ''}</span>
-        </div>`;
+        </li>`;
     });
 
     list.innerHTML = html;

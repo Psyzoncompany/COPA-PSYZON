@@ -2035,6 +2035,9 @@ svg line {
   gap: 16px;
   justify-content: center;
   flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .top3-item {
@@ -2082,6 +2085,10 @@ svg line {
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+}
+
+.top3-av-placeholder {
+  font-size: 14px;
 }
 
 .top3-name {
