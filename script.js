@@ -64,6 +64,7 @@
   let currentUser = null;
   let isParticipant = false;
   let currentParticipantCode = null;
+  let currentViewingBracketId = null;
 
   /** @type {{ tournamentName: string, teamCount: number, teams: Array<{id:string, teamName:string, playerName:string}>, prize: string, bracket: null|{rounds: Array}, champion: null|{teamName:string, playerName:string} }} */
   let state = defaultState();
@@ -832,7 +833,7 @@
 
   /** Build a team slot data object from a team record */
   function makeTeamSlotData(t) {
-    const slot = { teamName: t.teamName, playerName: t.playerName, score: null };
+    const slot = { id: t.id, teamName: t.teamName, playerName: t.playerName, score: null };
     if (t.photo) slot.photo = t.photo;
     return slot;
   }
@@ -914,6 +915,7 @@
     saveState();
 
     renderBracket();
+
     const remaining = requiredCount - shuffled.length;
     if (remaining > 0) {
       showToast(`Chaveamento gerado! Aguardando ${remaining} participante(s).`, 'success');
@@ -946,8 +948,26 @@
   }
 
   /* ==========================================================
-     12. BRACKET RENDERING
+     12. BRACKET RENDERING & TIME MACHINE
      ========================================================== */
+
+  /** Retorna a chave atualmente sendo visualizada (Atual ou do Histórico) */
+  function getCurrentBracket() {
+    if (currentViewingBracketId) {
+      const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
+      return hist ? hist.bracket : null;
+    }
+    return state.bracket;
+  }
+
+  /** Retorna o nome do torneio que está sendo visualizado */
+  function getCurrentBracketName() {
+    if (currentViewingBracketId) {
+      const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
+      return hist ? hist.name : 'Torneio Passado';
+    }
+    return state.tournamentName || 'COPA PSYZON';
+  }
 
   /** Main bracket render function */
   function renderBracket() {
@@ -958,16 +978,52 @@
     // Clear
     container.innerHTML = '';
 
-    if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) {
-      if (emptyState) emptyState.style.display = '';
+    const bracket = getCurrentBracket();
+
+    if (!bracket || !bracket.rounds || bracket.rounds.length === 0) {
+      if (emptyState) emptyState.style.display = 'flex';
+      if ($('#btn-finish-tournament')) $('#btn-finish-tournament').style.display = 'none';
       return;
     }
 
     if (emptyState) emptyState.style.display = 'none';
+    if ($('#btn-finish-tournament')) {
+      // Só mostra o botão de finalizar se for o torneio atual
+      $('#btn-finish-tournament').style.display = currentViewingBracketId ? 'none' : '';
+    }
 
-    const bracket = state.bracket;
     const bracketEl = document.createElement('div');
     bracketEl.className = 'bracket';
+
+    // Se for modo máquina do tempo, avisa no topo do chaveamento
+    if (currentViewingBracketId) {
+      const timeMachineBar = document.createElement('div');
+      timeMachineBar.style.background = 'rgba(255, 149, 0, 0.15)';
+      timeMachineBar.style.border = '1px solid var(--accent-orange)';
+      timeMachineBar.style.color = 'var(--text-primary)';
+      timeMachineBar.style.padding = '12px 16px';
+      timeMachineBar.style.borderRadius = 'var(--radius-md)';
+      timeMachineBar.style.marginBottom = '20px';
+      timeMachineBar.style.display = 'flex';
+      timeMachineBar.style.justifyContent = 'space-between';
+      timeMachineBar.style.alignItems = 'center';
+      timeMachineBar.innerHTML = `
+        <div>
+          <strong style="color: var(--accent-orange);">Modo de Visualização/Edição do Histórico</strong><br>
+          <span style="font-size: 13px;">Você está vendo o chaveamento de: <b>${sanitize(getCurrentBracketName())}</b></span>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm btn-return-current">
+          ← Voltar ao Atual
+        </button>
+      `;
+      const btnReturn = timeMachineBar.querySelector('.btn-return-current');
+      btnReturn.addEventListener('click', () => {
+        currentViewingBracketId = null;
+        renderBracket();
+        renderTop3();
+      });
+      container.appendChild(timeMachineBar);
+    }
 
     bracket.rounds.forEach((round, rIdx) => {
       // Add connector column between rounds (except before the first)
@@ -1305,7 +1361,10 @@
    * @param {number} mIdx
    */
   function openScoreModal(rIdx, mIdx) {
-    const match = state.bracket.rounds[rIdx].matches[mIdx];
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+
+    const match = bracket.rounds[rIdx].matches[mIdx];
     if (!match || !match.team1 || !match.team2) return;
 
     modalMatch = { roundIdx: rIdx, matchIdx: mIdx };
@@ -1399,7 +1458,10 @@
     const mIdx = modalMatch.matchIdx;
     if (rIdx < 0 || mIdx < 0) return;
 
-    const match = state.bracket.rounds[rIdx].matches[mIdx];
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+
+    const match = bracket.rounds[rIdx].matches[mIdx];
     if (!match) return;
 
     const score1 = parseInt(($('#modal-team1-score') || {}).value, 10);
@@ -1459,7 +1521,7 @@
     match.winner = winnerNum;
     match.penalties = penalties;
 
-    const totalRounds = state.bracket.rounds.length;
+    const totalRounds = bracket.rounds.length;
 
     // --- APPLY NEW STATS ---
     const isFinal = rIdx === totalRounds - 1;
@@ -1471,7 +1533,7 @@
 
     if (rIdx < totalRounds - 1) {
       // Determine slot in next round
-      const nextRound = state.bracket.rounds[rIdx + 1];
+      const nextRound = bracket.rounds[rIdx + 1];
       const nextMatchIdx = Math.floor(mIdx / 2);
       const nextMatch = nextRound.matches[nextMatchIdx];
 
@@ -1481,21 +1543,28 @@
       }
     }
 
-    // Check if this was the final
-    saveState();
-    closeScoreModal();
-    renderBracket();
-
     if (isFinal) {
-      state.champion = {
+      const champData = {
         teamName: winnerTeam.teamName,
         playerName: winnerTeam.playerName
       };
+
+      if (currentViewingBracketId) {
+        const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
+        if (hist) hist.champion = champData;
+      } else {
+        state.champion = champData;
+      }
       
       showChampionCelebration();
     } else {
       showToast('Resultado registrado!', 'success');
     }
+
+    // Call saveState and renderBracket AFTER the champion state is set to properly persist it
+    saveState();
+    closeScoreModal();
+    renderBracket();
   }
 
   /** Initialize missing stats for a team ID */
@@ -1510,33 +1579,45 @@
     }
   }
 
+  /** Helper to get global team ID from match slot */
+  function getTeamIdGlobal(matchTeam) {
+    if (!matchTeam) return null;
+    if (matchTeam.id) return matchTeam.id; // Retro compatibility for newly generated brackets
+    const t = state.teams.find(x => x.playerName === matchTeam.playerName && x.teamName === matchTeam.teamName);
+    if (t) return t.id;
+    if (state.participants) {
+      const p = state.participants.find(x => x.name === matchTeam.playerName && x.nick === matchTeam.teamName);
+      if (p) return p.id;
+    }
+    return null; // Impossível rastrear se era antigo e não tinha ID
+  }
+
   /** Revert applied match stats */
   function revertMatchStats(match) {
     const s = match.statsApplied;
     if (!s) return;
     
-    // Finds teamID based on playerName and teamName in state.teams
-    const t1 = state.teams.find(t => match.team1 && t.playerName === match.team1.playerName && t.teamName === match.team1.teamName);
-    const t2 = state.teams.find(t => match.team2 && t.playerName === match.team2.playerName && t.teamName === match.team2.teamName);
+    const t1Id = getTeamIdGlobal(match.team1);
+    const t2Id = getTeamIdGlobal(match.team2);
 
-    if (t1) {
-      ensureStats(t1.id);
-      state.playerStats[t1.id].goals -= s.t1Score;
-      state.playerStats[t1.id].goalsTaken -= s.t2Score;
-      state.playerStats[t1.id].goalDiff = state.playerStats[t1.id].goals - state.playerStats[t1.id].goalsTaken;
-      if (s.isSemi) state.playerStats[t1.id].semifinals = Math.max(0, state.playerStats[t1.id].semifinals - 1);
-      if (s.isFinal) state.playerStats[t1.id].finals = Math.max(0, state.playerStats[t1.id].finals - 1);
-      if (s.isFinal && s.winner === 1) state.playerStats[t1.id].trophies = Math.max(0, state.playerStats[t1.id].trophies - 1);
+    if (t1Id) {
+      ensureStats(t1Id);
+      state.playerStats[t1Id].goals -= s.t1Score;
+      state.playerStats[t1Id].goalsTaken -= s.t2Score;
+      state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+      if (s.isSemi) state.playerStats[t1Id].semifinals = Math.max(0, state.playerStats[t1Id].semifinals - 1);
+      if (s.isFinal) state.playerStats[t1Id].finals = Math.max(0, state.playerStats[t1Id].finals - 1);
+      if (s.isFinal && s.winner === 1) state.playerStats[t1Id].trophies = Math.max(0, state.playerStats[t1Id].trophies - 1);
     }
     
-    if (t2) {
-      ensureStats(t2.id);
-      state.playerStats[t2.id].goals -= s.t2Score;
-      state.playerStats[t2.id].goalsTaken -= s.t1Score;
-      state.playerStats[t2.id].goalDiff = state.playerStats[t2.id].goals - state.playerStats[t2.id].goalsTaken;
-      if (s.isSemi) state.playerStats[t2.id].semifinals = Math.max(0, state.playerStats[t2.id].semifinals - 1);
-      if (s.isFinal) state.playerStats[t2.id].finals = Math.max(0, state.playerStats[t2.id].finals - 1);
-      if (s.isFinal && s.winner === 2) state.playerStats[t2.id].trophies = Math.max(0, state.playerStats[t2.id].trophies - 1);
+    if (t2Id) {
+      ensureStats(t2Id);
+      state.playerStats[t2Id].goals -= s.t2Score;
+      state.playerStats[t2Id].goalsTaken -= s.t1Score;
+      state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+      if (s.isSemi) state.playerStats[t2Id].semifinals = Math.max(0, state.playerStats[t2Id].semifinals - 1);
+      if (s.isFinal) state.playerStats[t2Id].finals = Math.max(0, state.playerStats[t2Id].finals - 1);
+      if (s.isFinal && s.winner === 2) state.playerStats[t2Id].trophies = Math.max(0, state.playerStats[t2Id].trophies - 1);
     }
 
     match.statsApplied = null;
@@ -1544,8 +1625,8 @@
 
   /** Apply match stats */
   function applyMatchStats(match, isSemi, isFinal) {
-    const t1 = state.teams.find(t => match.team1 && t.playerName === match.team1.playerName && t.teamName === match.team1.teamName);
-    const t2 = state.teams.find(t => match.team2 && t.playerName === match.team2.playerName && t.teamName === match.team2.teamName);
+    const t1Id = getTeamIdGlobal(match.team1);
+    const t2Id = getTeamIdGlobal(match.team2);
 
     match.statsApplied = {
       t1Score: match.team1.score,
@@ -1555,24 +1636,24 @@
       winner: match.winner
     };
 
-    if (t1) {
-      ensureStats(t1.id);
-      state.playerStats[t1.id].goals += match.team1.score;
-      state.playerStats[t1.id].goalsTaken += match.team2.score;
-      state.playerStats[t1.id].goalDiff = state.playerStats[t1.id].goals - state.playerStats[t1.id].goalsTaken;
-      if (isSemi) state.playerStats[t1.id].semifinals += 1;
-      if (isFinal) state.playerStats[t1.id].finals += 1;
-      if (isFinal && match.winner === 1) state.playerStats[t1.id].trophies += 1;
+    if (t1Id) {
+      ensureStats(t1Id);
+      state.playerStats[t1Id].goals += match.team1.score;
+      state.playerStats[t1Id].goalsTaken += match.team2.score;
+      state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+      if (isSemi) state.playerStats[t1Id].semifinals += 1;
+      if (isFinal) state.playerStats[t1Id].finals += 1;
+      if (isFinal && match.winner === 1) state.playerStats[t1Id].trophies += 1;
     }
 
-    if (t2) {
-      ensureStats(t2.id);
-      state.playerStats[t2.id].goals += match.team2.score;
-      state.playerStats[t2.id].goalsTaken += match.team1.score;
-      state.playerStats[t2.id].goalDiff = state.playerStats[t2.id].goals - state.playerStats[t2.id].goalsTaken;
-      if (isSemi) state.playerStats[t2.id].semifinals += 1;
-      if (isFinal) state.playerStats[t2.id].finals += 1;
-      if (isFinal && match.winner === 2) state.playerStats[t2.id].trophies += 1;
+    if (t2Id) {
+      ensureStats(t2Id);
+      state.playerStats[t2Id].goals += match.team2.score;
+      state.playerStats[t2Id].goalsTaken += match.team1.score;
+      state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+      if (isSemi) state.playerStats[t2Id].semifinals += 1;
+      if (isFinal) state.playerStats[t2Id].finals += 1;
+      if (isFinal && match.winner === 2) state.playerStats[t2Id].trophies += 1;
     }
   }
 
@@ -1887,7 +1968,14 @@
 
   /** Open player profile modal */
   function openPlayerProfile(teamId) {
-    const team = state.teams.find(t => t.id === teamId);
+    let team = state.teams.find(t => t.id === teamId);
+    
+    // Se o time não for do torneio atual, procura direto nos cadastros de usuários globais
+    if (!team && state.participants) {
+      const p = state.participants.find(p => p.id === teamId);
+      if (p) team = { id: p.id, playerName: p.name, teamName: p.nick, photo: p.photo };
+    }
+    
     if (!team) return;
 
     const stats = (state.playerStats && state.playerStats[teamId]) || {};
@@ -2017,6 +2105,156 @@
   }
 
   /* ==========================================================
+     16fb. TOURNAMENT HISTORY RENDERING & MANAGEMENT
+     ========================================================== */
+
+  function handleFinishTournament() {
+    if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) return;
+
+    if (!state.champion) {
+      if (!confirm('Este torneio ainda NÃO tem um Campeão definido. Tem certeza que deseja encerrar de forma incompleta e salvar no histórico?')) return;
+    } else {
+      if (!confirm('Deseja oficializar o fim deste torneio e movê-lo para o seu Histórico? A seção de chaveamentos ficará livre para o próximo torneio.')) return;
+    }
+
+    if (!state.tournamentsHistory) state.tournamentsHistory = [];
+
+    // Save snapshot
+    const editionNumber = state.tournamentsHistory.length + 1;
+    const defaultName = 'Torneio Edição ' + editionNumber;
+    let tName = state.tournamentName && state.tournamentName.trim() !== '' ? state.tournamentName : defaultName;
+
+    const record = {
+      id: generateId(),
+      name: tName,
+      date: new Date().toISOString(),
+      champion: state.champion ? JSON.parse(JSON.stringify(state.champion)) : null,
+      bracket: JSON.parse(JSON.stringify(state.bracket)),
+      teamsCount: state.teamCount || 8
+    };
+
+    state.tournamentsHistory.unshift(record);
+
+    state.bracket = null;
+    state.champion = null;
+    state.teams = [];
+    
+    // Reseta os códigos de participação apenas quando o torneio for ENCERRADO
+    state.codes = [];
+    
+    state.tournamentName = ''; // reset name
+    const tnInput = $('#tournament-name');
+    if (tnInput) tnInput.value = '';
+
+    saveState();
+    
+    // UI Resets
+    renderBracket();
+    renderTeamList();
+    renderTop3();
+    if (isAdmin) renderCodesList();
+    const titleDisp = $('#tournament-title-display');
+    if (titleDisp) titleDisp.style.display = 'none';
+    const prizeDisp = $('#prize-display');
+    if (prizeDisp) prizeDisp.style.display = 'none';
+
+    showToast('Torneio salvo com sucesso no Histórico!', 'success');
+
+    // Switch to history tab
+    const historyBtn = document.querySelector('.tab-btn[data-tab="history-tab"]');
+    if (historyBtn) historyBtn.click();
+  }
+
+  function renderHistory() {
+    const container = $('#history-container');
+    if (!container) return;
+
+    if (!state.tournamentsHistory || state.tournamentsHistory.length === 0) {
+      container.innerHTML = '<div class="empty-state"><span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg></span><p class="empty-title">Nenhum torneio finalizado</p><p class="empty-subtitle">Encerre um torneio na aba Chaveamento para organizá-lo aqui.</p></div>';
+      return;
+    }
+
+    let html = '';
+    state.tournamentsHistory.forEach(record => {
+      const dateStr = new Date(record.date).toLocaleDateString();
+      let champHtml = '<span class="history-date">Sem campeão declarado</span>';
+      
+      if (record.champion) {
+        const cNome = record.champion.playerName || record.champion.teamName;
+        champHtml = '<div class="history-champ">' +
+                    '<svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>' +
+                    '<span class="history-champ-winner">' + sanitize(cNome) + '</span>' +
+                    '</div>';
+      }
+
+      html += '<div class="history-card" data-history-id="' + record.id + '" style="cursor:pointer;" title="Clique para Visualizar e Editar a Chave">' +
+                '<div class="history-info">' +
+                  '<div class="history-title">' + sanitize(record.name) + ' (' + record.teamsCount + ' Times)</div>' +
+                  '<div class="history-date">Concluído em: ' + dateStr + '</div>' +
+                  champHtml +
+                '</div>' +
+                '<div class="history-actions" onclick="event.stopPropagation()">' + // prevent row click from triggering when deleting
+                  (isAdmin ? '<button type="button" class="btn btn-outline btn-sm btn-delete-history" data-history-id="'+record.id+'" style="color:var(--accent-red);border-color:var(--accent-red);"><svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Deletar</button>' : '') +
+                '</div>' +
+              '</div>';
+    });
+
+    container.innerHTML = html;
+
+    // View/Edit historical bracket
+    const historyCards = container.querySelectorAll('.history-card');
+    historyCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-history-id');
+        currentViewingBracketId = id;
+        
+        // Switch to bracket tab
+        const bracketBtn = document.querySelector('.tab-btn[data-tab="bracket-tab"]');
+        if (bracketBtn) bracketBtn.click();
+      });
+    });
+
+    // Delete history logic
+    const deleteBtns = container.querySelectorAll('.btn-delete-history');
+    deleteBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-history-id');
+        deleteHistory(id);
+      });
+    });
+  }
+
+  function deleteHistory(id) {
+    if (!isAdmin) return;
+    if (!confirm('Você está prestes a DELETAR um torneio antigo. Todos os títulos, gols e finais que os jogadores ganharam nele serão descontados dos seus Rankings Globais! Tem certeza?')) return;
+    
+    const histIdx = state.tournamentsHistory.findIndex(h => h.id === id);
+    if (histIdx === -1) return;
+    const hist = state.tournamentsHistory[histIdx];
+
+    // Revert all match stats to maintain accurate global ranking
+    if (hist.bracket && hist.bracket.rounds) {
+      hist.bracket.rounds.forEach(round => {
+        round.matches.forEach(match => {
+          revertMatchStats(match);
+        });
+      });
+    }
+
+    state.tournamentsHistory.splice(histIdx, 1);
+    
+    // Update active view if they were viewing this one
+    if (currentViewingBracketId === id) {
+      currentViewingBracketId = null;
+      renderBracket();
+    }
+    
+    saveState();
+    renderHistory();
+    showToast('Torneio e suas estatísticas foram deletados do Histórico.', 'success');
+  }
+
+  /* ==========================================================
      16fa. RANKING TABLE RENDERING
      ========================================================== */
 
@@ -2033,8 +2271,8 @@
         const stats = state.playerStats[p.id] || {};
         ranked.push({
           id: p.id,
-          name: p.name,
-          nick: p.nick,
+          name: p.name || 'Sem Nome',
+          nick: p.nick || 'S/N',
           photo: p.photo,
           trophies: stats.trophies || 0,
           finals: stats.finals || 0,
@@ -2052,8 +2290,8 @@
           const stats = state.playerStats[t.id] || {};
           ranked.push({
             id: t.id,
-            name: t.playerName,
-            nick: t.teamName,
+            name: t.playerName || 'Sem Nome',
+            nick: t.teamName || 'S/N',
             photo: t.photo,
             trophies: stats.trophies || 0,
             finals: stats.finals || 0,
@@ -2077,7 +2315,7 @@
       if (b.semifinals !== a.semifinals) return b.semifinals - a.semifinals;
       if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
       if (b.goals !== a.goals) return b.goals - a.goals;
-      return a.name.localeCompare(b.name);
+      return String(a.name).localeCompare(String(b.name));
     });
 
     let html = '';
@@ -2249,12 +2487,16 @@
     }
 
     // Link the returning player as a team
-    state.teams.push({
+    const newTeam = {
       id: existing.id,
       teamName: existing.nick,
       playerName: existing.name,
       photo: existing.photo || null
-    });
+    };
+    state.teams.push(newTeam);
+
+    // Auto-place in bracket
+    autoPlaceInBracket(newTeam);
 
     // Update code to used
     codeEntry.status = 'used';
@@ -2262,11 +2504,14 @@
 
     saveState();
     renderTeamList();
+    renderBracket();
     
     // Hide registration and show main screen in view mode
     const checkScreen = $('#participant-cpf-check-screen');
     if (checkScreen) checkScreen.style.display = 'none';
-    startMainApp();
+    
+    isParticipant = true;
+    showGameSelection();
     
     showToast(`Bem-vindo de volta, ${existing.name}!`, 'success');
   }
@@ -2523,10 +2768,35 @@
       btnGenerate.addEventListener('click', handleGenerate);
     }
 
-    // Reset tournament
+    // Finish tournament
+    const btnFinishTournament = $('#btn-finish-tournament');
+    if (btnFinishTournament) {
+      btnFinishTournament.addEventListener('click', handleFinishTournament);
+    }
+
+    // Reset current tournament
     const btnReset = $('#btn-reset');
     if (btnReset) {
       btnReset.addEventListener('click', handleReset);
+    }
+
+    // Hard Reset All
+    const btnResetAll = $('#btn-reset-all');
+    if (btnResetAll) {
+      btnResetAll.addEventListener('click', () => {
+        const codePrompt = prompt('ALERTA MÁXIMO: Isto apagará todos os cadastros, históricos, times e stats do Database inteiro.\n\nDigite o código de segurança para confirmar:');
+        if (codePrompt !== '153090') {
+          if (codePrompt) showToast('Código incorreto. Reset cancelado.', 'error');
+          return;
+        }
+
+        if (confirm('Tem CERTEZA MESMO? Isso apagará a Tabela inteira do Brasileirão e reseta o site pra fábrica.')) {
+          state = defaultState();
+          saveState();
+          showToast('Site formatado com sucesso! Recarregando...', 'success');
+          setTimeout(() => window.location.reload(), 1500);
+        }
+      });
     }
 
     // Score modal: confirm
@@ -2666,9 +2936,13 @@
         const target = $('#' + targetId);
         if (target) target.style.display = 'block';
 
-        // Renderizar dinamicamente se for para aba de Ranking
+        // Renderizar dinamicamente se for para aba de Histórico/Ranking
         if (targetId === 'ranking-tab') {
           renderRankingTable();
+        } else if (targetId === 'history-tab') {
+          renderHistory();
+        } else if (targetId === 'bracket-tab') {
+          renderBracket();
         }
       });
     });
