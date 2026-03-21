@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -7,10 +8,13 @@
   <meta name="description" content="COPA PSYZON — Plataforma de Gerenciamento de Torneio Eliminatório">
   <style>
     /* Critical: prevent FOUC while CSS loads */
-    body { font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body {
+      font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
   </style>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <!-- ============================================
@@ -20,7 +24,19 @@
     <div class="login-card">
       <!-- Branding -->
       <div class="login-branding">
-        <span class="login-emoji"><svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg><svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
+        <span class="login-emoji"><svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            <path d="M2 12h20" />
+          </svg><svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path
+              d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+          </svg></span>
         <h1 class="login-title">COPA PSYZON</h1>
         <p class="login-subtitle">Torneio Eliminatório</p>
       </div>
@@ -28,7 +44,11 @@
       <!-- Admin Login -->
       <div class="login-section">
         <button type="button" id="btn-show-login" class="btn btn-primary btn-block">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> LOGIN DONO
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg> ORGANIZADOR
         </button>
 
         <form id="login-form" class="login-form" style="display:none;" autocomplete="off">
@@ -52,19 +72,25 @@
 
       <!-- Participant Entry -->
       <button type="button" id="btn-participant" class="btn btn-accent btn-block">
-        <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg> PARTICIPANTE
+        <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <line x1="19" x2="19" y1="8" y2="14" />
+          <line x1="22" x2="16" y1="11" y2="11" />
+        </svg> PARTICIPANTE
       </button>
 
       <!-- Visitor Entry -->
       <button type="button" id="btn-visitor" class="btn btn-secondary btn-block">
-        <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ENTRAR COMO VISITANTE
+        <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg> ENTRAR COMO VISITANTE
       </button>
 
-      <!-- Remember Choice -->
-      <label class="remember-choice-label" for="remember-choice">
-        <input type="checkbox" id="remember-choice">
-        <span>Lembrar escolha</span>
-      </label>
+
     </div>
   </section>
 
@@ -79,17 +105,30 @@
       </div>
       <div class="game-options">
         <button type="button" id="btn-game-fifa" class="btn-game-option">
-          <svg class="svg-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+          <svg class="svg-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            <path d="M2 12h20" />
+          </svg>
           <span class="game-option-name">FIFA</span>
         </button>
         <button type="button" id="btn-game-cs" class="btn-game-option disabled" disabled>
-          <svg class="svg-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/><path d="M12 2v4M12 18v4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83M2 12h4M18 12h4"/></svg>
+          <svg class="svg-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="m4.93 4.93 14.14 14.14" />
+            <path d="M12 2v4M12 18v4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83M2 12h4M18 12h4" />
+          </svg>
           <span class="game-option-name">Counter-Strike</span>
           <span class="game-option-badge">Em Breve</span>
         </button>
       </div>
       <button type="button" id="btn-game-back" class="btn btn-outline btn-block" style="margin-top:20px;">
-        <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Voltar
+        <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg> Voltar
       </button>
     </div>
   </section>
@@ -101,7 +140,11 @@
     <div class="login-card">
       <div class="login-branding">
         <span class="login-emoji">
-          <svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
         </span>
         <h1 class="login-title">Código de Acesso</h1>
         <p class="login-subtitle">Digite o código de 4 dígitos fornecido pelo organizador</p>
@@ -109,16 +152,24 @@
       <form id="code-form" autocomplete="off">
         <div class="form-group">
           <div class="code-input-wrapper">
-            <input type="text" id="participant-code" class="code-input" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="0000" autocomplete="off">
+            <input type="text" id="participant-code" class="code-input" maxlength="4" pattern="[0-9]{4}"
+              inputmode="numeric" placeholder="0000" autocomplete="off">
           </div>
         </div>
         <button type="submit" class="btn btn-primary btn-block">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg> CONFIRMAR CÓDIGO
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <path d="m9 11 3 3L22 4" />
+          </svg> CONFIRMAR CÓDIGO
         </button>
         <p id="code-error" class="login-error" role="alert"></p>
       </form>
       <button type="button" id="btn-code-back" class="btn btn-outline btn-block" style="margin-top:12px;">
-        <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Voltar
+        <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg> Voltar
       </button>
     </div>
   </section>
@@ -130,7 +181,13 @@
     <div class="login-card participant-form-card">
       <div class="login-branding">
         <span class="login-emoji">
-          <svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+          <svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <line x1="19" x2="19" y1="8" y2="14" />
+            <line x1="22" x2="16" y1="11" y2="11" />
+          </svg>
         </span>
         <h1 class="login-title">Cadastro</h1>
         <p class="login-subtitle">Preencha seus dados para participar do torneio</p>
@@ -138,7 +195,11 @@
       <form id="participant-form" autocomplete="off">
         <div class="form-group">
           <label for="participant-photo">
-            <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> Foto (opcional)
+            <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+              <circle cx="12" cy="13" r="3" />
+            </svg> Foto (opcional)
           </label>
           <input type="file" id="participant-photo" accept="image/*" class="photo-upload-input">
         </div>
@@ -148,7 +209,8 @@
         </div>
         <div class="form-group">
           <label for="participant-cpf">CPF</label>
-          <input type="text" id="participant-cpf" placeholder="000.000.000-00" required maxlength="14" inputmode="numeric">
+          <input type="text" id="participant-cpf" placeholder="000.000.000-00" required maxlength="14"
+            inputmode="numeric">
         </div>
         <div class="form-group">
           <label for="participant-instagram">Instagram</label>
@@ -156,19 +218,27 @@
         </div>
         <div class="form-group">
           <label for="participant-whatsapp">WhatsApp</label>
-          <input type="text" id="participant-whatsapp" placeholder="(00) 00000-0000" required maxlength="15" inputmode="tel">
+          <input type="text" id="participant-whatsapp" placeholder="(00) 00000-0000" required maxlength="15"
+            inputmode="tel">
         </div>
         <div class="form-group">
           <label for="participant-nick">Nick (exibido na tabela)</label>
           <input type="text" id="participant-nick" placeholder="Seu nick no jogo" required maxlength="30">
         </div>
         <button type="submit" class="btn btn-success btn-block">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg> ENVIAR CADASTRO
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <path d="m9 11 3 3L22 4" />
+          </svg> ENVIAR CADASTRO
         </button>
         <p id="participant-form-error" class="login-error" role="alert"></p>
       </form>
       <button type="button" id="btn-form-back" class="btn btn-outline btn-block" style="margin-top:12px;">
-        <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Voltar
+        <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg> Voltar
       </button>
     </div>
   </section>
@@ -181,8 +251,19 @@
     <!-- ---- Header ---- -->
     <header class="app-header">
       <div class="header-left">
-        <button type="button" id="btn-mobile-menu" class="btn-mobile-menu" aria-label="Menu"><svg class="svg-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
-        <h1 class="header-logo"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg> COPA PSYZON</h1>
+        <button type="button" id="btn-mobile-menu" class="btn-mobile-menu" aria-label="Menu"><svg class="svg-icon"
+            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <line x1="4" x2="20" y1="6" y2="6" />
+            <line x1="4" x2="20" y1="12" y2="12" />
+            <line x1="4" x2="20" y1="18" y2="18" />
+          </svg></button>
+        <h1 class="header-logo"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            <path d="M2 12h20" />
+          </svg> COPA PSYZON</h1>
       </div>
       <div class="header-right">
         <span id="role-badge" class="role-badge">VISITANTE</span>
@@ -198,7 +279,12 @@
 
         <!-- Tournament Config -->
         <section class="sidebar-section">
-          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 2h3.4l.8 3.1c.6.2 1.2.6 1.8 1l3-1 1.7 3-2.4 2c.1.6.1 1.2 0 1.8l2.4 2-1.7 3-3-1c-.5.4-1.1.8-1.8 1L13.7 20h-3.4l-.8-3.1c-.6-.2-1.2-.6-1.8-1l-3 1-1.7-3 2.4-2a7 7 0 0 1 0-1.8l-2.4-2 1.7-3 3 1c.5-.4 1.1-.8 1.8-1L10.3 2z"/><circle cx="12" cy="11" r="3"/></svg> Configuração do Torneio</h2>
+          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path
+                d="M10.3 2h3.4l.8 3.1c.6.2 1.2.6 1.8 1l3-1 1.7 3-2.4 2c.1.6.1 1.2 0 1.8l2.4 2-1.7 3-3-1c-.5.4-1.1.8-1.8 1L13.7 20h-3.4l-.8-3.1c-.6-.2-1.2-.6-1.8-1l-3 1-1.7-3 2.4-2a7 7 0 0 1 0-1.8l-2.4-2 1.7-3 3 1c.5-.4 1.1-.8 1.8-1L10.3 2z" />
+              <circle cx="12" cy="11" r="3" />
+            </svg> Configuração do Torneio</h2>
           <div class="form-group">
             <label for="tournament-name">Nome do Torneio</label>
             <input type="text" id="tournament-name" placeholder="Ex: Copa Psyzon 2025" maxlength="60">
@@ -216,7 +302,14 @@
 
         <!-- Prize / Premiação -->
         <section class="sidebar-section">
-          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2M13 12l5.88-9.8M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/></svg> Premiação</h2>
+          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
+              <path d="M11 12 5.12 2.2M13 12l5.88-9.8M8 7h8" />
+              <circle cx="12" cy="17" r="5" />
+              <path d="M12 18v-2h-.5" />
+            </svg> Premiação</h2>
           <div class="form-group">
             <label for="prize-description">Descrição do Prêmio</label>
             <textarea id="prize-description" rows="3" placeholder="Ex: R$500 + Troféu para o campeão"></textarea>
@@ -228,12 +321,22 @@
 
         <!-- Team Registration -->
         <section class="sidebar-section">
-          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg> Cadastro de Times</h2>
+          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01" />
+            </svg> Cadastro de Times</h2>
           <div class="form-group">
             <label for="team-name-input">Nome do Time</label>
             <div class="input-with-action">
               <input type="text" id="team-name-input" placeholder="Ex: Falcões FC" maxlength="40">
-              <button type="button" id="btn-random-name" class="btn-icon-action" title="Gerar nome aleatório" aria-label="Gerar nome aleatório"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01M12 12h.01M8 16h.01"/></svg></button>
+              <button type="button" id="btn-random-name" class="btn-icon-action" title="Gerar nome aleatório"
+                aria-label="Gerar nome aleatório"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                  <path d="M16 8h.01M12 12h.01M8 16h.01" />
+                </svg></button>
             </div>
           </div>
           <div class="form-group">
@@ -242,19 +345,33 @@
           </div>
           <div class="form-group">
             <label for="player-photo-input" class="photo-upload-label">
-              <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> Foto do Jogador (opcional)
+              <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg> Foto do Jogador (opcional)
             </label>
             <input type="file" id="player-photo-input" accept="image/*" class="photo-upload-input">
           </div>
           <button type="button" id="btn-add-team" class="btn btn-sm btn-success btn-block">
-            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg> Adicionar Time
+            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 12h8M12 8v8" />
+            </svg> Adicionar Time
           </button>
           <div id="team-list" class="team-list"></div>
         </section>
 
         <!-- Clients / Player Stats Management -->
         <section class="sidebar-section">
-          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Clientes</h2>
+          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg> Clientes</h2>
           <div class="form-group">
             <label for="client-select">Selecionar Jogador</label>
             <select id="client-select">
@@ -286,9 +403,17 @@
 
         <!-- Code Management -->
         <section class="sidebar-section">
-          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Códigos de Acesso</h2>
+          <h2 class="sidebar-heading"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg> Códigos de Acesso</h2>
           <button type="button" id="btn-generate-codes" class="btn btn-sm btn-warning btn-block">
-            <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Gerar 32 Códigos
+            <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+            </svg> Gerar 32 Códigos
           </button>
           <div id="codes-summary" class="codes-summary"></div>
           <div id="codes-list" class="codes-list"></div>
@@ -297,10 +422,23 @@
         <!-- Actions -->
         <section class="sidebar-section sidebar-actions">
           <button type="button" id="btn-generate" class="btn btn-primary btn-block">
-            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H20"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M20 18h-3.9c-1.3 0-2.5-.6-3.3-1.7l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg> Gerar Chaveamento
+            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H20" />
+              <path d="m18 2 4 4-4 4" />
+              <path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2" />
+              <path d="M20 18h-3.9c-1.3 0-2.5-.6-3.3-1.7l-.5-.8" />
+              <path d="m18 14 4 4-4 4" />
+            </svg> Gerar Chaveamento
           </button>
           <button type="button" id="btn-reset" class="btn btn-danger btn-block">
-            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Resetar Torneio
+            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              <line x1="10" x2="10" y1="11" y2="17" />
+              <line x1="14" x2="14" y1="11" y2="17" />
+            </svg> Resetar Torneio
           </button>
         </section>
 
@@ -314,7 +452,14 @@
 
         <!-- Prize Display Banner -->
         <div id="prize-display" class="prize-display" style="display:none;">
-          <span class="prize-icon"><svg class="svg-icon svg-icon-prize" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#af8a2e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2M13 12l5.88-9.8M8 7h8"/><circle cx="12" cy="17" r="5" fill="#FFD700" stroke="#af8a2e"/><path d="M12 18v-2h-.5"/></svg></span>
+          <span class="prize-icon"><svg class="svg-icon svg-icon-prize" width="40" height="40" viewBox="0 0 24 24"
+              fill="none" stroke="#af8a2e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
+              <path d="M11 12 5.12 2.2M13 12l5.88-9.8M8 7h8" />
+              <circle cx="12" cy="17" r="5" fill="#FFD700" stroke="#af8a2e" />
+              <path d="M12 18v-2h-.5" />
+            </svg></span>
           <p id="prize-text" class="prize-text"></p>
         </div>
 
@@ -323,7 +468,14 @@
 
         <!-- Top 3 Players Card -->
         <div id="top3-card" class="top3-card" style="display:none;">
-          <h3 class="top3-title"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> Top 3 Melhores</h3>
+          <h3 class="top3-title"><svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+              <path d="M4 22h16" />
+              <path
+                d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg> Top 3 Melhores</h3>
           <ol id="top3-list" class="top3-list"></ol>
         </div>
 
@@ -332,7 +484,12 @@
 
         <!-- Empty State -->
         <div id="empty-state" class="empty-state">
-          <span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></span>
+          <span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              <path d="M2 12h20" />
+            </svg></span>
           <p class="empty-title">Nenhum torneio ativo</p>
           <p class="empty-subtitle">Configure os times e gere o chaveamento para começar.</p>
         </div>
@@ -387,12 +544,17 @@
         <div id="penalties-inputs" class="penalties-inputs" style="display:none;">
           <div class="penalty-group">
             <span id="penalty-team1-name" class="penalty-team-name">Time A</span>
-            <input type="number" id="penalty-team1-score" class="score-input score-input-sm" min="0" value="0" placeholder="0">
+            <input type="number" id="penalty-team1-score" class="score-input score-input-sm" min="0" value="0"
+              placeholder="0">
           </div>
-          <span class="penalty-x"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+          <span class="penalty-x"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg></span>
           <div class="penalty-group">
             <span id="penalty-team2-name" class="penalty-team-name">Time B</span>
-            <input type="number" id="penalty-team2-score" class="score-input score-input-sm" min="0" value="0" placeholder="0">
+            <input type="number" id="penalty-team2-score" class="score-input score-input-sm" min="0" value="0"
+              placeholder="0">
           </div>
         </div>
       </div>
@@ -415,8 +577,14 @@
         <div id="profile-avatar" class="profile-avatar"></div>
         <h2 id="profile-player-name" class="profile-player-name"></h2>
         <p id="profile-team-name" class="profile-team-name"></p>
-        <a id="profile-instagram" class="profile-instagram" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
-          <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+        <a id="profile-instagram" class="profile-instagram" href="#" target="_blank" rel="noopener noreferrer"
+          style="display:none;">
+          <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+          </svg>
           <span id="profile-instagram-text"></span>
         </a>
       </div>
@@ -455,12 +623,15 @@
        ============================================ -->
   <div id="champion-banner" class="champion-banner" style="display:none;">
     <div class="champion-content">
-      <span class="champion-emoji"><svg class="champion-trophy-svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18" stroke="#af8a2e" stroke-width="1.5"/>
-        <path d="M4 22h16" stroke="#af8a2e" stroke-width="1.5"/>
-        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" stroke="#af8a2e" stroke-width="1.5"/>
-        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="#FFD700" stroke="#af8a2e" stroke-width="1.5"/>
-      </svg></span>
+      <span class="champion-emoji"><svg class="champion-trophy-svg" width="96" height="96" viewBox="0 0 24 24"
+          fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18" stroke="#af8a2e" stroke-width="1.5" />
+          <path d="M4 22h16" stroke="#af8a2e" stroke-width="1.5" />
+          <path
+            d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"
+            stroke="#af8a2e" stroke-width="1.5" />
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="#FFD700" stroke="#af8a2e" stroke-width="1.5" />
+        </svg></span>
       <h2 id="champion-team-name" class="champion-title"></h2>
       <p class="champion-subtitle">Campeão do Torneio!</p>
       <button type="button" id="btn-close-champion" class="btn btn-outline btn-sm">Fechar</button>
@@ -480,4 +651,5 @@
   <script src="script.js"></script>
 
 </body>
+
 </html>

@@ -58,8 +58,6 @@
   /* ==========================================================
      2. STATE MANAGEMENT
      ========================================================== */
-  const STORAGE_KEY = 'copaPsyzonState';
-  const REMEMBER_KEY = 'copaPsyzonRemember';
 
   let isAdmin = false;
   let currentUser = null;
@@ -478,15 +476,6 @@
   function handleVisitor() {
     isAdmin = false;
     currentUser = null;
-
-    // Save remember choice
-    const rememberCheck = $('#remember-choice');
-    if (rememberCheck && rememberCheck.checked) {
-      try { localStorage.setItem(REMEMBER_KEY, 'visitor'); } catch (_) { /* ignore */ }
-    } else {
-      try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
-    }
-
     showGameSelection();
   }
 
@@ -511,13 +500,11 @@
 
   /** Handle back from game selection */
   function handleGameBack() {
-    try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
     showLoginScreen();
   }
 
   /** Handle logout */
   function handleLogout() {
-    try { localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
     isParticipant = false;
     currentParticipantCode = null;
     if (firebaseAvailable && auth) {
@@ -2306,18 +2293,7 @@
         });
       }
 
-      // 4. Check for remembered choice
-      try {
-        const remembered = localStorage.getItem(REMEMBER_KEY);
-        if (remembered === 'visitor') {
-          isAdmin = false;
-          currentUser = null;
-          showGameSelection();
-          return;
-        }
-      } catch (_) { /* ignore */ }
-
-      // 5. Default: show login screen (auth callback above may override)
+      // 4. Default: show login screen (auth callback above may override)
       showLoginScreen();
     });
   }
