@@ -777,21 +777,16 @@
     // Sync tournament name
     syncTournamentName();
 
-    if (state.teams.length !== requiredCount) {
-      showToast(`Cadastre exatamente ${requiredCount} times para gerar o chaveamento. Você tem ${state.teams.length}.`, 'error');
-      return;
-    }
-
-    // Shuffle teams
-    const shuffled = shuffleArray([...state.teams]);
-
     const roundNames = getRoundNames(requiredCount);
     if (roundNames.length === 0) {
       showToast('Quantidade de times inválida. Escolha 4, 8, 16 ou 32.', 'error');
       return;
     }
-    let matchesInRound = requiredCount / 2;
 
+    // Shuffle already registered teams
+    const shuffled = shuffleArray([...state.teams]);
+
+    let matchesInRound = requiredCount / 2;
     const rounds = [];
 
     roundNames.forEach((name, rIdx) => {
@@ -806,12 +801,16 @@
           dateTime: null
         };
 
-        // First round: populate with shuffled teams
+        // First round: fill with already registered teams (remaining slots stay null/TBD)
         if (rIdx === 0) {
-          const t1 = shuffled[m * 2];
-          const t2 = shuffled[m * 2 + 1];
-          match.team1 = makeTeamSlotData(t1);
-          match.team2 = makeTeamSlotData(t2);
+          const idx1 = m * 2;
+          const idx2 = m * 2 + 1;
+          if (idx1 < shuffled.length) {
+            match.team1 = makeTeamSlotData(shuffled[idx1]);
+          }
+          if (idx2 < shuffled.length) {
+            match.team2 = makeTeamSlotData(shuffled[idx2]);
+          }
         }
 
         matches.push(match);
@@ -825,7 +824,35 @@
     saveState();
 
     renderBracket();
-    showToast('Chaveamento gerado!', 'success');
+    const remaining = requiredCount - shuffled.length;
+    if (remaining > 0) {
+      showToast(`Chaveamento gerado! Aguardando ${remaining} participante(s).`, 'success');
+    } else {
+      showToast('Chaveamento gerado com todos os times!', 'success');
+    }
+  }
+
+  /**
+   * Place a team into the next available slot in round 0 of the bracket.
+   * @param {object} team - team object with teamName, playerName, photo
+   * @returns {boolean} true if placed successfully
+   */
+  function autoPlaceInBracket(team) {
+    if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) return false;
+
+    const firstRound = state.bracket.rounds[0];
+    for (let m = 0; m < firstRound.matches.length; m++) {
+      const match = firstRound.matches[m];
+      if (!match.team1) {
+        match.team1 = makeTeamSlotData(team);
+        return true;
+      }
+      if (!match.team2) {
+        match.team2 = makeTeamSlotData(team);
+        return true;
+      }
+    }
+    return false; // bracket is full
   }
 
   /* ==========================================================
@@ -1894,6 +1921,18 @@
       };
       if (photoData) team.photo = photoData;
       state.teams.push(team);
+
+      // Auto-save Instagram to playerStats
+      if (!state.playerStats) state.playerStats = {};
+      state.playerStats[participantId] = {
+        instagram: instagram || '',
+        trophies: 0,
+        finals: 0,
+        semifinals: 0
+      };
+
+      // Auto-place in bracket if bracket exists
+      autoPlaceInBracket(team);
 
       // Save state
       saveState();
