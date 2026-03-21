@@ -541,6 +541,52 @@ textarea::placeholder {
   background: rgba(255, 59, 48, 0.1);
 }
 
+/* ---------- 9b. Team Item (in sidebar list) ---------- */
+.team-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.team-item:hover {
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.team-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.btn-remove-team {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--accent-red);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background var(--transition);
+  flex-shrink: 0;
+}
+
+.btn-remove-team:hover {
+  background: rgba(255, 59, 48, 0.1);
+}
+
 /* ---------- 10. Main Content ---------- */
 .main-content {
   flex: 1;

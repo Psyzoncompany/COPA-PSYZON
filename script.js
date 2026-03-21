@@ -17,8 +17,24 @@
     appId: "1:000000000000:web:0000000000000000000000"
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+  /** @type {boolean} Whether Firebase is available */
+  let firebaseAvailable = false;
+  /** @type {object|null} Firebase auth instance */
+  let auth = null;
+
+  // Fallback credentials for when Firebase is not available
+  const FALLBACK_EMAIL = 'copa-psyzon@email.com';
+  const FALLBACK_PASSWORD = '451021';
+
+  try {
+    if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      firebaseAvailable = true;
+    }
+  } catch (_) {
+    firebaseAvailable = false;
+  }
 
   /* ==========================================================
      2. STATE MANAGEMENT
@@ -226,16 +242,29 @@
     const submitBtn = $('#login-form button[type="submit"]');
     if (submitBtn) submitBtn.disabled = true;
 
-    auth.signInWithEmailAndPassword(email, password)
-      .then(() => {
-        // onAuthStateChanged will handle the rest
-      })
-      .catch((err) => {
-        if (errorEl) errorEl.textContent = authErrorMessage(err.code);
-      })
-      .finally(() => {
-        if (submitBtn) submitBtn.disabled = false;
-      });
+    if (firebaseAvailable && auth) {
+      // Firebase authentication
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          // onAuthStateChanged will handle the rest
+        })
+        .catch((err) => {
+          if (errorEl) errorEl.textContent = authErrorMessage(err.code);
+        })
+        .finally(() => {
+          if (submitBtn) submitBtn.disabled = false;
+        });
+    } else {
+      // Fallback authentication (local credential check)
+      if (email.trim() === FALLBACK_EMAIL && password === FALLBACK_PASSWORD) {
+        isAdmin = true;
+        currentUser = { email: FALLBACK_EMAIL };
+        showMainApp(true);
+      } else {
+        if (errorEl) errorEl.textContent = 'Credenciais inválidas. Verifique e-mail e senha.';
+      }
+      if (submitBtn) submitBtn.disabled = false;
+    }
   }
 
   /** Handle visitor button */
@@ -247,16 +276,21 @@
 
   /** Handle logout */
   function handleLogout() {
-    auth.signOut().then(() => {
+    if (firebaseAvailable && auth) {
+      auth.signOut().then(() => {
+        isAdmin = false;
+        currentUser = null;
+        showLoginScreen();
+      }).catch(() => {
+        isAdmin = false;
+        currentUser = null;
+        showLoginScreen();
+      });
+    } else {
       isAdmin = false;
       currentUser = null;
       showLoginScreen();
-    }).catch(() => {
-      // Force logout even if signOut fails
-      isAdmin = false;
-      currentUser = null;
-      showLoginScreen();
-    });
+    }
   }
 
   /* ==========================================================
@@ -1298,19 +1332,21 @@
     // 2. Set up event listeners
     setupEventListeners();
 
-    // 3. Listen for Firebase auth state changes
-    auth.onAuthStateChanged((user) => {
-      currentUser = user;
-      if (user) {
-        // User is signed in: show as admin
-        showMainApp(true);
-      } else {
-        // Not signed in: only show login if we haven't already entered as visitor
-        if (!document.getElementById('main-app') || document.getElementById('main-app').style.display === 'none') {
-          showLoginScreen();
+    // 3. Listen for Firebase auth state changes (if available)
+    if (firebaseAvailable && auth) {
+      auth.onAuthStateChanged((user) => {
+        currentUser = user;
+        if (user) {
+          // User is signed in: show as admin
+          showMainApp(true);
+        } else {
+          // Not signed in: only show login if we haven't already entered as visitor
+          if (!document.getElementById('main-app') || document.getElementById('main-app').style.display === 'none') {
+            showLoginScreen();
+          }
         }
-      }
-    });
+      });
+    }
 
     // 4. Default: show login screen (auth callback above may override)
     showLoginScreen();
