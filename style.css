@@ -1794,6 +1794,13 @@ svg line {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .champion-trophy-svg,
+  .champion-emoji {
+    animation: none;
+  }
+}
+
 /* ---------- 23. Utility Classes ---------- */
 .hidden {
   display: none !important;

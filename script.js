@@ -182,7 +182,10 @@
   function generateRandomTeamName() {
     const usedNames = state.teams.map(t => t.teamName.toLowerCase());
     const available = RANDOM_TEAM_NAMES.filter(n => !usedNames.includes(n.toLowerCase()));
-    if (available.length === 0) return RANDOM_TEAM_NAMES[Math.floor(Math.random() * RANDOM_TEAM_NAMES.length)];
+    if (available.length === 0) {
+      showToast('Todos os nomes aleatórios já foram usados.', 'info');
+      return '';
+    }
     return available[Math.floor(Math.random() * available.length)];
   }
 
@@ -214,7 +217,7 @@
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
+          resolve(canvas.toDataURL('image/png'));
         };
         img.onerror = reject;
         img.src = e.target.result;
