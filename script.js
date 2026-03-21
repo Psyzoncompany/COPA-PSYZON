@@ -1,1021 +1,698 @@
-/* ======================================================
-   COPA PSYZON — Script Principal
-   Gerenciamento de Torneio Eliminatório (Mata-Mata)
-   ====================================================== */
-
+/**
+ * COPA PSYZON — Tournament Management Platform
+ * Complete IIFE-wrapped application for managing elimination-style tournaments.
+ */
 (function () {
   'use strict';
 
-  // ——— Estado Global ———
-  let state = {
-    tournamentName: '',
-    teams: [],           // { id, name, img }
-    rounds: [],          // [ [ {id, team1, team2, score1, score2, winner, date, time} ] ]
-    started: false,
-    champion: null
+  /* ==========================================================
+     1. FIREBASE INITIALIZATION
+     ========================================================== */
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    authDomain: "copa-psyzon.firebaseapp.com",
+    projectId: "copa-psyzon",
+    storageBucket: "copa-psyzon.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:0000000000000000000000"
   };
 
-  const LS_KEY = 'copa_psyzon_state';
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 
-  // ——— Seleções (Seleções Nacionais) ———
-  const SELECOES = [
-    { code: '', name: 'Sem seleção', flag: '' },
-    { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
-    { code: 'AR', name: 'Argentina', flag: '🇦🇷' },
-    { code: 'DE', name: 'Alemanha', flag: '🇩🇪' },
-    { code: 'FR', name: 'França', flag: '🇫🇷' },
-    { code: 'ES', name: 'Espanha', flag: '🇪🇸' },
-    { code: 'IT', name: 'Itália', flag: '🇮🇹' },
-    { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
-    { code: 'GB-ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-    { code: 'NL', name: 'Holanda', flag: '🇳🇱' },
-    { code: 'BE', name: 'Bélgica', flag: '🇧🇪' },
-    { code: 'UY', name: 'Uruguai', flag: '🇺🇾' },
-    { code: 'CO', name: 'Colômbia', flag: '🇨🇴' },
-    { code: 'MX', name: 'México', flag: '🇲🇽' },
-    { code: 'JP', name: 'Japão', flag: '🇯🇵' },
-    { code: 'KR', name: 'Coreia do Sul', flag: '🇰🇷' },
-    { code: 'US', name: 'EUA', flag: '🇺🇸' },
-    { code: 'HR', name: 'Croácia', flag: '🇭🇷' },
-    { code: 'MA', name: 'Marrocos', flag: '🇲🇦' },
-    { code: 'SN', name: 'Senegal', flag: '🇸🇳' },
-    { code: 'AU', name: 'Austrália', flag: '🇦🇺' },
-    { code: 'CL', name: 'Chile', flag: '🇨🇱' },
-    { code: 'PE', name: 'Peru', flag: '🇵🇪' },
-    { code: 'EC', name: 'Equador', flag: '🇪🇨' },
-    { code: 'PY', name: 'Paraguai', flag: '🇵🇾' },
-    { code: 'NG', name: 'Nigéria', flag: '🇳🇬' },
-    { code: 'GH', name: 'Gana', flag: '🇬🇭' },
-    { code: 'CM', name: 'Camarões', flag: '🇨🇲' },
-    { code: 'DZ', name: 'Argélia', flag: '🇩🇿' },
-    { code: 'EG', name: 'Egito', flag: '🇪🇬' },
-    { code: 'TR', name: 'Turquia', flag: '🇹🇷' },
-    { code: 'PL', name: 'Polônia', flag: '🇵🇱' },
-    { code: 'SE', name: 'Suécia', flag: '🇸🇪' },
-    { code: 'DK', name: 'Dinamarca', flag: '🇩🇰' },
-    { code: 'CH', name: 'Suíça', flag: '🇨🇭' },
-    { code: 'AT', name: 'Áustria', flag: '🇦🇹' },
-    { code: 'RS', name: 'Sérvia', flag: '🇷🇸' },
-    { code: 'SA', name: 'Arábia Saudita', flag: '🇸🇦' },
-    { code: 'QA', name: 'Catar', flag: '🇶🇦' },
-    { code: 'CR', name: 'Costa Rica', flag: '🇨🇷' },
-  ];
+  /* ==========================================================
+     2. STATE MANAGEMENT
+     ========================================================== */
+  const STORAGE_KEY = 'copaPsyzonState';
 
-  function getFlag(code) {
-    if (!code) return '';
-    const s = SELECOES.find(s => s.code === code);
-    return s ? s.flag : '';
+  let isAdmin = false;
+  let currentUser = null;
+
+  /** @type {{ tournamentName: string, teamCount: number, teams: Array<{id:string, teamName:string, playerName:string}>, prize: string, bracket: null|{rounds: Array}, champion: null|{teamName:string, playerName:string} }} */
+  let state = defaultState();
+
+  /** Returns a fresh default state object */
+  function defaultState() {
+    return {
+      tournamentName: '',
+      teamCount: 8,
+      teams: [],
+      prize: '',
+      bracket: null,
+      champion: null
+    };
   }
 
-  // ——— Seleção de Elementos ———
-  const $ = (sel, ctx = document) => ctx.querySelector(sel);
-  const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
-
-  const elTournamentName = $('#tournament-name');
-  const elTeamCount = $('#team-count');
-  const elTeamList = $('#team-list');
-  const elBtnGenerate = $('#btn-generate');
-  const elBtnShuffle = $('#btn-shuffle');
-  const elBtnReset = $('#btn-reset');
-  const elBracketArea = $('#bracket-area');
-  const elTournamentTitle = $('#tournament-title-display');
-  const elTournamentStatus = $('#tournament-status');
-  const elChampionBanner = $('#champion-banner');
-  const elEmptyState = $('#empty-state');
-  const elToastContainer = $('#toast-container');
-  const elModalOverlay = $('#modal-overlay');
-  const elPlayerDragZone = $('#player-drag-zone');
-  const elDragPool = $('#drag-pool');
-  const elDragSlots = $('#drag-slots');
-  const elBtnConfirmDrag = $('#btn-confirm-drag');
-
-  // ——— Inicialização ———
-  function init() {
-    loadState();
-    bindEvents();
-    renderTeamInputs();
-    if (state.started) {
-      renderBracket();
-    }
-  }
-
-  // ——— Persistência ———
+  /** Persist current state to localStorage */
   function saveState() {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(state));
-    } catch (e) { /* silently fail */ }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (_) { /* quota exceeded – silently fail */ }
   }
 
+  /** Load state from localStorage (or use defaults) */
   function loadState() {
     try {
-      const data = localStorage.getItem(LS_KEY);
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (parsed && parsed.teams) {
-          state = parsed;
-          elTournamentName.value = state.tournamentName || '';
-          elTeamCount.value = state.teams.length || 8;
-        }
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = Object.assign(defaultState(), parsed);
       }
-    } catch (e) { /* silently fail */ }
-  }
-
-  // ——— Eventos ———
-  function bindEvents() {
-    elTeamCount.addEventListener('change', renderTeamInputs);
-    elBtnGenerate.addEventListener('click', generateTournament);
-    elBtnShuffle.addEventListener('click', shuffleTeams);
-    elBtnReset.addEventListener('click', resetTournament);
-    elModalOverlay.addEventListener('click', (e) => {
-      if (e.target === elModalOverlay) closeModal();
-    });
-    if (elBtnConfirmDrag) {
-      elBtnConfirmDrag.addEventListener('click', confirmDragOrder);
+    } catch (_) {
+      state = defaultState();
     }
   }
 
-  // ——— Toast ———
-  function toast(msg, type = 'info') {
-    const el = document.createElement('div');
-    el.className = `toast ${type}`;
-    el.textContent = msg;
-    elToastContainer.appendChild(el);
-    setTimeout(() => el.remove(), 3200);
-  }
+  /* ==========================================================
+     3. DOM REFERENCES (cached for performance)
+     ========================================================== */
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
 
-  // ——— Render Team Inputs ———
-  function renderTeamInputs() {
-    const count = parseInt(elTeamCount.value) || 8;
+  /* ==========================================================
+     4. UTILITY FUNCTIONS
+     ========================================================== */
 
-    // Preserve existing team data
-    const existing = [];
-    if (state.teams.length && !state.started) {
-      state.teams.forEach(t => existing.push({ ...t }));
-    }
-
-    if (!state.started) {
-      state.teams = [];
-      for (let i = 0; i < count; i++) {
-        state.teams.push({
-          id: i,
-          name: existing[i] ? existing[i].name : '',
-          img: existing[i] ? existing[i].img : '',
-          country: existing[i] ? existing[i].country || '' : ''
-        });
-      }
-    }
-
-    elTeamList.innerHTML = '';
-    state.teams.forEach((team, idx) => {
-      const entry = document.createElement('div');
-      entry.className = 'team-entry';
-      entry.draggable = !state.started;
-      entry.dataset.index = idx;
-
-      const countryOpts = SELECOES.map(s =>
-        `<option value="${s.code}" ${team.country === s.code ? 'selected' : ''}>${s.flag} ${s.name}</option>`
-      ).join('');
-
-      entry.innerHTML = `
-        <span class="team-num">${idx + 1}</span>
-        <div class="team-img-wrapper" title="Clique para adicionar imagem">
-          ${team.img
-            ? `<img src="${sanitizeDataUrl(team.img)}" alt="">`
-            : '<span class="img-placeholder">IMG</span>'}
-        </div>
-        <input type="text" placeholder="Nome do time ${idx + 1}" value="${escapeHtml(team.name)}" ${state.started ? 'disabled' : ''}>
-        <select class="country-select" ${state.started ? 'disabled' : ''}>${countryOpts}</select>
-        ${!state.started ? '<button class="remove-team" title="Remover">&times;</button>' : ''}
-      `;
-
-      // Name input
-      const nameInput = $('input[type="text"]', entry);
-      nameInput.addEventListener('input', () => {
-        state.teams[idx].name = nameInput.value.trim();
-        saveState();
-      });
-
-      // Country select
-      const countrySelect = $('.country-select', entry);
-      if (countrySelect) {
-        countrySelect.addEventListener('change', () => {
-          state.teams[idx].country = countrySelect.value;
-          saveState();
-        });
-      }
-
-      // Image click
-      const imgWrapper = $('.team-img-wrapper', entry);
-      if (!state.started) {
-        imgWrapper.addEventListener('click', () => pickImage(idx));
-      }
-
-      // Remove button
-      const removeBtn = $('.remove-team', entry);
-      if (removeBtn) {
-        removeBtn.addEventListener('click', () => {
-          state.teams.splice(idx, 1);
-          // Re-index
-          state.teams.forEach((t, i) => t.id = i);
-          elTeamCount.value = state.teams.length;
-          renderTeamInputs();
-          saveState();
-        });
-      }
-
-      // Drag & Drop reorder
-      if (!state.started) {
-        entry.addEventListener('dragstart', handleTeamDragStart);
-        entry.addEventListener('dragover', handleTeamDragOver);
-        entry.addEventListener('drop', handleTeamDrop);
-        entry.addEventListener('dragend', handleTeamDragEnd);
-      }
-
-      elTeamList.appendChild(entry);
-    });
-
-    saveState();
-  }
-
-  // ——— Image Picker ———
-  function pickImage(teamIdx) {
-    if (state.started) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.addEventListener('change', () => {
-      const file = input.files[0];
-      if (!file) return;
-      if (file.size > 2 * 1024 * 1024) {
-        toast('Imagem muito grande (máx 2MB)', 'error');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        state.teams[teamIdx].img = e.target.result;
-        saveState();
-        renderTeamInputs();
-      };
-      reader.readAsDataURL(file);
-    });
-    input.click();
-  }
-
-  function sanitizeDataUrl(url) {
-    if (!url) return '';
-    if (url.startsWith('data:image/')) return url;
-    return '';
-  }
-
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
-  }
-
-  // ——— Team Drag Reorder ———
-  let dragSrcIndex = null;
-
-  function handleTeamDragStart(e) {
-    dragSrcIndex = parseInt(this.dataset.index);
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  }
-
-  function handleTeamDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    this.classList.add('drag-over');
-  }
-
-  function handleTeamDrop(e) {
-    e.preventDefault();
-    this.classList.remove('drag-over');
-    const targetIndex = parseInt(this.dataset.index);
-    if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
-
-    const moved = state.teams.splice(dragSrcIndex, 1)[0];
-    state.teams.splice(targetIndex, 0, moved);
-    state.teams.forEach((t, i) => t.id = i);
-    renderTeamInputs();
-    saveState();
-  }
-
-  function handleTeamDragEnd() {
-    $$('.team-entry').forEach(el => el.classList.remove('dragging', 'drag-over'));
-    dragSrcIndex = null;
-  }
-
-  // ——— Shuffle Teams ———
-  function shuffleTeams() {
-    if (state.started) return;
-    for (let i = state.teams.length - 1; i > 0; i--) {
+  /**
+   * Fisher-Yates shuffle (in-place, returns same array).
+   * @param {Array} arr
+   * @returns {Array}
+   */
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [state.teams[i], state.teams[j]] = [state.teams[j], state.teams[i]];
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    state.teams.forEach((t, i) => t.id = i);
-    renderTeamInputs();
-    saveState();
-    toast('Times embaralhados!', 'success');
+    return arr;
   }
 
-  // ——— Validate Before Generate ———
-  function validateTeams() {
-    const count = state.teams.length;
-    if (count < 2) {
-      toast('Mínimo de 2 times!', 'error');
-      return false;
-    }
-    // Must be power of 2
-    if ((count & (count - 1)) !== 0) {
-      toast('Quantidade de times deve ser potência de 2 (2, 4, 8, 16, 32...)', 'error');
-      return false;
-    }
-    // All teams must have names
-    for (const t of state.teams) {
-      if (!t.name) {
-        toast('Todos os times precisam de nome!', 'error');
-        return false;
-      }
-    }
-    // No duplicate names
-    const names = state.teams.map(t => t.name.toLowerCase());
-    const unique = new Set(names);
-    if (unique.size !== names.length) {
-      toast('Nomes de times duplicados!', 'error');
-      return false;
-    }
-    return true;
+  /** Generate a unique id string */
+  function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
-  // ——— Generate Tournament ———
-  function generateTournament() {
-    state.tournamentName = elTournamentName.value.trim() || 'COPA PSYZON';
-    if (!validateTeams()) return;
-
-    // Show drag zone for ordering
-    showDragZone();
+  /**
+   * Sanitize a string for safe HTML insertion (prevent XSS).
+   * @param {string} str
+   * @returns {string}
+   */
+  function sanitize(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
-  // ——— Drag Zone for Initial Placement ———
-  function showDragZone() {
-    elPlayerDragZone.classList.add('show');
-    elDragPool.innerHTML = '';
-    elDragSlots.innerHTML = '';
-
-    const shuffled = [...state.teams];
-    // Shuffle for random initial pool order
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
-    shuffled.forEach(team => {
-      const chip = createDragChip(team);
-      elDragPool.appendChild(chip);
-    });
-
-    for (let i = 0; i < state.teams.length; i++) {
-      const slot = document.createElement('div');
-      slot.className = 'drag-slot';
-      slot.dataset.slotIndex = i;
-      slot.textContent = `Posição ${i + 1}`;
-
-      slot.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        slot.classList.add('drag-hover');
-      });
-      slot.addEventListener('dragleave', () => slot.classList.remove('drag-hover'));
-      slot.addEventListener('drop', (e) => {
-        e.preventDefault();
-        slot.classList.remove('drag-hover');
-        const teamId = parseInt(e.dataTransfer.getData('text/plain'));
-        placeTeamInSlot(teamId, slot);
-      });
-
-      elDragSlots.appendChild(slot);
-    }
-
-    elBracketArea.scrollTo({ top: 0, behavior: 'smooth' });
-    toast('Arraste os times para as posições desejadas, ou confirme para posições aleatórias!', 'info');
+  /** Get initials (up to 2 chars) from a name for avatar placeholder */
+  function initials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 
-  function createDragChip(team) {
-    const chip = document.createElement('div');
-    chip.className = 'drag-player';
-    chip.draggable = true;
-    chip.dataset.teamId = team.id;
-    chip.innerHTML = `
-      <div class="dp-avatar">
-        ${team.img ? `<img src="${sanitizeDataUrl(team.img)}" alt="">` : ''}
-      </div>
-      ${team.country ? `<span class="dp-flag">${getFlag(team.country)}</span>` : ''}
-      <span>${escapeHtml(team.name)}</span>
-    `;
-    chip.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', String(team.id));
-      chip.classList.add('dragging');
-    });
-    chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
-    return chip;
+  /* ==========================================================
+     5. TOAST NOTIFICATIONS
+     ========================================================== */
+
+  /**
+   * Show a toast notification.
+   * @param {string} message
+   * @param {'success'|'error'|'info'} type
+   */
+  function showToast(message, type = 'info') {
+    const container = $('#toast-container');
+    if (!container) return;
+
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${sanitize(message)}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      toast.addEventListener('animationend', () => toast.remove());
+    }, 3500);
   }
 
-  function placeTeamInSlot(teamId, slot) {
-    // If slot already filled, return chip to pool
-    if (slot.dataset.filledTeamId !== undefined && slot.dataset.filledTeamId !== '') {
-      const oldId = parseInt(slot.dataset.filledTeamId);
-      const oldTeam = state.teams.find(t => t.id === oldId);
-      if (oldTeam) {
-        elDragPool.appendChild(createDragChip(oldTeam));
-      }
-    }
+  /* ==========================================================
+     6. AUTH MANAGEMENT
+     ========================================================== */
 
-    // Remove chip from pool
-    const chip = $(`.drag-player[data-team-id="${teamId}"]`, elDragPool);
-    if (chip) chip.remove();
-    // Also remove from other slots
-    $$('.drag-slot').forEach(s => {
-      if (s.dataset.filledTeamId === String(teamId)) {
-        const idx = s.dataset.slotIndex;
-        s.textContent = `Posição ${parseInt(idx) + 1}`;
-        s.classList.remove('filled');
-        delete s.dataset.filledTeamId;
-      }
-    });
-
-    const team = state.teams.find(t => t.id === teamId);
-    if (!team) return;
-
-    slot.innerHTML = '';
-    slot.classList.add('filled');
-    slot.dataset.filledTeamId = teamId;
-
-    const miniChip = document.createElement('div');
-    miniChip.className = 'drag-player';
-    miniChip.style.cursor = 'default';
-    miniChip.innerHTML = `
-      <div class="dp-avatar">
-        ${team.img ? `<img src="${sanitizeDataUrl(team.img)}" alt="">` : ''}
-      </div>
-      ${team.country ? `<span class="dp-flag">${getFlag(team.country)}</span>` : ''}
-      <span>${escapeHtml(team.name)}</span>
-    `;
-    slot.appendChild(miniChip);
+  /** Show login screen, hide main app */
+  function showLoginScreen() {
+    const loginScreen = $('#login-screen');
+    const mainApp = $('#main-app');
+    if (loginScreen) loginScreen.style.display = '';
+    if (mainApp) mainApp.style.display = 'none';
+    // Reset login form
+    const loginForm = $('#login-form');
+    if (loginForm) loginForm.style.display = 'none';
+    const loginError = $('#login-error');
+    if (loginError) loginError.textContent = '';
   }
 
-  function confirmDragOrder() {
-    const slots = $$('.drag-slot');
-    const orderedIds = [];
-    let allFilled = true;
+  /**
+   * Show main app with role-based UI.
+   * @param {boolean} admin
+   */
+  function showMainApp(admin) {
+    isAdmin = admin;
+    const loginScreen = $('#login-screen');
+    const mainApp = $('#main-app');
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (mainApp) mainApp.style.display = '';
 
-    slots.forEach(s => {
-      if (s.dataset.filledTeamId !== undefined && s.dataset.filledTeamId !== '') {
-        orderedIds.push(parseInt(s.dataset.filledTeamId));
+    // Role badge
+    const badge = $('#role-badge');
+    if (badge) {
+      if (admin) {
+        badge.textContent = 'DONO';
+        badge.style.background = 'rgba(0,122,255,0.12)';
+        badge.style.color = '#007aff';
       } else {
-        allFilled = false;
+        badge.textContent = 'VISITANTE';
+        badge.style.background = '';
+        badge.style.color = '';
       }
+    }
+
+    // Toggle admin-only elements
+    $$('.admin-only').forEach((el) => {
+      el.style.display = admin ? '' : 'none';
     });
 
-    // If not all filled, auto-fill remaining
-    if (!allFilled) {
-      const placed = new Set(orderedIds);
-      const remaining = state.teams.filter(t => !placed.has(t.id));
-      // Shuffle remaining
-      for (let i = remaining.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
-      }
-      let rIdx = 0;
-      const finalOrder = [];
-      slots.forEach(s => {
-        if (s.dataset.filledTeamId !== undefined && s.dataset.filledTeamId !== '') {
-          finalOrder.push(parseInt(s.dataset.filledTeamId));
-        } else {
-          finalOrder.push(remaining[rIdx].id);
-          rIdx++;
-        }
-      });
-      startTournament(finalOrder);
-    } else {
-      startTournament(orderedIds);
-    }
-
-    elPlayerDragZone.classList.remove('show');
+    // Render current state into the UI
+    populateFormFromState();
+    renderTeamList();
+    renderPrize();
+    renderTournamentTitle();
+    renderBracket();
   }
 
-  // ——— Start Tournament with given order ———
-  function startTournament(orderedIds) {
-    const orderedTeams = orderedIds.map(id => state.teams.find(t => t.id === id));
-    state.teams = orderedTeams.map((t, i) => ({ ...t, id: i }));
-    state.started = true;
-    state.champion = null;
-    state.rounds = [];
+  /** Translate Firebase auth errors to Portuguese messages */
+  function authErrorMessage(code) {
+    const map = {
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/user-disabled': 'Esta conta foi desativada.',
+      'auth/user-not-found': 'Usuário não encontrado.',
+      'auth/wrong-password': 'Senha incorreta.',
+      'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
+      'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
+      'auth/invalid-credential': 'Credenciais inválidas. Verifique e-mail e senha.',
+      'auth/invalid-login-credentials': 'Credenciais inválidas. Verifique e-mail e senha.'
+    };
+    return map[code] || 'Erro ao fazer login. Tente novamente.';
+  }
 
-    // Build first round matches
-    const firstRound = [];
-    for (let i = 0; i < state.teams.length; i += 2) {
-      firstRound.push({
-        id: `R1M${i / 2 + 1}`,
-        team1: state.teams[i],
-        team2: state.teams[i + 1],
-        score1: null,
-        score2: null,
-        winner: null,
-        date: '',
-        time: ''
-      });
+  /** Handle login form submission */
+  function handleLogin(e) {
+    e.preventDefault();
+    const email = ($('#login-email') || {}).value || '';
+    const password = ($('#login-password') || {}).value || '';
+    const errorEl = $('#login-error');
+    if (errorEl) errorEl.textContent = '';
+
+    if (!email.trim() || !password.trim()) {
+      if (errorEl) errorEl.textContent = 'Preencha todos os campos.';
+      return;
     }
-    state.rounds.push(firstRound);
 
-    // Build placeholder rounds
-    let matchCount = firstRound.length / 2;
-    let roundNum = 2;
-    while (matchCount >= 1) {
-      const round = [];
-      for (let i = 0; i < matchCount; i++) {
-        round.push({
-          id: `R${roundNum}M${i + 1}`,
+    // Disable submit button to prevent double-submission
+    const submitBtn = $('#login-form button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => {
+        // onAuthStateChanged will handle the rest
+      })
+      .catch((err) => {
+        if (errorEl) errorEl.textContent = authErrorMessage(err.code);
+      })
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
+      });
+  }
+
+  /** Handle visitor button */
+  function handleVisitor() {
+    isAdmin = false;
+    currentUser = null;
+    showMainApp(false);
+  }
+
+  /** Handle logout */
+  function handleLogout() {
+    auth.signOut().then(() => {
+      isAdmin = false;
+      currentUser = null;
+      showLoginScreen();
+    }).catch(() => {
+      // Force logout even if signOut fails
+      isAdmin = false;
+      currentUser = null;
+      showLoginScreen();
+    });
+  }
+
+  /* ==========================================================
+     7. LOGIN FORM TOGGLE
+     ========================================================== */
+
+  /** Toggle login form visibility with slide animation */
+  function toggleLoginForm() {
+    const form = $('#login-form');
+    if (!form) return;
+    if (form.style.display === 'none' || !form.style.display) {
+      form.style.display = 'block';
+      form.style.animation = 'slideUp 0.3s ease';
+      // Focus first input
+      const emailInput = $('#login-email');
+      if (emailInput) emailInput.focus();
+    } else {
+      form.style.display = 'none';
+    }
+  }
+
+  /* ==========================================================
+     8. FORM STATE SYNC
+     ========================================================== */
+
+  /** Populate sidebar form fields from current state */
+  function populateFormFromState() {
+    const nameInput = $('#tournament-name');
+    if (nameInput) nameInput.value = state.tournamentName || '';
+
+    const countSelect = $('#team-count');
+    if (countSelect) countSelect.value = String(state.teamCount || 8);
+
+    const prizeInput = $('#prize-description');
+    if (prizeInput) prizeInput.value = state.prize || '';
+  }
+
+  /** Save tournament name when it changes */
+  function syncTournamentName() {
+    const nameInput = $('#tournament-name');
+    if (nameInput) {
+      state.tournamentName = nameInput.value.trim();
+      saveState();
+      renderTournamentTitle();
+    }
+  }
+
+  /** Render tournament title display */
+  function renderTournamentTitle() {
+    const display = $('#tournament-title-display');
+    if (!display) return;
+    if (state.tournamentName) {
+      display.textContent = state.tournamentName;
+      display.style.display = '';
+    } else {
+      display.textContent = '';
+      display.style.display = 'none';
+    }
+  }
+
+  /* ==========================================================
+     9. PRIZE MANAGEMENT
+     ========================================================== */
+
+  /** Save prize from textarea */
+  function handleSavePrize() {
+    const prizeInput = $('#prize-description');
+    if (!prizeInput) return;
+    state.prize = prizeInput.value.trim();
+    saveState();
+    renderPrize();
+    showToast('Premiação salva com sucesso!', 'success');
+  }
+
+  /** Render prize display banner */
+  function renderPrize() {
+    const display = $('#prize-display');
+    const text = $('#prize-text');
+    if (!display || !text) return;
+
+    if (state.prize) {
+      text.textContent = state.prize;
+      display.style.display = '';
+    } else {
+      display.style.display = 'none';
+    }
+  }
+
+  /* ==========================================================
+     10. TEAM / PLAYER CRUD
+     ========================================================== */
+
+  /** Add a team+player to state */
+  function handleAddTeam() {
+    const teamInput = $('#team-name-input');
+    const playerInput = $('#player-name-input');
+    if (!teamInput || !playerInput) return;
+
+    const teamName = teamInput.value.trim();
+    const playerName = playerInput.value.trim();
+
+    if (!teamName || !playerName) {
+      showToast('Preencha o nome do time e do jogador.', 'error');
+      return;
+    }
+
+    // Duplicate check (case-insensitive)
+    const duplicate = state.teams.some(
+      (t) => t.teamName.toLowerCase() === teamName.toLowerCase()
+    );
+    if (duplicate) {
+      showToast('Já existe um time com esse nome.', 'error');
+      return;
+    }
+
+    // Max count check
+    const maxTeams = parseInt($('#team-count').value, 10) || state.teamCount;
+    if (state.teams.length >= maxTeams) {
+      showToast(`Limite de ${maxTeams} times atingido.`, 'error');
+      return;
+    }
+
+    state.teams.push({
+      id: generateId(),
+      teamName,
+      playerName
+    });
+    saveState();
+
+    // Clear inputs
+    teamInput.value = '';
+    playerInput.value = '';
+    teamInput.focus();
+
+    renderTeamList();
+    showToast(`Time "${teamName}" adicionado!`, 'success');
+  }
+
+  /**
+   * Remove team by id.
+   * @param {string} id
+   */
+  function removeTeam(id) {
+    if (state.bracket) {
+      showToast('Não é possível remover times com torneio ativo.', 'error');
+      return;
+    }
+    const team = state.teams.find((t) => t.id === id);
+    state.teams = state.teams.filter((t) => t.id !== id);
+    saveState();
+    renderTeamList();
+    if (team) {
+      showToast(`Time "${team.teamName}" removido.`, 'info');
+    }
+  }
+
+  /** Render the team list in sidebar */
+  function renderTeamList() {
+    const container = $('#team-list');
+    if (!container) return;
+
+    const maxTeams = parseInt(($('#team-count') || {}).value, 10) || state.teamCount;
+
+    if (state.teams.length === 0) {
+      container.innerHTML = `<p style="text-align:center;color:var(--text-tertiary);font-size:13px;padding:12px 0;">Nenhum time cadastrado</p>`;
+      return;
+    }
+
+    let html = `<p style="font-size:12px;color:var(--text-tertiary);margin-bottom:8px;font-weight:600;">${state.teams.length}/${maxTeams} times cadastrados</p>`;
+
+    state.teams.forEach((team) => {
+      const canDelete = !state.bracket;
+      html += `
+        <div class="team-item" data-id="${sanitize(team.id)}">
+          <div class="team-item-info">
+            <div class="team-avatar"><span class="av-placeholder">${sanitize(initials(team.playerName))}</span></div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${sanitize(team.teamName)}</div>
+              <div style="font-size:12px;color:var(--text-secondary);">${sanitize(team.playerName)}</div>
+            </div>
+          </div>
+          ${canDelete ? `<button type="button" class="btn-remove-team icon-btn" data-team-id="${sanitize(team.id)}" title="Remover time" aria-label="Remover time">✕</button>` : ''}
+        </div>`;
+    });
+
+    container.innerHTML = html;
+
+    // Attach remove handlers
+    container.querySelectorAll('.btn-remove-team').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        removeTeam(btn.dataset.teamId);
+      });
+    });
+  }
+
+  /* ==========================================================
+     11. TOURNAMENT GENERATION
+     ========================================================== */
+
+  /**
+   * Determine round names based on total number of teams.
+   * @param {number} teamCount
+   * @returns {string[]}
+   */
+  function getRoundNames(teamCount) {
+    switch (teamCount) {
+      case 16:
+        return ['Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Final'];
+      case 8:
+        return ['Quartas de Final', 'Semifinal', 'Final'];
+      case 4:
+        return ['Semifinal', 'Final'];
+      default:
+        return ['Final'];
+    }
+  }
+
+  /** Generate bracket from registered teams */
+  function handleGenerate() {
+    // Sync team count from select
+    const countSelect = $('#team-count');
+    const requiredCount = parseInt(countSelect ? countSelect.value : state.teamCount, 10);
+    state.teamCount = requiredCount;
+
+    // Sync tournament name
+    syncTournamentName();
+
+    if (state.teams.length !== requiredCount) {
+      showToast(`Cadastre exatamente ${requiredCount} times para gerar o chaveamento. Você tem ${state.teams.length}.`, 'error');
+      return;
+    }
+
+    // Shuffle teams
+    const shuffled = shuffleArray([...state.teams]);
+
+    const roundNames = getRoundNames(requiredCount);
+    if (roundNames.length === 0) {
+      showToast('Quantidade de times inválida. Escolha 4, 8 ou 16.', 'error');
+      return;
+    }
+    let matchesInRound = requiredCount / 2;
+
+    const rounds = [];
+
+    roundNames.forEach((name, rIdx) => {
+      const matches = [];
+      for (let m = 0; m < matchesInRound; m++) {
+        const match = {
+          id: `r${rIdx}m${m}`,
           team1: null,
           team2: null,
-          score1: null,
-          score2: null,
           winner: null,
-          date: '',
-          time: ''
-        });
+          penalties: null
+        };
+
+        // First round: populate with shuffled teams
+        if (rIdx === 0) {
+          const t1 = shuffled[m * 2];
+          const t2 = shuffled[m * 2 + 1];
+          match.team1 = { teamName: t1.teamName, playerName: t1.playerName, score: null };
+          match.team2 = { teamName: t2.teamName, playerName: t2.playerName, score: null };
+        }
+
+        matches.push(match);
       }
-      state.rounds.push(round);
-      matchCount = matchCount / 2;
-      roundNum++;
-    }
+      rounds.push({ name, matches });
+      matchesInRound = Math.floor(matchesInRound / 2);
+    });
 
+    state.bracket = { rounds };
+    state.champion = null;
     saveState();
-    renderTeamInputs();
+
     renderBracket();
-    toast('Torneio gerado com sucesso!', 'success');
+    showToast('Chaveamento gerado!', 'success');
   }
 
-  // ——— Round Names ———
-  // SVG icon helper — returns inline SVG HTML using the sprite
-  function svgIcon(id, cls = 'icon') {
-    return `<svg class="${cls}"><use href="#ico-${id}"/></svg>`;
-  }
+  /* ==========================================================
+     12. BRACKET RENDERING
+     ========================================================== */
 
-  function getRoundName(roundIdx, totalRounds) {
-    const remaining = totalRounds - roundIdx;
-    if (remaining === 1) return 'FINAL';
-    if (remaining === 2) return 'SEMIFINAL';
-    if (remaining === 3) return 'QUARTAS';
-    if (remaining === 4) return 'OITAVAS';
-    if (remaining === 5) return '16 AVOS';
-    return `RODADA ${roundIdx + 1}`;
-  }
-
-  function getRoundIcon(roundIdx, totalRounds) {
-    const remaining = totalRounds - roundIdx;
-    if (remaining === 1) return 'trophy';
-    return 'ball';
-  }
-
-  // ——— Render Bracket ———
+  /** Main bracket render function */
   function renderBracket() {
-    if (!state.started || !state.rounds.length) {
-      elBracketArea.innerHTML = '';
-      elBracketArea.appendChild(createEmptyState());
-      elEmptyState && (elEmptyState.style.display = '');
-      elChampionBanner.classList.remove('show');
-      elTournamentTitle.textContent = '';
-      elTournamentStatus.textContent = '';
+    const container = $('#bracket-container');
+    const emptyState = $('#empty-state');
+    if (!container) return;
+
+    // Clear
+    container.innerHTML = '';
+
+    if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) {
+      if (emptyState) emptyState.style.display = '';
       return;
     }
 
-    elTournamentTitle.textContent = state.tournamentName;
-    updateStatus();
+    if (emptyState) emptyState.style.display = 'none';
 
-    const bracket = document.createElement('div');
-    bracket.className = 'bracket';
+    const bracket = state.bracket;
+    const bracketEl = document.createElement('div');
+    bracketEl.className = 'bracket';
 
-    const totalRounds = state.rounds.length;
-    const firstRoundMatches = state.rounds[0].length;
+    bracket.rounds.forEach((round, rIdx) => {
+      // Add connector column between rounds (except before the first)
+      if (rIdx > 0) {
+        const connCol = createConnectorColumn(bracket.rounds[rIdx - 1].matches.length, rIdx);
+        bracketEl.appendChild(connCol);
+      }
 
-    state.rounds.forEach((round, rIdx) => {
-      const roundDiv = document.createElement('div');
-      roundDiv.className = 'round';
+      const roundEl = document.createElement('div');
+      roundEl.className = 'round';
 
-      const title = document.createElement('div');
-      title.className = 'round-title';
-      title.innerHTML = svgIcon(getRoundIcon(rIdx, totalRounds)) + ' ' + getRoundName(rIdx, totalRounds);
-      roundDiv.appendChild(title);
+      // Round header
+      const roundIcon = rIdx === bracket.rounds.length - 1 ? '🏆' : '⚽';
+      const header = document.createElement('div');
+      header.className = 'round-title';
+      header.innerHTML = `<span class="icon">${roundIcon}</span> ${sanitize(round.name)}`;
+      roundEl.appendChild(header);
 
-      const matchesDiv = document.createElement('div');
-      matchesDiv.className = 'round-matches';
+      // Matches container
+      const matchesEl = document.createElement('div');
+      matchesEl.className = 'round-matches';
 
-      // Calculate spacing - matches should be vertically centered between feeder matches
-      const matchHeight = 120;
-      const baseGap = 12;
-      const spacer = rIdx === 0 ? 0 : (Math.pow(2, rIdx) - 1) * (matchHeight + baseGap) / 2;
-
-      matchesDiv.style.paddingTop = spacer + 'px';
-      matchesDiv.style.gap = (rIdx === 0 ? baseGap : (Math.pow(2, rIdx) * (matchHeight + baseGap) - matchHeight)) + 'px';
-
-      round.forEach((match, mIdx) => {
+      round.matches.forEach((match, mIdx) => {
         const card = createMatchCard(match, rIdx, mIdx);
-        matchesDiv.appendChild(card);
+        matchesEl.appendChild(card);
       });
 
-      roundDiv.appendChild(matchesDiv);
-      bracket.appendChild(roundDiv);
-
-      // Connector column
-      if (rIdx < totalRounds - 1) {
-        const connCol = document.createElement('div');
-        connCol.className = 'round connector-col';
-        connCol.style.minWidth = '30px';
-        connCol.style.display = 'flex';
-        connCol.style.alignItems = 'stretch';
-
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', '30');
-        svg.style.overflow = 'visible';
-        svg.style.flex = '1';
-        connCol.appendChild(svg);
-        bracket.appendChild(connCol);
-      }
+      roundEl.appendChild(matchesEl);
+      bracketEl.appendChild(roundEl);
     });
 
-    elBracketArea.innerHTML = '';
-    elBracketArea.appendChild(bracket);
+    container.appendChild(bracketEl);
 
-    // Draw SVG connectors after DOM layout
-    requestAnimationFrame(() => drawConnectors());
-
-    // Champion
+    // Show champion if already determined
     if (state.champion) {
-      showChampion(state.champion);
-    } else {
-      elChampionBanner.classList.remove('show');
+      renderChampionBannerIfNeeded();
     }
   }
 
-  // ——— Create Match Card ———
-  function createMatchCard(match, roundIdx, matchIdx) {
-    const card = document.createElement('div');
-    card.className = 'match-card';
-    card.dataset.round = roundIdx;
-    card.dataset.match = matchIdx;
+  /**
+   * Create a connector column (SVG lines) between two rounds.
+   * @param {number} prevMatchCount – number of matches in the previous round
+   * @param {number} roundIndex
+   * @returns {HTMLElement}
+   */
+  function createConnectorColumn(prevMatchCount, roundIndex) {
+    const col = document.createElement('div');
+    col.className = 'round connector-col';
 
-    // Header
-    const header = document.createElement('div');
-    header.className = 'match-header';
-    header.innerHTML = `
-      <span class="match-id">${match.id}</span>
-      <span class="match-schedule" title="Definir data/hora">${svgIcon('calendar', 'icon-btn')} ${formatSchedule(match)}</span>
-    `;
-    $('.match-schedule', header).addEventListener('click', () => openScheduleModal(roundIdx, matchIdx));
-    card.appendChild(header);
+    // We add a title placeholder to align with the round headers
+    const titlePlaceholder = document.createElement('div');
+    titlePlaceholder.className = 'round-title';
+    titlePlaceholder.innerHTML = '&nbsp;';
+    col.appendChild(titlePlaceholder);
 
-    // Team rows
-    [1, 2].forEach(num => {
-      const team = match[`team${num}`];
-      const score = match[`score${num}`];
-      const isWinner = match.winner && team && match.winner.id === team.id;
-      const isLoser = match.winner && team && match.winner.id !== team.id;
+    const svgWrap = document.createElement('div');
+    svgWrap.style.flex = '1';
+    svgWrap.style.position = 'relative';
+    svgWrap.style.width = '100%';
+    col.appendChild(svgWrap);
 
-      const row = document.createElement('div');
-      row.className = 'match-team' + (isWinner ? ' winner' : '') + (isLoser ? ' loser' : '');
-
-      if (team) {
-        row.innerHTML = `
-          <div class="team-avatar">
-            ${team.img ? `<img src="${sanitizeDataUrl(team.img)}" alt="">` : `<span class="av-placeholder">${team.name.substring(0, 2).toUpperCase()}</span>`}
-          </div>
-          ${team.country ? `<span class="team-flag">${getFlag(team.country)}</span>` : ''}
-          <span class="team-name-bracket">${escapeHtml(team.name)}</span>
-        `;
-
-        if (!match.winner) {
-          const scoreInput = document.createElement('input');
-          scoreInput.type = 'number';
-          scoreInput.className = 'score-input';
-          scoreInput.min = '0';
-          scoreInput.max = '99';
-          scoreInput.value = score !== null ? score : '';
-          scoreInput.placeholder = '-';
-          scoreInput.addEventListener('input', () => {
-            const val = scoreInput.value;
-            state.rounds[roundIdx][matchIdx][`score${num}`] = val !== '' ? parseInt(val) : null;
-            saveState();
-          });
-          row.appendChild(scoreInput);
-        } else {
-          const scoreDisp = document.createElement('span');
-          scoreDisp.className = 'score-display';
-          scoreDisp.textContent = score !== null ? score : '-';
-          row.appendChild(scoreDisp);
-        }
-      } else {
-        row.innerHTML = `
-          <div class="team-avatar"><span class="av-placeholder">?</span></div>
-          <span class="team-name-bracket tbd">A definir</span>
-        `;
-      }
-
-      card.appendChild(row);
+    // Defer SVG drawing until after layout
+    requestAnimationFrame(() => {
+      drawConnectors(svgWrap, col, prevMatchCount, roundIndex);
     });
 
-    // Actions
-    if (match.team1 && match.team2 && !match.winner) {
-      const actions = document.createElement('div');
-      actions.className = 'match-actions';
-      const confirmBtn = document.createElement('button');
-      confirmBtn.className = 'btn btn-primary btn-sm';
-      confirmBtn.innerHTML = svgIcon('check', 'icon-btn') + ' Confirmar';
-      confirmBtn.addEventListener('click', () => confirmResult(roundIdx, matchIdx));
-      actions.appendChild(confirmBtn);
-      card.appendChild(actions);
-    } else if (match.winner) {
-      if (match.pen1 != null && match.pen2 != null) {
-        const penInfo = document.createElement('div');
-        penInfo.className = 'match-penalty-info';
-        penInfo.textContent = `PEN: ${match.pen1} \u2013 ${match.pen2}`;
-        card.appendChild(penInfo);
-      }
-      const actions = document.createElement('div');
-      actions.className = 'match-actions';
-      const editBtn = document.createElement('button');
-      editBtn.className = 'btn btn-warning btn-sm';
-      editBtn.innerHTML = svgIcon('edit', 'icon-btn') + ' Editar';
-      editBtn.addEventListener('click', () => editMatch(roundIdx, matchIdx));
-      actions.appendChild(editBtn);
-      card.appendChild(actions);
-    }
-
-    return card;
+    return col;
   }
 
-  // ——— Schedule ———
-  function formatSchedule(match) {
-    if (match.date || match.time) {
-      const d = match.date ? formatDate(match.date) : '';
-      const t = match.time || '';
-      return `${d} ${t}`.trim() || 'Agendar';
-    }
-    return 'Agendar';
-  }
-
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
-    return dateStr;
-  }
-
-  function openScheduleModal(roundIdx, matchIdx) {
-    const match = state.rounds[roundIdx][matchIdx];
-    elModalOverlay.classList.add('show');
-    const modal = $('.modal', elModalOverlay);
-    modal.innerHTML = `
-      <h3>${svgIcon('calendar')} Agendar Partida — ${match.id}</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="modal-date" value="${match.date || ''}">
-        </div>
-        <div class="form-group">
-          <label>Horário</label>
-          <input type="time" id="modal-time" value="${match.time || ''}">
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-primary btn-sm" id="modal-save">Salvar</button>
-        <button class="btn btn-danger btn-sm" id="modal-cancel">Cancelar</button>
-      </div>
-    `;
-
-    $('#modal-save', modal).addEventListener('click', () => {
-      state.rounds[roundIdx][matchIdx].date = $('#modal-date', modal).value;
-      state.rounds[roundIdx][matchIdx].time = $('#modal-time', modal).value;
-      saveState();
-      renderBracket();
-      closeModal();
-      toast('Agenda atualizada!', 'success');
-    });
-
-    $('#modal-cancel', modal).addEventListener('click', closeModal);
-  }
-
-  function closeModal() {
-    elModalOverlay.classList.remove('show');
-  }
-
-  // ——— Confirm Result ———
-  function confirmResult(roundIdx, matchIdx) {
-    const match = state.rounds[roundIdx][matchIdx];
-    const s1 = match.score1;
-    const s2 = match.score2;
-
-    if (s1 === null || s2 === null) {
-      toast('Insira o placar dos dois times!', 'error');
-      return;
-    }
-
-    if (s1 === s2) {
-      openPenaltyModal(roundIdx, matchIdx);
-      return;
-    }
-
-    applyMatchResult(roundIdx, matchIdx, s1 > s2 ? match.team1 : match.team2);
-  }
-
-  function applyMatchResult(roundIdx, matchIdx, winner, pen1, pen2) {
-    const match = state.rounds[roundIdx][matchIdx];
-    match.winner = { ...winner };
-    if (pen1 != null) match.pen1 = pen1;
-    if (pen2 != null) match.pen2 = pen2;
-
-    const nextRoundIdx = roundIdx + 1;
-    if (nextRoundIdx < state.rounds.length) {
-      const nextMatchIdx = Math.floor(matchIdx / 2);
-      const slot = matchIdx % 2 === 0 ? 'team1' : 'team2';
-      state.rounds[nextRoundIdx][nextMatchIdx][slot] = { ...winner };
-    }
-
-    if (nextRoundIdx >= state.rounds.length) {
-      state.champion = { ...winner };
-    }
-
-    saveState();
-    renderBracket();
-
-    if (state.champion) {
-      toast(`${state.champion.name} é o CAMPEÃO!`, 'success');
-      launchConfetti();
-    } else {
-      toast(`${winner.name} avança!`, 'success');
-    }
-  }
-
-  // ——— Penalty Shootout Modal ———
-  function openPenaltyModal(roundIdx, matchIdx) {
-    const match = state.rounds[roundIdx][matchIdx];
-    elModalOverlay.classList.add('show');
-    const modal = $('.modal', elModalOverlay);
-    modal.innerHTML = `
-      <h3>${svgIcon('bolt')} Disputa de Pênaltis — ${match.id}</h3>
-      <p style="text-align:center;color:var(--text-dim);font-size:.85rem;margin-bottom:14px;">
-        Placar no tempo normal: ${match.score1} x ${match.score2} (Empate)
-      </p>
-      <div class="penalty-row">
-        <div class="penalty-team">
-          ${match.team1.country ? `<span class="penalty-flag">${getFlag(match.team1.country)}</span>` : ''}
-          <span>${escapeHtml(match.team1.name)}</span>
-        </div>
-        <input type="number" id="modal-pen1" min="0" max="99" placeholder="0" class="penalty-input">
-      </div>
-      <div class="penalty-row">
-        <div class="penalty-team">
-          ${match.team2.country ? `<span class="penalty-flag">${getFlag(match.team2.country)}</span>` : ''}
-          <span>${escapeHtml(match.team2.name)}</span>
-        </div>
-        <input type="number" id="modal-pen2" min="0" max="99" placeholder="0" class="penalty-input">
-      </div>
-      <div class="modal-actions" style="margin-top:16px;">
-        <button class="btn btn-primary btn-sm" id="modal-pen-save">${svgIcon('check', 'icon-btn')} Confirmar</button>
-        <button class="btn btn-danger btn-sm" id="modal-pen-cancel">Cancelar</button>
-      </div>
-    `;
-
-    $('#modal-pen-save', modal).addEventListener('click', () => {
-      const p1 = parseInt($('#modal-pen1', modal).value);
-      const p2 = parseInt($('#modal-pen2', modal).value);
-      if (isNaN(p1) || isNaN(p2)) {
-        toast('Insira o placar dos pênaltis!', 'error');
-        return;
-      }
-      if (p1 === p2) {
-        toast('Pênaltis não podem empatar!', 'error');
-        return;
-      }
-      const winner = p1 > p2 ? match.team1 : match.team2;
-      closeModal();
-      applyMatchResult(roundIdx, matchIdx, winner, p1, p2);
-    });
-
-    $('#modal-pen-cancel', modal).addEventListener('click', closeModal);
-  }
-
-  // ——— Edit Match ———
-  function editMatch(roundIdx, matchIdx) {
-    const match = state.rounds[roundIdx][matchIdx];
-    if (!match.winner) return;
-
-    match.winner = null;
-    match.score1 = null;
-    match.score2 = null;
-    delete match.pen1;
-    delete match.pen2;
-
-    cascadeClear(roundIdx, matchIdx);
-    state.champion = null;
-
-    saveState();
-    renderBracket();
-    toast('Jogo liberado para edição!', 'info');
-  }
-
-  function cascadeClear(roundIdx, matchIdx) {
-    const nextRoundIdx = roundIdx + 1;
-    if (nextRoundIdx >= state.rounds.length) return;
-
-    const nextMatchIdx = Math.floor(matchIdx / 2);
-    const slot = matchIdx % 2 === 0 ? 'team1' : 'team2';
-    const nextMatch = state.rounds[nextRoundIdx][nextMatchIdx];
-
-    nextMatch[slot] = null;
-
-    if (nextMatch.winner) {
-      nextMatch.winner = null;
-      nextMatch.score1 = null;
-      nextMatch.score2 = null;
-      delete nextMatch.pen1;
-      delete nextMatch.pen2;
-      cascadeClear(nextRoundIdx, nextMatchIdx);
-    }
-  }
-
-  // ——— Status ———
-  function updateStatus() {
-    if (state.champion) {
-      elTournamentStatus.textContent = `Torneio finalizado — Campeão: ${state.champion.name}`;
-    } else {
-      const totalMatches = state.rounds.reduce((a, r) => a + r.length, 0);
-      const completed = state.rounds.reduce((a, r) => a + r.filter(m => m.winner).length, 0);
-      elTournamentStatus.textContent = `${completed}/${totalMatches} jogos concluídos — ${state.teams.length} times`;
-    }
-  }
-
-  // ——— Show Champion ———
-  function showChampion(team) {
-    elChampionBanner.classList.add('show');
-    elChampionBanner.innerHTML = `
-      <svg class="trophy-svg"><use href="#ico-trophy"/></svg>
-      <h2>CAMPEÃO</h2>
-      ${team.img ? `<div class="champ-avatar"><img src="${sanitizeDataUrl(team.img)}" alt=""></div>` : ''}
-      ${team.country ? `<div class="champ-flag">${getFlag(team.country)}</div>` : ''}
-      <div class="champ-name">${escapeHtml(team.name)}</div>
-    `;
-  }
-
-  // ——— Draw SVG Connectors ———
-  function drawConnectors() {
-    const bracket = $('.bracket', elBracketArea);
+  /**
+   * Draw SVG connector lines inside the connector column.
+   * Lines connect pairs of matches from the previous round to match slots in the next round.
+   */
+  function drawConnectors(svgWrap, col, prevMatchCount, roundIndex) {
+    const bracket = col.closest('.bracket');
     if (!bracket) return;
 
-    const connCols = $$('.connector-col', bracket);
-    const rounds = $$('.round:not(.connector-col)', bracket);
+    const rounds = bracket.querySelectorAll('.round:not(.connector-col)');
+    const prevRound = rounds[roundIndex - 1];
+    const nextRound = rounds[roundIndex];
+    if (!prevRound || !nextRound) return;
 
-    connCols.forEach((col, cIdx) => {
-      const svg = $('svg', col);
-      if (!svg) return;
+    const prevCards = prevRound.querySelectorAll('.match-card');
+    const nextCards = nextRound.querySelectorAll('.match-card');
+    if (prevCards.length === 0 || nextCards.length === 0) return;
 
-      const leftRound = rounds[cIdx];
-      const rightRound = rounds[cIdx + 1];
-      if (!leftRound || !rightRound) return;
+    const bracketRect = bracket.getBoundingClientRect();
+    const colRect = col.getBoundingClientRect();
 
-      const leftCards = $$('.match-card', leftRound);
-      const rightCards = $$('.match-card', rightRound);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'bracket-svg');
+    svg.style.position = 'absolute';
+    svg.style.top = '0';
+    svg.style.left = '0';
+    svg.style.width = '100%';
+    svg.style.height = col.offsetHeight + 'px';
+    svg.style.overflow = 'visible';
 
-      const colRect = col.getBoundingClientRect();
-      svg.setAttribute('height', colRect.height);
-      svg.innerHTML = '';
+    const colLeft = colRect.left;
+    const colWidth = colRect.width;
 
-      rightCards.forEach((rCard, rIdx) => {
-        const topCard = leftCards[rIdx * 2];
-        const botCard = leftCards[rIdx * 2 + 1];
-        if (!topCard || !botCard) return;
+    for (let i = 0; i < prevCards.length; i += 2) {
+      const nextIdx = Math.floor(i / 2);
+      if (nextIdx >= nextCards.length) break;
 
-        const rRect = rCard.getBoundingClientRect();
-        const tRect = topCard.getBoundingClientRect();
-        const bRect = botCard.getBoundingClientRect();
+      const card1 = prevCards[i];
+      const card2 = prevCards[i + 1];
+      const target = nextCards[nextIdx];
 
-        const y1 = tRect.top + tRect.height / 2 - colRect.top;
-        const y2 = bRect.top + bRect.height / 2 - colRect.top;
-        const yMid = rRect.top + rRect.height / 2 - colRect.top;
+      if (!card1 || !card2 || !target) continue;
 
-        const w = 30;
+      const r1 = card1.getBoundingClientRect();
+      const r2 = card2.getBoundingClientRect();
+      const rt = target.getBoundingClientRect();
 
-        // Top line: left mid -> right end at midpoint
-        addLine(svg, 0, y1, w / 2, y1);
-        addLine(svg, w / 2, y1, w / 2, yMid);
-        addLine(svg, w / 2, yMid, w, yMid);
+      // Y positions relative to the column
+      const y1 = r1.top + r1.height / 2 - colRect.top;
+      const y2 = r2.top + r2.height / 2 - colRect.top;
+      const yt = rt.top + rt.height / 2 - colRect.top;
 
-        // Bottom line
-        addLine(svg, 0, y2, w / 2, y2);
-        addLine(svg, w / 2, y2, w / 2, yMid);
-      });
-    });
+      const midX = colWidth / 2;
+
+      // Line from card1 right edge to midpoint
+      addLine(svg, 0, y1, midX, y1);
+      // Line from card2 right edge to midpoint
+      addLine(svg, 0, y2, midX, y2);
+      // Vertical line connecting the two
+      addLine(svg, midX, y1, midX, y2);
+      // Horizontal line from midpoint to next round
+      addLine(svg, midX, yt, colWidth, yt);
+    }
+
+    svgWrap.appendChild(svg);
   }
 
+  /** Helper to add an SVG line */
   function addLine(svg, x1, y1, x2, y2) {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', x1);
@@ -1025,103 +702,625 @@
     svg.appendChild(line);
   }
 
-  // ——— Reset Tournament ———
-  function resetTournament() {
-    if (state.started && !confirm('Tem certeza que deseja resetar o torneio? Todos os dados serão perdidos.')) {
+  /**
+   * Create a single match card element.
+   * @param {object} match
+   * @param {number} rIdx – round index
+   * @param {number} mIdx – match index
+   * @returns {HTMLElement}
+   */
+  function createMatchCard(match, rIdx, mIdx) {
+    const card = document.createElement('div');
+    card.className = 'match-card';
+    card.dataset.matchId = match.id;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'match-header';
+
+    const matchLabel = document.createElement('span');
+    matchLabel.className = 'match-id';
+    matchLabel.textContent = `Jogo ${mIdx + 1}`;
+    header.appendChild(matchLabel);
+
+    // Edit button (admin only, both teams present, no winner yet)
+    const bothTeams = match.team1 && match.team2;
+    const canEdit = isAdmin && bothTeams && !match.winner;
+
+    if (canEdit) {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'match-schedule icon-btn';
+      editBtn.type = 'button';
+      editBtn.innerHTML = '✏️ Resultado';
+      editBtn.addEventListener('click', () => openScoreModal(rIdx, mIdx));
+      header.appendChild(editBtn);
+    } else if (match.winner) {
+      const doneSpan = document.createElement('span');
+      doneSpan.style.cssText = 'font-size:11px;color:var(--accent-green);font-weight:600;';
+      doneSpan.textContent = '✓ Finalizado';
+      header.appendChild(doneSpan);
+    }
+
+    card.appendChild(header);
+
+    // Team 1 slot
+    card.appendChild(createTeamSlot(match.team1, match, 1));
+
+    // Team 2 slot
+    card.appendChild(createTeamSlot(match.team2, match, 2));
+
+    // Penalty info
+    if (match.penalties) {
+      const penDiv = document.createElement('div');
+      penDiv.className = 'match-penalty-info';
+      penDiv.textContent = `Pênaltis: ${match.penalties.team1} ✕ ${match.penalties.team2}`;
+      card.appendChild(penDiv);
+    }
+
+    return card;
+  }
+
+  /**
+   * Create a team slot inside a match card.
+   * @param {object|null} team
+   * @param {object} match
+   * @param {1|2} teamNum
+   * @returns {HTMLElement}
+   */
+  function createTeamSlot(team, match, teamNum) {
+    const slot = document.createElement('div');
+    slot.className = 'match-team';
+
+    if (!team) {
+      // TBD slot
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'team-name-bracket tbd';
+      nameSpan.textContent = 'A definir';
+      slot.appendChild(nameSpan);
+      return slot;
+    }
+
+    // Winner/loser styling
+    if (match.winner === teamNum) {
+      slot.classList.add('winner');
+    } else if (match.winner && match.winner !== teamNum) {
+      slot.classList.add('loser');
+    }
+
+    // Avatar
+    const avatar = document.createElement('div');
+    avatar.className = 'team-avatar';
+    const avPlaceholder = document.createElement('span');
+    avPlaceholder.className = 'av-placeholder';
+    avPlaceholder.textContent = initials(team.playerName);
+    avatar.appendChild(avPlaceholder);
+    slot.appendChild(avatar);
+
+    // Player name (primary display in bracket)
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'team-name-bracket';
+    nameSpan.textContent = team.playerName || team.teamName;
+    nameSpan.title = `${team.teamName} — ${team.playerName}`;
+    slot.appendChild(nameSpan);
+
+    // Score
+    if (team.score !== null && team.score !== undefined) {
+      const scoreSpan = document.createElement('span');
+      scoreSpan.className = 'score-display';
+      scoreSpan.textContent = String(team.score);
+      slot.appendChild(scoreSpan);
+    }
+
+    return slot;
+  }
+
+  /* ==========================================================
+     13. SCORE MODAL
+     ========================================================== */
+
+  /** Currently open match info for the modal */
+  let modalMatch = { roundIdx: -1, matchIdx: -1 };
+
+  /**
+   * Open the score modal for a specific match.
+   * @param {number} rIdx
+   * @param {number} mIdx
+   */
+  function openScoreModal(rIdx, mIdx) {
+    const match = state.bracket.rounds[rIdx].matches[mIdx];
+    if (!match || !match.team1 || !match.team2) return;
+
+    modalMatch = { roundIdx: rIdx, matchIdx: mIdx };
+
+    const modal = $('#score-modal');
+    if (!modal) return;
+
+    // Populate team names
+    const t1Name = $('#modal-team1-name');
+    const t2Name = $('#modal-team2-name');
+    if (t1Name) t1Name.textContent = match.team1.playerName;
+    if (t2Name) t2Name.textContent = match.team2.playerName;
+
+    // Scores
+    const s1 = $('#modal-team1-score');
+    const s2 = $('#modal-team2-score');
+    if (s1) s1.value = match.team1.score !== null ? match.team1.score : 0;
+    if (s2) s2.value = match.team2.score !== null ? match.team2.score : 0;
+
+    // Penalty team names
+    const pt1 = $('#penalty-team1-name');
+    const pt2 = $('#penalty-team2-name');
+    if (pt1) pt1.textContent = match.team1.playerName;
+    if (pt2) pt2.textContent = match.team2.playerName;
+
+    // Reset penalties section
+    const penSection = $('#penalties-section');
+    const penCheck = $('#penalties-check');
+    const penInputs = $('#penalties-inputs');
+    if (penSection) penSection.style.display = '';
+    if (penCheck) penCheck.checked = match.penalties ? true : false;
+    if (penInputs) penInputs.style.display = (match.penalties || (penCheck && penCheck.checked)) ? '' : 'none';
+
+    const ps1 = $('#penalty-team1-score');
+    const ps2 = $('#penalty-team2-score');
+    if (ps1) ps1.value = match.penalties ? match.penalties.team1 : 0;
+    if (ps2) ps2.value = match.penalties ? match.penalties.team2 : 0;
+
+    // Modal title
+    const title = $('#modal-title');
+    if (title) title.textContent = 'Registrar Resultado';
+
+    modal.style.display = 'flex';
+  }
+
+  /** Close the score modal */
+  function closeScoreModal() {
+    const modal = $('#score-modal');
+    if (modal) modal.style.display = 'none';
+    modalMatch = { roundIdx: -1, matchIdx: -1 };
+  }
+
+  /** Handle penalty checkbox toggle */
+  function handlePenaltyToggle() {
+    const penCheck = $('#penalties-check');
+    const penInputs = $('#penalties-inputs');
+    if (!penCheck || !penInputs) return;
+    penInputs.style.display = penCheck.checked ? '' : 'none';
+  }
+
+  /** Auto-show penalties when scores are equal */
+  function handleScoreChange() {
+    const s1 = parseInt(($('#modal-team1-score') || {}).value, 10);
+    const s2 = parseInt(($('#modal-team2-score') || {}).value, 10);
+
+    if (!isNaN(s1) && !isNaN(s2) && s1 === s2) {
+      const penSection = $('#penalties-section');
+      const penCheck = $('#penalties-check');
+      const penInputs = $('#penalties-inputs');
+      if (penSection) penSection.style.display = '';
+      if (penCheck) penCheck.checked = true;
+      if (penInputs) penInputs.style.display = '';
+    }
+  }
+
+  /** Confirm score and determine winner */
+  function handleConfirmScore() {
+    const rIdx = modalMatch.roundIdx;
+    const mIdx = modalMatch.matchIdx;
+    if (rIdx < 0 || mIdx < 0) return;
+
+    const match = state.bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    const score1 = parseInt(($('#modal-team1-score') || {}).value, 10);
+    const score2 = parseInt(($('#modal-team2-score') || {}).value, 10);
+
+    if (isNaN(score1) || isNaN(score2) || score1 < 0 || score2 < 0) {
+      showToast('Insira placares válidos (números >= 0).', 'error');
       return;
     }
-    state = {
-      tournamentName: '',
-      teams: [],
-      rounds: [],
-      started: false,
-      champion: null
-    };
-    elTournamentName.value = '';
-    elTeamCount.value = 8;
-    localStorage.removeItem(LS_KEY);
-    renderTeamInputs();
-    renderBracket();
-    elPlayerDragZone.classList.remove('show');
-    elChampionBanner.classList.remove('show');
-    toast('Torneio resetado!', 'info');
-  }
 
-  // ——— Empty State ———
-  function createEmptyState() {
-    const div = document.createElement('div');
-    div.className = 'empty-state';
-    div.innerHTML = `
-      <svg class="empty-icon-svg"><use href="#ico-ball"/></svg>
-      <p>Nenhum torneio ativo</p>
-      <p style="font-size:.85rem;">Configure os times e clique em <strong>"Gerar Torneio"</strong></p>
-    `;
-    return div;
-  }
+    let winnerNum = null;
+    let penalties = null;
 
-  // ——— Confetti ———
-  function launchConfetti() {
-    const canvas = document.getElementById('confetti-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    if (score1 !== score2) {
+      // Clear winner from regular score
+      winnerNum = score1 > score2 ? 1 : 2;
+    } else {
+      // Draw: must have penalties
+      const penCheck = $('#penalties-check');
+      if (!penCheck || !penCheck.checked) {
+        showToast('Empate! Marque os pênaltis para decidir o vencedor.', 'error');
+        return;
+      }
 
-    const particles = [];
-    const colors = ['#ffdf00', '#009c3b', '#002776', '#ffffff', '#00e676', '#ff4444'];
+      const pen1 = parseInt(($('#penalty-team1-score') || {}).value, 10);
+      const pen2 = parseInt(($('#penalty-team2-score') || {}).value, 10);
 
-    for (let i = 0; i < 150; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - canvas.height,
-        w: Math.random() * 10 + 5,
-        h: Math.random() * 6 + 3,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        vy: Math.random() * 3 + 2,
-        vx: (Math.random() - 0.5) * 2,
-        rot: Math.random() * 360,
-        rotSpeed: (Math.random() - 0.5) * 10
-      });
+      if (isNaN(pen1) || isNaN(pen2) || pen1 < 0 || pen2 < 0) {
+        showToast('Insira placares de pênaltis válidos.', 'error');
+        return;
+      }
+
+      if (pen1 === pen2) {
+        showToast('Pênaltis não podem terminar empatados.', 'error');
+        return;
+      }
+
+      penalties = { team1: pen1, team2: pen2 };
+      winnerNum = pen1 > pen2 ? 1 : 2;
     }
 
-    let frame = 0;
-    const maxFrames = 180;
+    // Update match
+    match.team1.score = score1;
+    match.team2.score = score2;
+    match.winner = winnerNum;
+    match.penalties = penalties;
 
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rot += p.rotSpeed;
-        p.vy += 0.05;
+    // Advance winner to next round
+    const winnerTeam = winnerNum === 1 ? match.team1 : match.team2;
+    const totalRounds = state.bracket.rounds.length;
 
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rot * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, 1 - frame / maxFrames);
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        ctx.restore();
-      });
+    if (rIdx < totalRounds - 1) {
+      // Determine slot in next round
+      const nextRound = state.bracket.rounds[rIdx + 1];
+      const nextMatchIdx = Math.floor(mIdx / 2);
+      const nextMatch = nextRound.matches[nextMatchIdx];
 
-      frame++;
-      if (frame < maxFrames) {
-        requestAnimationFrame(animate);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (nextMatch) {
+        const slot = mIdx % 2 === 0 ? 'team1' : 'team2';
+        nextMatch[slot] = {
+          teamName: winnerTeam.teamName,
+          playerName: winnerTeam.playerName,
+          score: null
+        };
       }
     }
 
-    animate();
+    // Check if this was the final
+    const isFinal = rIdx === totalRounds - 1;
+
+    saveState();
+    closeScoreModal();
+    renderBracket();
+
+    if (isFinal) {
+      state.champion = {
+        teamName: winnerTeam.teamName,
+        playerName: winnerTeam.playerName
+      };
+      saveState();
+      showChampionCelebration();
+    } else {
+      showToast('Resultado registrado!', 'success');
+    }
   }
 
-  // Redraw connectors on resize
-  window.addEventListener('resize', () => {
-    if (state.started) {
-      requestAnimationFrame(drawConnectors);
-    }
-  });
+  /* ==========================================================
+     14. CHAMPION CELEBRATION
+     ========================================================== */
 
-  // Init
-  document.addEventListener('DOMContentLoaded', init);
+  let confettiAnimationId = null;
+
+  /** Trigger the champion celebration */
+  function showChampionCelebration() {
+    if (!state.champion) return;
+
+    const banner = $('#champion-banner');
+    const nameEl = $('#champion-team-name');
+    if (banner) {
+      banner.style.display = 'flex';
+    }
+    if (nameEl) {
+      nameEl.textContent = state.champion.playerName;
+    }
+
+    startConfetti();
+    showToast(`🏆 Campeão: ${state.champion.playerName}!`, 'success');
+  }
+
+  /** Show champion banner if champion exists (on page load) */
+  function renderChampionBannerIfNeeded() {
+    /* Don't auto-show banner on reload; user can see it in bracket */
+  }
+
+  /** Close champion banner */
+  function closeChampionBanner() {
+    const banner = $('#champion-banner');
+    if (banner) banner.style.display = 'none';
+    stopConfetti();
+  }
+
+  /* ==========================================================
+     15. CONFETTI ANIMATION
+     ========================================================== */
+
+  /** Start confetti particle animation */
+  function startConfetti() {
+    const canvas = $('#confetti-canvas');
+    if (!canvas) return;
+
+    canvas.style.display = 'block';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const ctx = canvas.getContext('2d');
+    const colors = ['#FFD700', '#34c759', '#007aff', '#ff3b30', '#ffffff', '#ff9500', '#af8a2e'];
+    const particles = [];
+    const PARTICLE_COUNT = 200;
+    const DURATION = 5000;
+    const startTime = Date.now();
+
+    // Create particles
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        w: Math.random() * 8 + 4,
+        h: Math.random() * 6 + 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 3,
+        vy: Math.random() * 4 + 2,
+        rotation: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 10,
+        shape: Math.random() > 0.5 ? 'rect' : 'circle'
+      });
+    }
+
+    function animate() {
+      const elapsed = Date.now() - startTime;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fade out in the last second
+      const opacity = elapsed > DURATION - 1000
+        ? Math.max(0, 1 - (elapsed - (DURATION - 1000)) / 1000)
+        : 1;
+
+      ctx.globalAlpha = opacity;
+
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.rotSpeed;
+
+        // Wrap horizontally
+        if (p.x > canvas.width + 20) p.x = -20;
+        if (p.x < -20) p.x = canvas.width + 20;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+
+        if (p.shape === 'rect') {
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      });
+
+      ctx.globalAlpha = 1;
+
+      if (elapsed < DURATION) {
+        confettiAnimationId = requestAnimationFrame(animate);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.display = 'none';
+        confettiAnimationId = null;
+      }
+    }
+
+    confettiAnimationId = requestAnimationFrame(animate);
+  }
+
+  /** Stop confetti animation */
+  function stopConfetti() {
+    if (confettiAnimationId) {
+      cancelAnimationFrame(confettiAnimationId);
+      confettiAnimationId = null;
+    }
+    const canvas = $('#confetti-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.style.display = 'none';
+    }
+  }
+
+  /* ==========================================================
+     16. TOURNAMENT RESET
+     ========================================================== */
+
+  /** Reset tournament (bracket + champion only, keep teams) */
+  function handleReset() {
+    if (!confirm('Tem certeza que deseja resetar o torneio? O chaveamento e resultados serão apagados.')) {
+      return;
+    }
+
+    state.bracket = null;
+    state.champion = null;
+    saveState();
+
+    closeChampionBanner();
+    renderBracket();
+    renderTeamList();
+    showToast('Torneio resetado com sucesso.', 'info');
+  }
+
+  /* ==========================================================
+     17. EVENT LISTENERS
+     ========================================================== */
+
+  /** Set up all event listeners */
+  function setupEventListeners() {
+    // Login form toggle
+    const btnShowLogin = $('#btn-show-login');
+    if (btnShowLogin) {
+      btnShowLogin.addEventListener('click', toggleLoginForm);
+    }
+
+    // Login form submit
+    const loginForm = $('#login-form');
+    if (loginForm) {
+      loginForm.addEventListener('submit', handleLogin);
+    }
+
+    // Visitor button
+    const btnVisitor = $('#btn-visitor');
+    if (btnVisitor) {
+      btnVisitor.addEventListener('click', handleVisitor);
+    }
+
+    // Logout button
+    const btnLogout = $('#btn-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', handleLogout);
+    }
+
+    // Add team button
+    const btnAddTeam = $('#btn-add-team');
+    if (btnAddTeam) {
+      btnAddTeam.addEventListener('click', handleAddTeam);
+    }
+
+    // Enter key in team/player inputs
+    const teamInput = $('#team-name-input');
+    const playerInput = $('#player-name-input');
+    [teamInput, playerInput].forEach((input) => {
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddTeam();
+          }
+        });
+      }
+    });
+
+    // Save prize
+    const btnSavePrize = $('#btn-save-prize');
+    if (btnSavePrize) {
+      btnSavePrize.addEventListener('click', handleSavePrize);
+    }
+
+    // Generate bracket
+    const btnGenerate = $('#btn-generate');
+    if (btnGenerate) {
+      btnGenerate.addEventListener('click', handleGenerate);
+    }
+
+    // Reset tournament
+    const btnReset = $('#btn-reset');
+    if (btnReset) {
+      btnReset.addEventListener('click', handleReset);
+    }
+
+    // Score modal: confirm
+    const btnConfirm = $('#btn-confirm-score');
+    if (btnConfirm) {
+      btnConfirm.addEventListener('click', handleConfirmScore);
+    }
+
+    // Score modal: cancel
+    const btnCancel = $('#btn-cancel-modal');
+    if (btnCancel) {
+      btnCancel.addEventListener('click', closeScoreModal);
+    }
+
+    // Score modal: backdrop click
+    const backdrop = $('.modal-backdrop[data-dismiss="modal"]');
+    if (backdrop) {
+      backdrop.addEventListener('click', closeScoreModal);
+    }
+
+    // Penalties checkbox
+    const penCheck = $('#penalties-check');
+    if (penCheck) {
+      penCheck.addEventListener('change', handlePenaltyToggle);
+    }
+
+    // Score inputs: auto-detect draw
+    const s1Input = $('#modal-team1-score');
+    const s2Input = $('#modal-team2-score');
+    [s1Input, s2Input].forEach((input) => {
+      if (input) {
+        input.addEventListener('input', handleScoreChange);
+      }
+    });
+
+    // Champion banner close
+    const btnCloseChamp = $('#btn-close-champion');
+    if (btnCloseChamp) {
+      btnCloseChamp.addEventListener('click', closeChampionBanner);
+    }
+
+    // Tournament name: save on blur/change
+    const tournamentNameInput = $('#tournament-name');
+    if (tournamentNameInput) {
+      tournamentNameInput.addEventListener('blur', syncTournamentName);
+      tournamentNameInput.addEventListener('change', syncTournamentName);
+    }
+
+    // Team count select: save on change
+    const teamCountSelect = $('#team-count');
+    if (teamCountSelect) {
+      teamCountSelect.addEventListener('change', () => {
+        state.teamCount = parseInt(teamCountSelect.value, 10);
+        saveState();
+        renderTeamList();
+      });
+    }
+
+    // Handle window resize for confetti canvas
+    window.addEventListener('resize', () => {
+      const canvas = $('#confetti-canvas');
+      if (canvas && canvas.style.display !== 'none') {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    });
+  }
+
+  /* ==========================================================
+     18. INITIALIZATION
+     ========================================================== */
+
+  /** Main initialization function */
+  function init() {
+    // 1. Load persisted state
+    loadState();
+
+    // 2. Set up event listeners
+    setupEventListeners();
+
+    // 3. Listen for Firebase auth state changes
+    auth.onAuthStateChanged((user) => {
+      currentUser = user;
+      if (user) {
+        // User is signed in: show as admin
+        showMainApp(true);
+      } else {
+        // Not signed in: only show login if we haven't already entered as visitor
+        if (!document.getElementById('main-app') || document.getElementById('main-app').style.display === 'none') {
+          showLoginScreen();
+        }
+      }
+    });
+
+    // 4. Default: show login screen (auth callback above may override)
+    showLoginScreen();
+  }
+
+  // Run initialization when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
 })();
