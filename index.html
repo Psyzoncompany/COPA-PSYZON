@@ -426,6 +426,19 @@
               <label for="client-semifinals">Semifinais</label>
               <input type="number" id="client-semifinals" min="0" value="0" placeholder="0">
             </div>
+            <div class="form-group">
+              <label for="client-goals">Gols Feitos</label>
+              <input type="number" id="client-goals" value="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="client-goals-taken">Gols Tomados</label>
+              <input type="number" id="client-goals-taken" value="0" placeholder="0">
+            </div>
+            <!-- Saldo fica como opção caso dono queira forçar override, senão calcula -->
+            <div class="form-group">
+              <label for="client-goal-diff">Saldo de Gols</label>
+              <input type="number" id="client-goal-diff" value="0" placeholder="0">
+            </div>
             <button type="button" id="btn-save-client" class="btn btn-sm btn-primary btn-block">
               Salvar Dados do Jogador
             </button>

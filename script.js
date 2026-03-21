@@ -2101,10 +2101,16 @@
     const trInput = $('#client-trophies');
     const fiInput = $('#client-finals');
     const sfInput = $('#client-semifinals');
+    const glInput = $('#client-goals');
+    const gtInput = $('#client-goals-taken');
+    const gdInput = $('#client-goal-diff');
     if (igInput) igInput.value = stats.instagram || '';
     if (trInput) trInput.value = stats.trophies || 0;
     if (fiInput) fiInput.value = stats.finals || 0;
     if (sfInput) sfInput.value = stats.semifinals || 0;
+    if (glInput) glInput.value = stats.goals || 0;
+    if (gtInput) gtInput.value = stats.goalsTaken || 0;
+    if (gdInput) gdInput.value = stats.goalDiff || 0;
   }
 
   /** Save client stats */
@@ -2122,10 +2128,16 @@
       instagram: ($('#client-instagram') || {}).value || '',
       trophies: parseInt(($('#client-trophies') || {}).value, 10) || 0,
       finals: parseInt(($('#client-finals') || {}).value, 10) || 0,
-      semifinals: parseInt(($('#client-semifinals') || {}).value, 10) || 0
+      semifinals: parseInt(($('#client-semifinals') || {}).value, 10) || 0,
+      goals: parseInt(($('#client-goals') || {}).value, 10) || 0,
+      goalsTaken: parseInt(($('#client-goals-taken') || {}).value, 10) || 0,
+      goalDiff: parseInt(($('#client-goal-diff') || {}).value, 10) || 0
     };
 
     saveState();
+    if ($('#ranking-tab').style.display !== 'none') {
+      renderRankingTable();
+    }
     renderTop3();
     showToast('Dados do jogador salvos!', 'success');
   }
