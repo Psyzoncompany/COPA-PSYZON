@@ -990,6 +990,8 @@
     if (!bracket || !bracket.rounds || bracket.rounds.length === 0) {
       if (emptyState) emptyState.style.display = 'flex';
       if ($('#btn-finish-tournament')) $('#btn-finish-tournament').style.display = 'none';
+      if ($('#bracket-display-mode-selector')) $('#bracket-display-mode-selector').style.display = 'none';
+      if ($('#list-container')) $('#list-container').innerHTML = '';
       return;
     }
 
@@ -997,6 +999,9 @@
     if ($('#btn-finish-tournament')) {
       // Só mostra o botão de finalizar se for o torneio atual
       $('#btn-finish-tournament').style.display = currentViewingBracketId ? 'none' : '';
+    }
+    if ($('#bracket-display-mode-selector')) {
+      $('#bracket-display-mode-selector').style.display = 'flex';
     }
 
     const bracketEl = document.createElement('div');
@@ -1068,7 +1073,170 @@
     if (state.champion) {
       renderChampionBannerIfNeeded();
     }
+    
+    // Render list view side-by-side
+    renderListView();
   }
+
+  /* ---------- 12b. LIST VIEW FEATURE ---------- */
+  function renderListView() {
+    const listContainer = $('#list-container');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    const bracket = getCurrentBracket();
+    if (!bracket || !bracket.rounds || bracket.rounds.length === 0) {
+      return;
+    }
+
+    bracket.rounds.forEach((round, rIdx) => {
+      if (!round.matches || round.matches.length === 0) return;
+
+      const phaseSection = document.createElement('div');
+      phaseSection.className = 'phase-list-section';
+
+      const phaseTitle = document.createElement('div');
+      phaseTitle.className = 'phase-list-title';
+      phaseTitle.textContent = round.name;
+      phaseSection.appendChild(phaseTitle);
+
+      const cardsContainer = document.createElement('div');
+      cardsContainer.className = 'match-list-cards';
+
+      round.matches.forEach((match, mIdx) => {
+        const card = document.createElement('div');
+        card.className = 'match-list-card';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'match-list-header';
+        
+        const badge = document.createElement('span');
+        badge.className = 'match-list-badge';
+        badge.textContent = `${round.name.split(' ')[0]} ${mIdx + 1}`;
+        header.appendChild(badge);
+
+        const dtSpan = document.createElement('span');
+        dtSpan.className = 'match-list-datetime';
+        if (match.dateTime) {
+          const parts = match.dateTime.split('T');
+          let text = '';
+          if (parts[0] && parts[0] !== 'HOJE') {
+             const dp = parts[0].split('-');
+             text = dp.length === 3 ? `${dp[2]}/${dp[1]}` : parts[0];
+          } else if (parts[0] === 'HOJE') {
+             text = 'Hoje';
+          }
+          if (parts[1]) {
+             text += (text ? ' • ' : '') + parts[1];
+          }
+          dtSpan.innerHTML = `<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${text}`;
+        } else {
+          dtSpan.innerHTML = `<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> A definir`;
+        }
+        header.appendChild(dtSpan);
+        card.appendChild(header);
+
+        // Versus section
+        const versusWrap = document.createElement('div');
+        versusWrap.className = 'match-list-versus';
+
+        // Helper function for building a team side
+        function buildTeamSide(teamData) {
+          const t = document.createElement('div');
+          t.className = 'match-list-team';
+          
+          let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
+          let nameHtml = 'A definir';
+          
+          if (teamData) {
+            const initials = teamData.playerName ? teamData.playerName.substring(0,2).toUpperCase() : teamData.teamName.substring(0,2).toUpperCase();
+            imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initials)}</span>`;
+            nameHtml = sanitize(teamData.teamName || teamData.playerName);
+          }
+          
+          t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
+          return t;
+        }
+
+        const t1 = buildTeamSide(match.team1);
+        const t2 = buildTeamSide(match.team2);
+
+        // Center X
+        const cCenter = document.createElement('div');
+        cCenter.className = 'match-list-score-container';
+        
+        const s1 = document.createElement('div');
+        s1.className = 'match-list-score';
+        s1.textContent = (match.team1 && match.team1.score !== null) ? match.team1.score : '';
+        
+        const sx = document.createElement('div');
+        sx.className = 'match-list-x';
+        sx.textContent = 'X';
+
+        const s2 = document.createElement('div');
+        s2.className = 'match-list-score';
+        s2.textContent = (match.team2 && match.team2.score !== null) ? match.team2.score : '';
+        
+        cCenter.appendChild(s1);
+        cCenter.appendChild(sx);
+        cCenter.appendChild(s2);
+        
+        versusWrap.appendChild(t1);
+        versusWrap.appendChild(cCenter);
+        versusWrap.appendChild(t2);
+
+        card.appendChild(versusWrap);
+
+        // Penalties if they exist
+        if (match.penalties) {
+          const pen = document.createElement('div');
+          pen.style.textAlign = 'center';
+          pen.style.fontSize = '12px';
+          pen.style.color = '#aaa';
+          pen.style.marginTop = '12px';
+          pen.innerHTML = `Pênaltis: ${match.penalties.team1} x ${match.penalties.team2}`;
+          card.appendChild(pen);
+        }
+
+        // Edit hook for Admin
+        if (isAdmin && match.team1 && match.team2) {
+           card.style.cursor = 'pointer';
+           card.title = "Clique para registrar/editar resultado";
+           card.addEventListener('click', () => openScoreModal(rIdx, mIdx));
+        }
+
+        cardsContainer.appendChild(card);
+      });
+
+      phaseSection.appendChild(cardsContainer);
+      listContainer.appendChild(phaseSection);
+    });
+  }
+
+  // Bracket Display Mode Toggle Logic
+  document.addEventListener('DOMContentLoaded', () => {
+    function toggleMode() {
+      const listRadio = document.getElementById('mode-list');
+      const bContainer = document.getElementById('bracket-container');
+      const lContainer = document.getElementById('list-container');
+      
+      if (bContainer && lContainer && listRadio) {
+        if (listRadio.checked) {
+          bContainer.style.display = 'none';
+          lContainer.style.display = 'block';
+        } else {
+          bContainer.style.display = 'block';
+          lContainer.style.display = 'none';
+        }
+      }
+    }
+
+    const listRadio = document.getElementById('mode-list');
+    const treeRadio = document.getElementById('mode-tree');
+    if (listRadio) listRadio.addEventListener('change', toggleMode);
+    if (treeRadio) treeRadio.addEventListener('change', toggleMode);
+  });
 
   /**
    * Create a connector column (SVG lines) between two rounds.

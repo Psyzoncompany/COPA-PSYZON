@@ -560,8 +560,26 @@
 
         <!-- Tab Contents -->
         <div id="bracket-tab" class="tab-content active">
+          
+          <!-- Display Mode Selector (Added) -->
+          <div id="bracket-display-mode-selector" class="display-mode-selector" style="display:none;">
+            <p class="display-mode-title">Formato de exibição</p>
+            <div class="segmented-control-wrapper">
+              <div class="segmented-control">
+                <input type="radio" id="mode-tree" name="display-mode" value="tree" checked>
+                <label for="mode-tree">Árvore</label>
+                <input type="radio" id="mode-list" name="display-mode" value="list">
+                <label for="mode-list">Lista</label>
+                <div class="segmented-control-bg"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- Bracket -->
           <div id="bracket-container" class="bracket-container"></div>
+          
+          <!-- List View -->
+          <div id="list-container" class="list-container" style="display:none;"></div>
           
           <!-- Empty State -->
           <div id="empty-state" class="empty-state" style="display:none;">
