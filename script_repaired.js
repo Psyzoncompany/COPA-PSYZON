@@ -1,5 +1,5 @@
 /**
- * COPA PSYZON â€” Tournament Management Platform
+ * COPA PSYZON � Tournament Management Platform
  * Complete IIFE-wrapped application for managing elimination-style tournaments.
  */
 (function () {
@@ -110,7 +110,7 @@
 
         // Auto-generate bracket if it doesn't exist
         ensureBracketExists();
-
+        
         // Re-render UI immediately if we are in the main app
         const mainApp = $('#main-app');
         if (mainApp && mainApp.style.display !== 'none') {
@@ -125,7 +125,7 @@
             renderCodesList();
           }
         }
-
+        
         if (firstLoad) {
           firstLoad = false;
           if (typeof callback === 'function') callback();
@@ -295,7 +295,7 @@
      4c. RANDOM TEAM NAME GENERATOR
      ========================================================== */
   const RANDOM_TEAM_NAMES = [
-    'Trovões FC', 'Ãguias Douradas', 'Fúria Negra', 'Dragões de Fogo',
+    'Trovões FC', 'Águias Douradas', 'Fúria Negra', 'Dragões de Fogo',
     'Lobos Selvagens', 'Falcões de Aço', 'Leões do Norte', 'Tubarões Azuis',
     'Panteras Negras', 'Fênix Renascida', 'Relâmpago FC', 'Guerreiros de Ferro',
     'Cobras Venenosas', 'Titãs do Sul', 'Cavaleiros da Lua', 'Vulcões FC',
@@ -1020,7 +1020,7 @@
           <span style="font-size: 13px;">Você está vendo o chaveamento de: <b>${sanitize(getCurrentBracketName())}</b></span>
         </div>
         <button type="button" class="btn btn-primary btn-sm btn-return-current">
-          â† Voltar ao Atual
+          � � Voltar ao Atual
         </button>
       `;
       const btnReturn = timeMachineBar.querySelector('.btn-return-current');
@@ -1072,7 +1072,7 @@
 
   /**
    * Create a connector column (SVG lines) between two rounds.
-   * @param {number} prevMatchCount â€“ number of matches in the previous round
+   * @param {number} prevMatchCount � number of matches in the previous round
    * @param {number} roundIndex
    * @returns {HTMLElement}
    */
@@ -1177,8 +1177,8 @@
   /**
    * Create a single match card element.
    * @param {object} match
-   * @param {number} rIdx â€“ round index
-   * @param {number} mIdx â€“ match index
+   * @param {number} rIdx � round index
+   * @param {number} mIdx � match index
    * @returns {HTMLElement}
    */
   function createMatchCard(match, rIdx, mIdx) {
@@ -1219,11 +1219,11 @@
     if (canEdit && !match.winner) {
       const dtBar = document.createElement('div');
       dtBar.className = 'match-datetime-bar';
-
+      
       const dateInp = document.createElement('input');
       dateInp.type = 'date';
       dateInp.className = 'card-date-input';
-
+      
       const timeInp = document.createElement('input');
       timeInp.type = 'time';
       timeInp.className = 'card-time-input';
@@ -1238,9 +1238,9 @@
         const dVal = dateInp.value || 'HOJE';
         const tVal = timeInp.value;
         if (dateInp.value || timeInp.value) {
-          match.dateTime = dVal + (tVal ? 'T' + tVal : '');
+           match.dateTime = dVal + (tVal ? 'T' + tVal : '');
         } else {
-          match.dateTime = null;
+           match.dateTime = null;
         }
         saveState();
       };
@@ -1248,8 +1248,8 @@
       dateInp.addEventListener('change', saveDateTime);
       // Fallback para preencher data caso digite apenas o tempo primeiro
       timeInp.addEventListener('change', () => {
-        if (!dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
-        saveDateTime();
+         if (!dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
+         saveDateTime();
       });
 
       dtBar.appendChild(dateInp);
@@ -1258,7 +1258,7 @@
     } else if (match.dateTime) {
       const dtBar = document.createElement('div');
       dtBar.className = 'match-datetime-bar readonly';
-
+      
       try {
         const [datePart, timePart] = match.dateTime.split('T');
         let formatted = '';
@@ -1269,7 +1269,7 @@
           formatted = 'Hoje';
         }
         if (timePart) {
-          formatted += (formatted ? ' às ' : '') + timePart;
+          formatted += (formatted ? ' �s ' : '') + timePart;
         }
         dtBar.innerHTML = `<span style="font-size:11px;font-weight:700;color:inherit;display:flex;align-items:center;gap:4px;"><svg class="svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${formatted}</span>`;
       } catch (_) {
@@ -1283,16 +1283,16 @@
 
     // Team 2 slot
     card.appendChild(createTeamSlot(match.team2, match, 2));
-    // Penalty info
-    if (match.penalties) {
-      const penDiv = document.createElement('div');
-      penDiv.className = 'match-penalty-info';
-      penDiv.innerHTML = `Pênaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
-      card.appendChild(penDiv);
-    }
+      // Penalty info
+      if (match.penalties) {
+        const penDiv = document.createElement('div');
+        penDiv.className = 'match-penalty-info';
+        penDiv.innerHTML = `Pênaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
+        card.appendChild(penDiv);
+      }
 
-    return card;
-  }
+      return card;
+    }
 
   let activeTouchGhost = null;
   let activeTouchData = null;
@@ -1302,11 +1302,11 @@
     slot.className = 'match-team';
     slot.dataset.matchId = match.id;
     slot.dataset.teamNum = teamNum;
-
+    
     // Configurações de Drag and Drop se for organizador e não tiver vencedor ainda
     if (isAdmin) {
       slot.classList.add('droppable-slot');
-
+      
       slot.addEventListener('dragover', (e) => {
         e.preventDefault();
         slot.classList.add('drag-over');
@@ -1319,7 +1319,7 @@
         slot.classList.remove('drag-over');
         const draggedDataStr = e.dataTransfer.getData('application/json');
         if (!draggedDataStr) return;
-
+        
         try {
           const draggedInfo = JSON.parse(draggedDataStr);
           // Efetuar a troca de times
@@ -1357,16 +1357,16 @@
 
       slot.addEventListener('touchstart', (e) => {
         if (e.touches.length > 1 || activeTouchGhost) return; // Ignore multi-touch ou arrastar duplo
-
+        
         const touch = e.touches[0];
         startTouchPos = { x: touch.clientX, y: touch.clientY };
-
+        
         touchTimeout = setTimeout(() => {
           // 3 seconds passed without significant movement
           if (navigator.vibrate) navigator.vibrate(100); // Vibrate!
-
+          
           activeTouchData = { matchId: match.id, teamNum };
-
+          
           activeTouchGhost = slot.cloneNode(true);
           activeTouchGhost.style.position = 'fixed';
           activeTouchGhost.style.opacity = '0.8';
@@ -1374,13 +1374,13 @@
           activeTouchGhost.style.zIndex = '99999';
           activeTouchGhost.style.transform = 'scale(1.05)';
           activeTouchGhost.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
-
+          
           activeTouchGhost.style.left = (startTouchPos.x - (slot.offsetWidth / 2)) + 'px';
           activeTouchGhost.style.top = (startTouchPos.y - (slot.offsetHeight / 2)) + 'px';
-
+          
           document.body.appendChild(activeTouchGhost);
           slot.classList.add('dragging');
-
+          
           // Disable scroll behavior temporary for better drag
           document.body.style.overflow = 'hidden';
         }, 3000); // 3 SEGUNDOS como solicitado
@@ -1388,30 +1388,30 @@
 
       slot.addEventListener('touchmove', (e) => {
         if (!activeTouchGhost) {
-          // Not dragging yet, still measuring for timeout
-          if (touchTimeout && startTouchPos) {
-            const touch = e.touches[0];
-            const dx = touch.clientX - startTouchPos.x;
-            const dy = touch.clientY - startTouchPos.y;
-            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-              clearTimeout(touchTimeout);
-              touchTimeout = null;
-              startTouchPos = null;
-            }
-          }
-          return;
+           // Not dragging yet, still measuring for timeout
+           if (touchTimeout && startTouchPos) {
+             const touch = e.touches[0];
+             const dx = touch.clientX - startTouchPos.x;
+             const dy = touch.clientY - startTouchPos.y;
+             if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+               clearTimeout(touchTimeout);
+               touchTimeout = null;
+               startTouchPos = null;
+             }
+           }
+           return;
         }
 
         e.preventDefault(); // Stop scrolling while dragging
-
+        
         const touch = e.touches[0];
         activeTouchGhost.style.left = (touch.clientX - (slot.offsetWidth / 2)) + 'px';
         activeTouchGhost.style.top = (touch.clientY - (slot.offsetHeight / 2)) + 'px';
-
+        
         // Find which slot we are hovering
         const elem = document.elementFromPoint(touch.clientX, touch.clientY);
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-
+        
         const targetSlot = elem && elem.closest('.match-team.droppable-slot');
         if (targetSlot && targetSlot !== slot) {
           targetSlot.classList.add('drag-over');
@@ -1426,24 +1426,24 @@
         startTouchPos = null;
 
         if (!activeTouchGhost) return;
-
+        
         slot.classList.remove('dragging');
         document.body.style.overflow = ''; // Restore smooth scrolling
-
+        
         if (e.type === 'touchend' && e.changedTouches && e.changedTouches.length > 0) {
           const touch = e.changedTouches[0];
           const elem = document.elementFromPoint(touch.clientX, touch.clientY);
           const targetSlot = elem && elem.closest('.match-team.droppable-slot');
-
+          
           if (targetSlot && targetSlot !== slot) {
             const targetMatchId = targetSlot.dataset.matchId;
             const targetTeamNum = parseInt(targetSlot.dataset.teamNum);
             if (targetMatchId && targetTeamNum) {
-              swapTeamsInBracket(activeTouchData, { matchId: targetMatchId, teamNum: targetTeamNum });
+               swapTeamsInBracket(activeTouchData, { matchId: targetMatchId, teamNum: targetTeamNum });
             }
           }
         }
-
+        
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
         if (activeTouchGhost) {
           activeTouchGhost.remove();
@@ -1483,7 +1483,7 @@
     const nameSpan = document.createElement('span');
     nameSpan.className = 'team-name-bracket';
     nameSpan.textContent = team.playerName || team.teamName;
-    nameSpan.title = `${team.teamName} â€” ${team.playerName}`;
+    nameSpan.title = `${team.teamName} � ${team.playerName}`;
 
     // Make player name clickable to show profile
     const teamRecord = state.teams.find(t => t.playerName === team.playerName && t.teamName === team.teamName);
@@ -1717,7 +1717,7 @@
       } else {
         state.champion = champData;
       }
-
+      
       showChampionCelebration();
     } else {
       showToast('Resultado registrado!', 'success');
@@ -1758,7 +1758,7 @@
   function revertMatchStats(match) {
     const s = match.statsApplied;
     if (!s) return;
-
+    
     const t1Id = getTeamIdGlobal(match.team1);
     const t2Id = getTeamIdGlobal(match.team2);
 
@@ -1771,7 +1771,7 @@
       if (s.isFinal) state.playerStats[t1Id].finals = Math.max(0, state.playerStats[t1Id].finals - 1);
       if (s.isFinal && s.winner === 1) state.playerStats[t1Id].trophies = Math.max(0, state.playerStats[t1Id].trophies - 1);
     }
-
+    
     if (t2Id) {
       ensureStats(t2Id);
       state.playerStats[t2Id].goals -= s.t2Score;
@@ -1822,7 +1822,7 @@
   /** Troca dois times de posição no chaveamento (Drag and Drop) */
   function swapTeamsInBracket(source, target) {
     if (!state.bracket || !state.bracket.rounds) return;
-
+    
     let sourceMatch = null;
     let targetMatch = null;
 
@@ -2149,13 +2149,13 @@
   /** Open player profile modal */
   function openPlayerProfile(teamId) {
     let team = state.teams.find(t => t.id === teamId);
-
+    
     // Se o time não for do torneio atual, procura direto nos cadastros de usuários globais
     if (!team && state.participants) {
       const p = state.participants.find(p => p.id === teamId);
       if (p) team = { id: p.id, playerName: p.name, teamName: p.nick, photo: p.photo };
     }
-
+    
     if (!team) return;
 
     const stats = (state.playerStats && state.playerStats[teamId]) || {};
@@ -2298,7 +2298,7 @@
     }
 
     if (!state.champion) {
-      if (!confirm('Este torneio ainda NÃO tem um Campeão definido. Tem certeza que deseja encerrar de forma incompleta e salvar no histórico?')) return;
+      if (!confirm('Este torneio ainda NÒO tem um Campeão definido. Tem certeza que deseja encerrar de forma incompleta e salvar no histórico?')) return;
     } else {
       if (!confirm('Deseja oficializar o fim deste torneio e movê-lo para o seu Histórico? A seção de chaveamentos ficará livre para o próximo torneio.')) return;
     }
@@ -2324,16 +2324,16 @@
     state.bracket = null;
     state.champion = null;
     state.teams = [];
-
+    
     // Reseta os códigos de participação apenas quando o torneio for ENCERRADO
     state.codes = [];
-
+    
     state.tournamentName = ''; // reset name
     const tnInput = $('#tournament-name');
     if (tnInput) tnInput.value = '';
 
     saveState();
-
+    
     // UI Resets
     renderBracket();
     renderTeamList();
@@ -2364,25 +2364,25 @@
     state.tournamentsHistory.forEach(record => {
       const dateStr = new Date(record.date).toLocaleDateString();
       let champHtml = '<span class="history-date">Sem campeão declarado</span>';
-
+      
       if (record.champion) {
         const cNome = record.champion.playerName || record.champion.teamName;
         champHtml = '<div class="history-champ">' +
-          '<svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>' +
-          '<span class="history-champ-winner">' + sanitize(cNome) + '</span>' +
-          '</div>';
+                    '<svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>' +
+                    '<span class="history-champ-winner">' + sanitize(cNome) + '</span>' +
+                    '</div>';
       }
 
       html += '<div class="history-card" data-history-id="' + record.id + '" style="cursor:pointer;" title="Clique para Visualizar e Editar a Chave">' +
-        '<div class="history-info">' +
-        '<div class="history-title">' + sanitize(record.name) + ' (' + record.teamsCount + ' Times)</div>' +
-        '<div class="history-date">Concluído em: ' + dateStr + '</div>' +
-        champHtml +
-        '</div>' +
-        '<div class="history-actions" onclick="event.stopPropagation()">' + // prevent row click from triggering when deleting
-        (isAdmin ? '<button type="button" class="btn btn-outline btn-sm btn-delete-history" data-history-id="' + record.id + '" style="color:var(--accent-red);border-color:var(--accent-red);"><svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Deletar</button>' : '') +
-        '</div>' +
-        '</div>';
+                '<div class="history-info">' +
+                  '<div class="history-title">' + sanitize(record.name) + ' (' + record.teamsCount + ' Times)</div>' +
+                  '<div class="history-date">Concluído em: ' + dateStr + '</div>' +
+                  champHtml +
+                '</div>' +
+                '<div class="history-actions" onclick="event.stopPropagation()">' + // prevent row click from triggering when deleting
+                  (isAdmin ? '<button type="button" class="btn btn-outline btn-sm btn-delete-history" data-history-id="'+record.id+'" style="color:var(--accent-red);border-color:var(--accent-red);"><svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Deletar</button>' : '') +
+                '</div>' +
+              '</div>';
     });
 
     container.innerHTML = html;
@@ -2393,7 +2393,7 @@
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-history-id');
         currentViewingBracketId = id;
-
+        
         // Switch to bracket tab
         const bracketBtn = document.querySelector('.tab-btn[data-tab="bracket-tab"]');
         if (bracketBtn) bracketBtn.click();
@@ -2413,7 +2413,7 @@
   function deleteHistory(id) {
     if (!isAdmin) return;
     if (!confirm('Você está prestes a DELETAR um torneio antigo. Todos os títulos, gols e finais que os jogadores ganharam nele serão descontados dos seus Rankings Globais! Tem certeza?')) return;
-
+    
     const histIdx = state.tournamentsHistory.findIndex(h => h.id === id);
     if (histIdx === -1) return;
     const hist = state.tournamentsHistory[histIdx];
@@ -2428,13 +2428,13 @@
     }
 
     state.tournamentsHistory.splice(histIdx, 1);
-
+    
     // Update active view if they were viewing this one
     if (currentViewingBracketId === id) {
       currentViewingBracketId = null;
       renderBracket();
     }
-
+    
     saveState();
     renderHistory();
     showToast('Torneio e suas estatísticas foram deletados do Histórico.', 'success');
@@ -2512,7 +2512,7 @@
         : '<span class="av-placeholder" style="font-size:12px;">' + sanitize(initials(r.name)) + '</span>';
 
       html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
-        '<td class="col-pos">' + (i + 1) + 'Âº</td>' +
+        '<td class="col-pos">' + (i + 1) + 'º</td>' +
         '<td class="col-player">' +
         '<div class="ranking-avatar">' + avatarHtml + '</div>' +
         '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
@@ -2538,7 +2538,7 @@
   }
 
   /* ==========================================================
-     16f. PARTICIPANT FLOW â€” CODE VALIDATION & REGISTRATION
+     16f. PARTICIPANT FLOW � CODE VALIDATION & REGISTRATION
      ========================================================== */
 
   /** Show participant code entry screen */
@@ -2578,7 +2578,7 @@
 
     const cpfInput = $('#returning-cpf');
     if (cpfInput) { cpfInput.value = ''; }
-
+    
     const errorEl = $('#returning-cpf-error');
     if (errorEl) errorEl.textContent = '';
   }
@@ -2646,7 +2646,7 @@
       return;
     }
 
-    // Valid code â€” store and show CPF check
+    // Valid code � store and show CPF check
     currentParticipantCode = code;
     showParticipantCPFCheckScreen();
   }
@@ -2657,7 +2657,7 @@
     const input = $('#returning-cpf');
     const errorEl = $('#returning-cpf-error');
     if (!input || !errorEl) return;
-
+    
     errorEl.textContent = '';
     const cpfRaw = input.value.trim();
     if (!cpfRaw) return;
@@ -2707,14 +2707,14 @@
     saveState();
     renderTeamList();
     renderBracket();
-
+    
     // Hide registration and show main screen in view mode
     const checkScreen = $('#participant-cpf-check-screen');
     if (checkScreen) checkScreen.style.display = 'none';
-
+    
     isParticipant = true;
     showGameSelection();
-
+    
     showToast(`Bem-vindo de volta, ${existing.name}!`, 'success');
   }
 
@@ -2893,7 +2893,7 @@
     let html = '';
     state.codes.forEach(function (c) {
       const statusClass = c.status === 'used' ? 'code-used' : 'code-available';
-      const statusText = c.status === 'used' ? 'Utilizado' : 'Disponível';
+      const statusText = c.status === 'used' ? 'Utilizado' : 'Dispon�vel';
       const participant = c.participantId && state.participants
         ? state.participants.find(function (p) { return p.id === c.participantId; })
         : null;
@@ -2903,28 +2903,28 @@
         '<span class="code-status">' + statusText + '</span>' +
         // removed
         (participant ? '<span class="code-participant" title="' + sanitize(participant.name) + '">' + sanitize(participant.nick) + '</span>' : '') +
-        '<button type="button" class="btn-refresh-code" data-code="' + sanitize(c.code) + '" title="Atualizar e resetar acesso associado a este código" style="background:none;border:none;cursor:pointer;color:var(--text-tertiary);font-size:22px;margin-left:auto;padding:0 8px;font-weight:bold;">&#x21bb;</button>' +
+        '<button type="button" class="btn-refresh-code" data-code="' + sanitize(c.code) + '" title="Atualizar e resetar acesso associado a este c�digo" style="background:none;border:none;cursor:pointer;color:var(--text-tertiary);font-size:22px;margin-left:auto;padding:0 8px;font-weight:bold;">&#x21bb;</button>' +
         '</div>';
     });
 
     list.innerHTML = html;
 
     const refreshBtns = list.querySelectorAll('.btn-refresh-code');
-    refreshBtns.forEach(function (btn) {
-      btn.addEventListener('click', function () {
+    refreshBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
         const oldCode = btn.getAttribute('data-code');
-        if (confirm('Deseja inutilizar o código ' + oldCode + ' e gerar N° novo no lugar?\nO cliente que já usou este código perderá o acesso e você poderá passar o novo código para outra pessoa.')) {
-          const idx = state.codes.findIndex(function (c) { return c.code === oldCode; });
+        if (confirm('Deseja inutilizar o c�digo ' + oldCode + ' e gerar N� novo no lugar?\nO cliente que j� usou este c�digo perder� o acesso e voc� poder� passar o novo c�digo para outra pessoa.')) {
+          const idx = state.codes.findIndex(function(c) { return c.code === oldCode; });
           if (idx !== -1) {
             let newCode;
             do {
               newCode = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-            } while (state.codes.some(function (c) { return c.code === newCode; }));
-
+            } while (state.codes.some(function(c) { return c.code === newCode; }));
+            
             state.codes[idx] = { code: newCode, status: 'available', participantId: null };
             saveState();
             renderCodesList();
-            showToast('Código revogado! Novo código disponível.', 'success');
+            showToast('C�digo revogado! Novo c�digo dispon�vel.', 'success');
           }
         }
       });
@@ -2941,23 +2941,23 @@
       showToast('Gere o chaveamento primeiro.', 'info');
       return;
     }
-
+    
     if (currentViewingBracketId) {
-      showToast('Não é possível embaralhar um torneio do histórico.', 'error');
+      showToast('N�o � poss�vel embaralhar um torneio do hist�rico.', 'error');
       return;
     }
-
+    
     const round0 = state.bracket.rounds[0];
     let slots = [];
     round0.matches.forEach(m => {
       if (m.team1) slots.push(m.team1);
       if (m.team2) slots.push(m.team2);
     });
-
+    
     if (slots.length === 0) return;
-
+    
     slots = shuffleArray(slots);
-
+    
     let pointer = 0;
     round0.matches.forEach(m => {
       if (m.statsApplied) revertMatchStats(m);
@@ -2971,7 +2971,7 @@
       if (m.team1) m.team1.score = null;
       if (m.team2) m.team2.score = null;
     });
-
+    
     for (let i = 1; i < state.bracket.rounds.length; i++) {
       state.bracket.rounds[i].matches.forEach(m => {
         if (m.statsApplied) revertMatchStats(m);
@@ -2984,7 +2984,7 @@
         m.dateTime = null;
       });
     }
-
+    
     state.champion = null;
     saveState();
     renderBracket();
@@ -2994,28 +2994,28 @@
   /** Swap two teams in the bracket */
   function swapTeamsInBracket(draggedInfo, dropInfo) {
     if (currentViewingBracketId) {
-      showToast('Não é possível editar chaveamento do histórico.', 'error');
+      showToast('N�o � poss�vel editar chaveamento do hist�rico.', 'error');
       return;
     }
-
+    
     if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) return;
-
+    
     const round0 = state.bracket.rounds[0];
     let sourceMatch = round0.matches.find(m => m.id === draggedInfo.matchId);
     let targetMatch = round0.matches.find(m => m.id === dropInfo.matchId);
-
+    
     if (!sourceMatch || !targetMatch) {
       showToast('Apenas times da primeira rodada podem ser trocados.', 'warning');
       return;
     }
-
+    
     let sourceKey = 'team' + draggedInfo.teamNum;
     let targetKey = 'team' + dropInfo.teamNum;
-
+    
     let temp = sourceMatch[sourceKey];
     sourceMatch[sourceKey] = targetMatch[targetKey];
     targetMatch[targetKey] = temp;
-
+    
     [sourceMatch, targetMatch].forEach(m => {
       if (m.statsApplied) revertMatchStats(m);
       m.score1 = 0;
@@ -3026,7 +3026,7 @@
       if (m.team1) m.team1.score = null;
       if (m.team2) m.team2.score = null;
     });
-
+    
     for (let i = 1; i < state.bracket.rounds.length; i++) {
       state.bracket.rounds[i].matches.forEach(m => {
         if (m.statsApplied) revertMatchStats(m);
@@ -3061,7 +3061,7 @@
     if (loginForm) {
       loginForm.addEventListener('submit', handleLogin);
     }
-
+    
     // Shuffle bracket button
     const btnShuffleBracket = $('#btn-shuffle-bracket');
     if (btnShuffleBracket) {
@@ -3128,7 +3128,7 @@
     const btnResetAll = $('#btn-reset-all');
     if (btnResetAll) {
       btnResetAll.addEventListener('click', () => {
-        const codePrompt = prompt('ALERTA MÃXIMO: Isto apagará todos os cadastros, históricos, times e stats do Database inteiro.\n\nDigite o código de segurança para confirmar:');
+        const codePrompt = prompt('ALERTA MÁXIMO: Isto apagará todos os cadastros, históricos, times e stats do Database inteiro.\n\nDigite o código de segurança para confirmar:');
         if (codePrompt !== '153090') {
           if (codePrompt) showToast('Código incorreto. Reset cancelado.', 'error');
           return;
@@ -3273,7 +3273,7 @@
         // Remover classe ativa de todos botões e abas
         tabBtns.forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-
+        
         // Adicionar classe ativa
         btn.classList.add('active');
         const targetId = btn.getAttribute('data-tab');
@@ -3304,7 +3304,7 @@
     if (codeForm) {
       codeForm.addEventListener('submit', handleCodeValidation);
     }
-
+    
     // Back button in Code Screen
     const btnCodeBack = $('#btn-code-back');
     if (btnCodeBack) {
@@ -3366,7 +3366,7 @@
     if (returningCpfForm) {
       returningCpfForm.addEventListener('submit', handleReturningCpfSearch);
     }
-
+    
     const returningCpfInput = $('#returning-cpf');
     if (returningCpfInput) {
       returningCpfInput.addEventListener('input', function () {

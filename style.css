@@ -56,7 +56,12 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   line-height: 1.2;
   color: var(--text-primary);
@@ -682,6 +687,20 @@ textarea::placeholder {
   border-radius: var(--radius-md);
   padding-bottom: 24px;
   min-height: 100%;
+  position: relative;
+  isolation: isolate;
+}
+
+#bracket-tab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 /* Destaque das fontes para o fundo escuro */
@@ -695,7 +714,7 @@ textarea::placeholder {
 }
 
 #bracket-tab .round-title .icon {
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 }
 
 #bracket-tab .match-card {
@@ -703,7 +722,7 @@ textarea::placeholder {
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 #bracket-tab .match-header {
@@ -732,7 +751,7 @@ textarea::placeholder {
   stroke: #ffffff;
   stroke-width: 3;
   opacity: 0.9;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 }
 
 .bracket-container {
@@ -920,7 +939,7 @@ textarea::placeholder {
   background: rgba(0, 122, 255, 0.1);
 }
 
-.match-team + .match-team {
+.match-team+.match-team {
   border-top: 1px solid var(--border-color);
 }
 
@@ -1343,6 +1362,7 @@ textarea::placeholder {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1353,6 +1373,7 @@ textarea::placeholder {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1364,6 +1385,7 @@ textarea::placeholder {
     opacity: 0;
     transform: translateX(60px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -1375,6 +1397,7 @@ textarea::placeholder {
     opacity: 1;
     transform: translateX(0);
   }
+
   to {
     opacity: 0;
     transform: translateX(60px);
@@ -1382,10 +1405,12 @@ textarea::placeholder {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -1551,7 +1576,9 @@ textarea::placeholder {
 }
 
 @media (max-width: 768px) {
-  html, body {
+
+  html,
+  body {
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
@@ -1600,7 +1627,7 @@ textarea::placeholder {
     overscroll-behavior-y: none;
     align-items: flex-start;
   }
-  
+
   .btn-mobile-menu {
     display: flex;
   }
@@ -1960,10 +1987,13 @@ textarea::placeholder {
 }
 
 @keyframes trophyPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     filter: drop-shadow(0 4px 12px rgba(175, 138, 46, 0.4));
   }
+
   50% {
     transform: scale(1.08);
     filter: drop-shadow(0 8px 24px rgba(175, 138, 46, 0.6));
@@ -1971,6 +2001,7 @@ textarea::placeholder {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .champion-trophy-svg,
   .champion-emoji {
     animation: none;
@@ -2216,9 +2247,17 @@ textarea::placeholder {
   line-height: 1;
 }
 
-.top3-position.gold { color: #FFD700; }
-.top3-position.silver { color: #C0C0C0; }
-.top3-position.bronze { color: #CD7F32; }
+.top3-position.gold {
+  color: #FFD700;
+}
+
+.top3-position.silver {
+  color: #C0C0C0;
+}
+
+.top3-position.bronze {
+  color: #CD7F32;
+}
 
 .top3-avatar {
   width: 40px;
@@ -2482,7 +2521,7 @@ textarea::placeholder {
   overflow: hidden;
   margin: 0 auto 16px;
   border: 3px solid var(--border-color);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   background: var(--bg-secondary);
 }
 
@@ -2596,6 +2635,7 @@ textarea::placeholder {
 .btn-delete-team-bracket:hover {
   background: rgba(255, 59, 48, 0.1);
 }
+
 /* ---------- 45. Main Tabs ---------- */
 .tabs-container {
   display: flex;
@@ -2701,9 +2741,20 @@ textarea::placeholder {
   color: var(--text-secondary) !important;
 }
 
-.ranking-table tr.pos-1 .col-pos { color: #FFD700 !important; font-size: 16px; }
-.ranking-table tr.pos-2 .col-pos { color: #C0C0C0 !important; font-size: 15px; }
-.ranking-table tr.pos-3 .col-pos { color: #CD7F32 !important; font-size: 15px; }
+.ranking-table tr.pos-1 .col-pos {
+  color: #FFD700 !important;
+  font-size: 16px;
+}
+
+.ranking-table tr.pos-2 .col-pos {
+  color: #C0C0C0 !important;
+  font-size: 15px;
+}
+
+.ranking-table tr.pos-3 .col-pos {
+  color: #CD7F32 !important;
+  font-size: 15px;
+}
 
 .col-player {
   display: flex;
@@ -2719,7 +2770,9 @@ textarea::placeholder {
   overflow: hidden;
   background: var(--bg-tertiary);
   flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ranking-avatar img {
@@ -2805,19 +2858,44 @@ textarea::placeholder {
 }
 
 /* Estilos para aumentar os troféus (Adicionado) */
-.prize-trophy-img { width: 120px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
-.champion-trophy-img { width: 160px; height: auto; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2)); margin-bottom: 20px; }
+.prize-trophy-img {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.champion-trophy-img {
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+  margin-bottom: 20px;
+}
 
 
 /* Estilos para aumentar os trofeus */
-.prize-trophy-img { width: 120px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
-.champion-trophy-img { width: 160px; height: auto; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2)); margin-bottom: 20px; }
+.prize-trophy-img {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.champion-trophy-img {
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+  margin-bottom: 20px;
+}
 
 /* Mobile Bracket Background Fix */
 @media (max-width: 768px) {
   #bracket-tab {
-    background-attachment: scroll;
+    background-image: url('img/imagem-de-mobile.jfif');
+    background-attachment: fixed;
     background-size: cover;
-    background-position: center top;
+    background-position: center;
   }
 }
