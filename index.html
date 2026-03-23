@@ -240,6 +240,13 @@
           <input type="file" id="participant-photo" accept="image/*" class="photo-upload-input">
         </div>
         <div class="form-group">
+          <label for="participant-flag">Seleção (Bandeira)</label>
+          <select id="participant-flag" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-secondary); color:var(--text-primary); font-size:14px; margin-bottom:4px; outline:none;">
+            <option value="">-- Escolher Aleatória --</option>
+          </select>
+          <small style="color:var(--text-tertiary); font-size:11px; display:block; line-height: 1.3;">A bandeira servirá de foto se nenhuma for enviada. Cada bandeira só pode ter 1 participante.</small>
+        </div>
+        <div class="form-group">
           <label for="participant-name">Nome Completo</label>
           <input type="text" id="participant-name" placeholder="Seu nome completo" required maxlength="60">
         </div>
@@ -453,6 +460,9 @@
             </div>
             <button type="button" id="btn-save-client" class="btn btn-sm btn-primary btn-block">
               Salvar Dados do Jogador
+            </button>
+            <button type="button" id="btn-delete-client" class="btn btn-sm btn-outline btn-block" style="margin-top:8px; border-color:var(--accent-red); color:var(--accent-red);">
+              <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Apagar Jogador
             </button>
           </div>
         </section>

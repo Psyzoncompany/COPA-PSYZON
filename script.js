@@ -718,12 +718,26 @@
     const photoFile = photoInput && photoInput.files && photoInput.files[0];
 
     function finishAddTeam(photoData) {
+      let assignedFlagId = null;
+      let finalPhoto = photoData;
+      
+      if (!finalPhoto) {
+        const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
+        const availableFlags = WORLD_FLAGS.filter(f => !takenFlags.includes(f.id));
+        if (availableFlags.length > 0) {
+           assignedFlagId = availableFlags[Math.floor(Math.random() * availableFlags.length)].id;
+           finalPhoto = `https://flagcdn.com/${assignedFlagId}.svg`;
+        }
+      }
+
       const team = {
         id: generateId(),
         teamName,
-        playerName
+        playerName,
+        flagId: assignedFlagId
       };
-      if (photoData) team.photo = photoData;
+      if (finalPhoto) team.photo = finalPhoto;
+      
       state.teams.push(team);
       saveState();
 
@@ -1517,15 +1531,32 @@
     // DATE/TIME BAR DIRECTLY INTO CARD
     if (canEdit && !match.winner) {
       const dtBar = document.createElement('div');
-      dtBar.className = 'match-datetime-bar';
+      dtBar.className = 'list-mode-dtbar';
+      dtBar.style.display = 'flex';
+      dtBar.style.alignItems = 'center';
+      dtBar.style.justifyContent = 'center';
+      dtBar.style.gap = '8px';
+      dtBar.style.background = 'rgba(255, 255, 255, 0.08)';
+      dtBar.style.margin = '4px 12px 0 12px';
+      dtBar.style.borderRadius = '6px';
+      dtBar.style.padding = '4px 8px';
+      // Prevent bubbling
+      dtBar.addEventListener('click', e => e.stopPropagation());
+
+      const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; text-align: center; max-width: 90px;';
 
       const dateInp = document.createElement('input');
       dateInp.type = 'date';
-      dateInp.className = 'card-date-input';
+      dateInp.style.cssText = inptStyle;
+
+      const divi = document.createElement('div');
+      divi.style.width = '1px';
+      divi.style.height = '12px';
+      divi.style.backgroundColor = 'rgba(255,255,255,0.2)';
 
       const timeInp = document.createElement('input');
       timeInp.type = 'time';
-      timeInp.className = 'card-time-input';
+      timeInp.style.cssText = inptStyle;
 
       if (match.dateTime) {
         const parts = match.dateTime.split('T');
@@ -1552,6 +1583,7 @@
       });
 
       dtBar.appendChild(dateInp);
+      dtBar.appendChild(divi);
       dtBar.appendChild(timeInp);
       card.appendChild(dtBar);
     } else if (match.dateTime) {
@@ -2441,6 +2473,75 @@
     showToast('Dados do jogador salvos!', 'success');
   }
 
+  /** Removes participant data completely from the system */
+  function removeParticipantData(participantId) {
+    if (!participantId) return;
+
+    if (state.participants) {
+      state.participants = state.participants.filter(p => p.id !== participantId);
+    }
+    if (state.teams) {
+      state.teams = state.teams.filter(t => t.id !== participantId);
+    }
+    if (state.playerStats && state.playerStats[participantId]) {
+      delete state.playerStats[participantId];
+    }
+    if (state.codes) {
+      const codeEntry = state.codes.find(c => c.participantId === participantId);
+      if (codeEntry) {
+         codeEntry.status = 'available';
+         codeEntry.participantId = null;
+      }
+    }
+    if (state.bracket && state.bracket.rounds) {
+      state.bracket.rounds.forEach(round => {
+         round.matches.forEach(match => {
+            if (match.team1 && match.team1.id === participantId) {
+               match.team1 = null;
+               match.score1 = null;
+               if (match.penalties) delete match.penalties.score1;
+            }
+            if (match.team2 && match.team2.id === participantId) {
+               match.team2 = null;
+               match.score2 = null;
+               if (match.penalties) delete match.penalties.score2;
+            }
+            if (match.winner && match.winner.id === participantId) {
+               match.winner = null;
+            }
+         });
+      });
+    }
+
+    saveState();
+    
+    // UI Updates
+    renderTeamList();
+    renderBracket();
+    if (isAdmin) renderCodesList();
+    
+    const rankEl = $('#ranking-tab');
+    if (rankEl && rankEl.style.display !== 'none') renderRankingTable();
+    renderTop3();
+
+    populateClientSelect();
+    const fields = $('#client-fields');
+    if (fields) fields.style.display = 'none';
+  }
+
+  function handleDeleteClient() {
+    const select = $('#client-select');
+    if (!select || !select.value) {
+      showToast('Selecione um jogador primeiro.', 'error');
+      return;
+    }
+    if (!confirm('ATENÇÃO: Deseja realmente APAGAR ESTE JOGADOR?\\nEle será removido da lista, do chaveamento e perderá o acesso do código associado.\\nAção irreversível!')) {
+      return;
+    }
+    removeParticipantData(select.value);
+    showToast('Jogador apagado com sucesso!', 'success');
+  }
+
   /* ==========================================================
      16d. PLAYER PROFILE MODAL
      ========================================================== */
@@ -2882,6 +2983,41 @@
     if (errorEl) errorEl.textContent = '';
   }
 
+  const WORLD_FLAGS = [
+    { id: 'br', name: 'Brasil' }, { id: 'ar', name: 'Argentina' },
+    { id: 'fr', name: 'França' }, { id: 'de', name: 'Alemanha' },
+    { id: 'es', name: 'Espanha' }, { id: 'it', name: 'Itália' },
+    { id: 'gb-eng', name: 'Inglaterra' }, { id: 'pt', name: 'Portugal' },
+    { id: 'uy', name: 'Uruguai' }, { id: 'nl', name: 'Holanda' },
+    { id: 'be', name: 'Bélgica' }, { id: 'hr', name: 'Croácia' },
+    { id: 'co', name: 'Colômbia' }, { id: 'mx', name: 'México' },
+    { id: 'us', name: 'Estados Unidos' }, { id: 'jp', name: 'Japão' },
+    { id: 'sn', name: 'Senegal' }, { id: 'ma', name: 'Marrocos' },
+    { id: 'ch', name: 'Suíça' }, { id: 'dk', name: 'Dinamarca' },
+    { id: 'kr', name: 'Coreia do Sul' }, { id: 'au', name: 'Austrália' },
+    { id: 'pl', name: 'Polônia' }, { id: 'se', name: 'Suécia' },
+    { id: 'cm', name: 'Camarões' }, { id: 'gh', name: 'Gana' },
+    { id: 'ng', name: 'Nigéria' }, { id: 'ec', name: 'Equador' },
+    { id: 'pe', name: 'Peru' }, { id: 'cl', name: 'Chile' },
+    { id: 'ca', name: 'Canadá' }, { id: 'sa', name: 'Arábia Saudita' }
+  ];
+
+  function populateFlagSelect() {
+    const flagSel = $('#participant-flag');
+    if (!flagSel) return;
+    flagSel.innerHTML = '<option value="">-- Escolher Aleatória --</option>';
+    
+    const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
+    WORLD_FLAGS.forEach(flag => {
+      if (!takenFlags.includes(flag.id)) {
+        const opt = document.createElement('option');
+        opt.value = flag.id;
+        opt.textContent = flag.name;
+        flagSel.appendChild(opt);
+      }
+    });
+  }
+
   /** Show participant registration form */
   function showParticipantFormScreen() {
     const screens = ['login-screen', 'game-selection-screen', 'participant-code-screen', 'participant-cpf-check-screen'];
@@ -2900,6 +3036,8 @@
     if (form) form.reset();
     const errorEl = $('#participant-form-error');
     if (errorEl) errorEl.textContent = '';
+    
+    populateFlagSelect();
   }
 
   /** Handle PARTICIPANTE button click on login screen */
@@ -3073,6 +3211,20 @@
     function finishRegistration(photoData) {
       const participantId = generateId();
 
+      // FLAG LOGIC
+      let selFlagId = $('#participant-flag') ? $('#participant-flag').value : null;
+      let assignedFlagId = selFlagId;
+
+      if (!assignedFlagId) {
+        const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
+        const availableFlags = WORLD_FLAGS.filter(f => !takenFlags.includes(f.id));
+        if (availableFlags.length > 0) {
+           assignedFlagId = availableFlags[Math.floor(Math.random() * availableFlags.length)].id;
+        }
+      }
+
+      const finalPhoto = photoData || (assignedFlagId ? `https://flagcdn.com/${assignedFlagId}.svg` : null);
+
       // Save participant record
       const participant = {
         id: participantId,
@@ -3082,7 +3234,8 @@
         instagram: instagram,
         whatsapp: whatsapp,
         nick: nick,
-        photo: photoData || null,
+        photo: finalPhoto,
+        flagId: assignedFlagId,
         registeredAt: new Date().toISOString()
       };
       state.participants.push(participant);
@@ -3095,9 +3248,10 @@
       const team = {
         id: participantId,
         teamName: nick,
-        playerName: name
+        playerName: name,
+        photo: finalPhoto,
+        flagId: assignedFlagId
       };
-      if (photoData) team.photo = photoData;
       state.teams.push(team);
 
       // Auto-save Instagram to playerStats
@@ -3212,9 +3366,12 @@
     refreshBtns.forEach(function (btn) {
       btn.addEventListener('click', function () {
         const oldCode = btn.getAttribute('data-code');
-        if (confirm('Deseja inutilizar o código ' + oldCode + ' e gerar N° novo no lugar?\nO cliente que já usou este código perderá o acesso e você poderá passar o novo código para outra pessoa.')) {
+        if (confirm('Deseja inutilizar o código ' + oldCode + ' e APAGAR O JOGADOR associado?\\nEle será excluído das chaves e do torneio. Além disso, um novo código numérico será gerado e ficará livre.')) {
           const idx = state.codes.findIndex(function (c) { return c.code === oldCode; });
           if (idx !== -1) {
+            const oldParticipantId = state.codes[idx].participantId;
+            if (oldParticipantId) removeParticipantData(oldParticipantId);
+
             let newCode;
             do {
               newCode = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
@@ -3551,6 +3708,11 @@
     const btnSaveClient = $('#btn-save-client');
     if (btnSaveClient) {
       btnSaveClient.addEventListener('click', handleSaveClient);
+    }
+
+    const btnDeleteClient = $('#btn-delete-client');
+    if (btnDeleteClient) {
+      btnDeleteClient.addEventListener('click', handleDeleteClient);
     }
 
     // Player profile modal close
