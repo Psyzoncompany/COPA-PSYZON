@@ -1079,43 +1079,174 @@
   }
 
   /* ---------- 12b. LIST VIEW FEATURE ---------- */
+  let currentListPhaseIndex = -1;
+  let lastListBracketRef = null;
+
   function renderListView() {
     const listContainer = $('#list-container');
     if (!listContainer) return;
-    listContainer.innerHTML = '';
 
     const bracket = getCurrentBracket();
     if (!bracket || !bracket.rounds || bracket.rounds.length === 0) {
+      listContainer.innerHTML = '';
       return;
     }
 
-    bracket.rounds.forEach((round, rIdx) => {
-      if (!round.matches || round.matches.length === 0) return;
+    if (lastListBracketRef !== bracket) {
+       lastListBracketRef = bracket;
+       currentListPhaseIndex = -1;
+    }
 
-      const phaseSection = document.createElement('div');
-      phaseSection.className = 'phase-list-section';
+    if (currentListPhaseIndex === -1) {
+       let found = 0;
+       for (let r = 0; r < bracket.rounds.length; r++) {
+         if (bracket.rounds[r].matches.some(m => !m.winner)) {
+            found = r;
+            break;
+         }
+       }
+       if (found === 0 && bracket.rounds.length > 0 && bracket.rounds[bracket.rounds.length-1].matches.every(m=>m.winner)) {
+         found = bracket.rounds.length - 1;
+       }
+       currentListPhaseIndex = found;
+    }
 
-      const phaseTitle = document.createElement('div');
-      phaseTitle.className = 'phase-list-title';
-      phaseTitle.textContent = round.name;
-      phaseSection.appendChild(phaseTitle);
+    if (currentListPhaseIndex >= bracket.rounds.length) {
+      currentListPhaseIndex = bracket.rounds.length - 1;
+    }
+    if (currentListPhaseIndex < 0) currentListPhaseIndex = 0;
 
-      const cardsContainer = document.createElement('div');
-      cardsContainer.className = 'match-list-cards';
+    listContainer.innerHTML = '';
 
-      round.matches.forEach((match, mIdx) => {
-        const card = document.createElement('div');
-        card.className = 'match-list-card';
+    const round = bracket.rounds[currentListPhaseIndex];
+    if (!round || !round.matches || round.matches.length === 0) return;
 
-        // Header
-        const header = document.createElement('div');
-        header.className = 'match-list-header';
+    // Build Navigation Header
+    const headerRow = document.createElement('div');
+    headerRow.className = 'list-phase-navigation';
+    headerRow.style.display = 'flex';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.justifyContent = 'space-between';
+    headerRow.style.marginTop = '16px';
+    headerRow.style.marginBottom = '24px';
+    headerRow.style.padding = '0 8px';
+
+    const btnPrev = document.createElement('button');
+    btnPrev.className = 'btn-icon-action list-nav-btn';
+    btnPrev.innerHTML = '<svg class="svg-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
+    btnPrev.disabled = currentListPhaseIndex === 0;
+    btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
+    btnPrev.style.cursor = btnPrev.disabled ? 'default' : 'pointer';
+    btnPrev.onclick = () => {
+       if (currentListPhaseIndex > 0) {
+           currentListPhaseIndex--;
+           renderListView();
+       }
+    };
+
+    const phaseTitle = document.createElement('div');
+    phaseTitle.className = 'phase-list-title';
+    phaseTitle.style.marginBottom = '0';
+    phaseTitle.textContent = round.name;
+
+    const btnNext = document.createElement('button');
+    btnNext.className = 'btn-icon-action list-nav-btn';
+    btnNext.innerHTML = '<svg class="svg-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+    btnNext.disabled = currentListPhaseIndex === bracket.rounds.length - 1;
+    btnNext.style.opacity = btnNext.disabled ? '0.3' : '1';
+    btnNext.style.cursor = btnNext.disabled ? 'default' : 'pointer';
+    btnNext.onclick = () => {
+       if (currentListPhaseIndex < bracket.rounds.length - 1) {
+           currentListPhaseIndex++;
+           renderListView();
+       }
+    };
+
+    headerRow.appendChild(btnPrev);
+    headerRow.appendChild(phaseTitle);
+    headerRow.appendChild(btnNext);
+    listContainer.appendChild(headerRow);
+
+    const phaseSection = document.createElement('div');
+    phaseSection.className = 'phase-list-section';
+    phaseSection.style.animation = 'fadeIn 0.3s ease forwards';
+
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'match-list-cards';
+
+    round.matches.forEach((match, mIdx) => {
+      const card = document.createElement('div');
+      card.className = 'match-list-card';
+
+      const bothTeams = match.team1 && match.team2;
+      const canEdit = isAdmin && bothTeams;
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'match-list-header';
+      header.style.flexWrap = 'wrap';
+      header.style.gap = '8px';
+      
+      const badge = document.createElement('span');
+      badge.className = 'match-list-badge';
+      badge.textContent = `${round.name.split(' ')[0]} ${mIdx + 1}`;
+      header.appendChild(badge);
+
+      if (canEdit && !match.winner) {
+        const dtBar = document.createElement('div');
+        dtBar.className = 'list-mode-dtbar';
+        dtBar.style.display = 'flex';
+        dtBar.style.alignItems = 'center';
+        dtBar.style.gap = '8px';
+        dtBar.style.background = 'rgba(255, 255, 255, 0.1)';
+        dtBar.style.borderRadius = '6px';
+        dtBar.style.padding = '4px 8px';
+        // Prevent click bubbling so it doesn't trigger the score modal
+        dtBar.addEventListener('click', e => e.stopPropagation());
+
+        const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; max-width: 90px;';
+
+        const dateInp = document.createElement('input');
+        dateInp.type = 'date';
+        dateInp.style.cssText = inptStyle;
         
-        const badge = document.createElement('span');
-        badge.className = 'match-list-badge';
-        badge.textContent = `${round.name.split(' ')[0]} ${mIdx + 1}`;
-        header.appendChild(badge);
+        const divi = document.createElement('div');
+        divi.style.width = '1px';
+        divi.style.height = '12px';
+        divi.style.backgroundColor = 'rgba(255,255,255,0.2)';
 
+        const timeInp = document.createElement('input');
+        timeInp.type = 'time';
+        timeInp.style.cssText = inptStyle;
+
+        if (match.dateTime) {
+          const parts = match.dateTime.split('T');
+          if (parts[0] && parts[0] !== 'HOJE') dateInp.value = parts[0];
+          if (parts[1]) timeInp.value = parts[1];
+        }
+
+        const saveDateTime = () => {
+          const dVal = dateInp.value || 'HOJE';
+          const tVal = timeInp.value;
+          if (dateInp.value || timeInp.value) {
+            match.dateTime = dVal + (tVal ? 'T' + tVal : '');
+          } else {
+            match.dateTime = null;
+          }
+          saveState();
+        };
+
+        dateInp.addEventListener('change', saveDateTime);
+        timeInp.addEventListener('change', () => {
+          if (!dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
+          saveDateTime();
+        });
+
+        dtBar.appendChild(dateInp);
+        dtBar.appendChild(divi);
+        dtBar.appendChild(timeInp);
+        header.appendChild(dtBar);
+      } else {
         const dtSpan = document.createElement('span');
         dtSpan.className = 'match-list-datetime';
         if (match.dateTime) {
@@ -1135,83 +1266,83 @@
           dtSpan.innerHTML = `<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> A definir`;
         }
         header.appendChild(dtSpan);
-        card.appendChild(header);
+      }
+      card.appendChild(header);
 
-        // Versus section
-        const versusWrap = document.createElement('div');
-        versusWrap.className = 'match-list-versus';
+      // Versus section
+      const versusWrap = document.createElement('div');
+      versusWrap.className = 'match-list-versus';
 
-        // Helper function for building a team side
-        function buildTeamSide(teamData) {
-          const t = document.createElement('div');
-          t.className = 'match-list-team';
-          
-          let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
-          let nameHtml = 'A definir';
-          
-          if (teamData) {
-            const initials = teamData.playerName ? teamData.playerName.substring(0,2).toUpperCase() : teamData.teamName.substring(0,2).toUpperCase();
-            imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initials)}</span>`;
-            nameHtml = sanitize(teamData.teamName || teamData.playerName);
-          }
-          
-          t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
-          return t;
+      // Helper function for building a team side
+      function buildTeamSide(teamData) {
+        const t = document.createElement('div');
+        t.className = 'match-list-team';
+        
+        let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
+        let nameHtml = 'A definir';
+        
+        if (teamData) {
+          const initials = teamData.playerName ? teamData.playerName.substring(0,2).toUpperCase() : teamData.teamName.substring(0,2).toUpperCase();
+          imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initials)}</span>`;
+          nameHtml = sanitize(teamData.teamName || teamData.playerName);
         }
-
-        const t1 = buildTeamSide(match.team1);
-        const t2 = buildTeamSide(match.team2);
-
-        // Center X
-        const cCenter = document.createElement('div');
-        cCenter.className = 'match-list-score-container';
         
-        const s1 = document.createElement('div');
-        s1.className = 'match-list-score';
-        s1.textContent = (match.team1 && match.team1.score !== null) ? match.team1.score : '';
-        
-        const sx = document.createElement('div');
-        sx.className = 'match-list-x';
-        sx.textContent = 'X';
+        t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
+        return t;
+      }
 
-        const s2 = document.createElement('div');
-        s2.className = 'match-list-score';
-        s2.textContent = (match.team2 && match.team2.score !== null) ? match.team2.score : '';
-        
-        cCenter.appendChild(s1);
-        cCenter.appendChild(sx);
-        cCenter.appendChild(s2);
-        
-        versusWrap.appendChild(t1);
-        versusWrap.appendChild(cCenter);
-        versusWrap.appendChild(t2);
+      const t1 = buildTeamSide(match.team1);
+      const t2 = buildTeamSide(match.team2);
 
-        card.appendChild(versusWrap);
+      // Center X
+      const cCenter = document.createElement('div');
+      cCenter.className = 'match-list-score-container';
+      
+      const s1 = document.createElement('div');
+      s1.className = 'match-list-score';
+      s1.textContent = (match.team1 && match.team1.score !== null) ? match.team1.score : '';
+      
+      const sx = document.createElement('div');
+      sx.className = 'match-list-x';
+      sx.textContent = 'X';
 
-        // Penalties if they exist
-        if (match.penalties) {
-          const pen = document.createElement('div');
-          pen.style.textAlign = 'center';
-          pen.style.fontSize = '12px';
-          pen.style.color = '#aaa';
-          pen.style.marginTop = '12px';
-          pen.innerHTML = `Pênaltis: ${match.penalties.team1} x ${match.penalties.team2}`;
-          card.appendChild(pen);
-        }
+      const s2 = document.createElement('div');
+      s2.className = 'match-list-score';
+      s2.textContent = (match.team2 && match.team2.score !== null) ? match.team2.score : '';
+      
+      cCenter.appendChild(s1);
+      cCenter.appendChild(sx);
+      cCenter.appendChild(s2);
+      
+      versusWrap.appendChild(t1);
+      versusWrap.appendChild(cCenter);
+      versusWrap.appendChild(t2);
 
-        // Edit hook for Admin
-        if (isAdmin && match.team1 && match.team2) {
-           card.style.cursor = 'pointer';
-           card.title = "Clique para registrar/editar resultado";
-           card.addEventListener('click', () => openScoreModal(rIdx, mIdx));
-        }
+      card.appendChild(versusWrap);
 
-        cardsContainer.appendChild(card);
-      });
+      // Penalties if they exist
+      if (match.penalties) {
+        const pen = document.createElement('div');
+        pen.style.textAlign = 'center';
+        pen.style.fontSize = '12px';
+        pen.style.color = '#aaa';
+        pen.style.marginTop = '12px';
+        pen.innerHTML = `Pênaltis: ${match.penalties.team1} x ${match.penalties.team2}`;
+        card.appendChild(pen);
+      }
 
-      phaseSection.appendChild(cardsContainer);
-      listContainer.appendChild(phaseSection);
+      // Edit hook for Admin
+      if (isAdmin && match.team1 && match.team2) {
+         card.style.cursor = 'pointer';
+         card.title = "Clique para registrar/editar resultado";
+         card.addEventListener('click', () => openScoreModal(currentListPhaseIndex, mIdx));
+      }
+
+      cardsContainer.appendChild(card);
     });
+
+    phaseSection.appendChild(cardsContainer);
+    listContainer.appendChild(phaseSection);
   }
 
   // Bracket Display Mode Toggle Logic

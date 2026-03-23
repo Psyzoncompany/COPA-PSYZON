@@ -1915,12 +1915,12 @@ textarea::placeholder {
   }
 
   .match-card {
-    width: 190px;
-    min-width: 190px;
+    width: 220px;
+    min-width: 220px;
   }
 
   .round {
-    min-width: 190px;
+    min-width: 220px;
   }
 
   .modal-card {
@@ -2051,12 +2051,12 @@ textarea::placeholder {
   }
 
   .match-card {
-    width: 170px;
-    min-width: 170px;
+    width: 200px;
+    min-width: 200px;
   }
 
   .round {
-    min-width: 170px;
+    min-width: 200px;
   }
 
   .modal-team .score-input {
