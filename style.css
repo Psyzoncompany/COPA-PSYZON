@@ -3125,8 +3125,9 @@ textarea::placeholder {
 @media (max-width: 768px) {
   #bracket-tab {
     background-image: url('img/imagem-de-mobile.jfif');
-    background-attachment: fixed;
+    background-attachment: scroll;
     background-size: cover;
-    background-position: center;
+    background-position: center top;
+    min-height: 100vh;
   }
 }

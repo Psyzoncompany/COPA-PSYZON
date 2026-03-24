@@ -3391,60 +3391,92 @@
      16h. BRACKET DRAG & DROP AND SHUFFLE
      ========================================================== */
 
-  /** Shuffle the first round of the bracket */
+  /** Shuffle the teams and adjust bracket size if needed based on the selected count */
   function shuffleBracket() {
-    if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) {
-      showToast('Gere o chaveamento primeiro.', 'info');
-      return;
-    }
-
     if (currentViewingBracketId) {
       showToast('Não é possível embaralhar um torneio do histórico.', 'error');
       return;
     }
 
-    const round0 = state.bracket.rounds[0];
-    let slots = [];
-    round0.matches.forEach(m => {
-      if (m.team1) slots.push(m.team1);
-      if (m.team2) slots.push(m.team2);
-    });
-
-    if (slots.length === 0) return;
-
-    slots = shuffleArray(slots);
-
-    let pointer = 0;
-    round0.matches.forEach(m => {
-      if (m.statsApplied) revertMatchStats(m);
-      m.team1 = slots[pointer++] || null;
-      m.team2 = slots[pointer++] || null;
-      m.score1 = 0;
-      m.score2 = 0;
-      m.winner = null;
-      m.penalties = null;
-      m.dateTime = null;
-      if (m.team1) m.team1.score = null;
-      if (m.team2) m.team2.score = null;
-    });
-
-    for (let i = 1; i < state.bracket.rounds.length; i++) {
-      state.bracket.rounds[i].matches.forEach(m => {
-        if (m.statsApplied) revertMatchStats(m);
-        m.team1 = null;
-        m.team2 = null;
-        m.score1 = 0;
-        m.score2 = 0;
-        m.winner = null;
-        m.penalties = null;
-        m.dateTime = null;
+    if (state.bracket && state.bracket.rounds && state.bracket.rounds.length > 0) {
+      if (!confirm('Este processo irá resetar partidas em andamento e recriar o chaveamento. Deseja continuar?')) {
+        return;
+      }
+      
+      // Revert all match stats to prevent leaking trophies or goals
+      state.bracket.rounds.forEach(round => {
+        round.matches.forEach(m => {
+          if (m.statsApplied && typeof revertMatchStats === 'function') {
+            revertMatchStats(m);
+          }
+        });
       });
     }
 
+    // Sync team count from select
+    const countSelect = $('#team-count');
+    const requiredCount = parseInt(countSelect ? countSelect.value : state.teamCount, 10);
+    state.teamCount = requiredCount;
+
+    // Sync tournament name
+    if (typeof syncTournamentName === 'function') syncTournamentName();
+
+    const roundNames = getRoundNames(requiredCount);
+    if (roundNames.length === 0) {
+      showToast('Quantidade de times inválida. Escolha 4, 8, 16 ou 32.', 'error');
+      return;
+    }
+
+    // Shuffle all currently registered teams
+    let shuffled = [];
+    if (state.teams && state.teams.length > 0) {
+      shuffled = shuffleArray([...state.teams]);
+    }
+
+    let matchesInRound = requiredCount / 2;
+    const rounds = [];
+
+    roundNames.forEach((name, rIdx) => {
+      const matches = [];
+      for (let m = 0; m < matchesInRound; m++) {
+        const match = {
+          id: `r${rIdx}m${m}`,
+          team1: null,
+          team2: null,
+          winner: null,
+          penalties: null,
+          dateTime: null
+        };
+
+        // Fill first round with the shuffled teams
+        if (rIdx === 0) {
+          const idx1 = m * 2;
+          const idx2 = m * 2 + 1;
+          if (idx1 < shuffled.length) {
+            match.team1 = makeTeamSlotData(shuffled[idx1]);
+          }
+          if (idx2 < shuffled.length) {
+            match.team2 = makeTeamSlotData(shuffled[idx2]);
+          }
+        }
+
+        matches.push(match);
+      }
+      rounds.push({ name, matches });
+      matchesInRound = Math.floor(matchesInRound / 2);
+    });
+
+    state.bracket = { rounds };
     state.champion = null;
     saveState();
     renderBracket();
-    showToast('Chaveamento embaralhado com sucesso!', 'success');
+
+    const remaining = requiredCount - (shuffled ? shuffled.length : 0);
+    if (remaining > 0) {
+      showToast(`Chaveamento embaralhado e redimensionado! Aguardando ${remaining} participante(s).`, 'success');
+    } else {
+      showToast('Chaveamento embaralhado e ajustado ao tamanho selecionado!', 'success');
+    }
   }
 
   /** Swap two teams in the bracket */
