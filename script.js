@@ -721,7 +721,13 @@
       let assignedFlagId = null;
       let finalPhoto = photoData;
       
-      if (!finalPhoto) {
+      const flagInput = $('#player-flag-input');
+      const selectedFlag = flagInput ? flagInput.value : '';
+
+      if (selectedFlag) {
+        assignedFlagId = selectedFlag;
+        if (!finalPhoto) finalPhoto = `https://flagcdn.com/${assignedFlagId}.svg`;
+      } else if (!finalPhoto) {
         const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
         const availableFlags = WORLD_FLAGS.filter(f => !takenFlags.includes(f.id));
         if (availableFlags.length > 0) {
@@ -734,9 +740,9 @@
         id: generateId(),
         teamName,
         playerName,
-        flagId: assignedFlagId
+        flagId: assignedFlagId,
+        photo: finalPhoto
       };
-      if (finalPhoto) team.photo = finalPhoto;
       
       state.teams.push(team);
       saveState();
@@ -819,14 +825,18 @@
     let html = `<p style="font-size:12px;color:var(--text-tertiary);margin-bottom:8px;font-weight:600;">${state.teams.length}/${maxTeams} times cadastrados</p>`;
 
     state.teams.forEach((team) => {
-      // Sempre pode deletar agora
+      // Get the full name from participants state if available
+      const p = state.participants ? state.participants.find(part => part.id === team.id) : null;
+      const fullName = p ? p.name : '';
+
       html += `
-        <div class="team-item" data-id="${sanitize(team.id)}">
+        <div class="team-item clickable-team" data-id="${sanitize(team.id)}">
           <div class="team-item-info">
             <div class="team-avatar">${team.photo ? '<img src="' + sanitize(team.photo) + '" alt="">' : '<span class="av-placeholder">' + sanitize(initials(team.playerName)) + '</span>'}</div>
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${sanitize(team.teamName)}</div>
               <div style="font-size:12px;color:var(--text-secondary);">${sanitize(team.playerName)}</div>
+              ${fullName ? `<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">${sanitize(fullName)}</div>` : ''}
             </div>
           </div>
           <button type="button" class="btn-remove-team icon-btn" data-team-id="${sanitize(team.id)}" title="Remover time" aria-label="Remover time"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
@@ -834,6 +844,14 @@
     });
 
     container.innerHTML = html;
+
+    // Attach click handlers for opening profile
+    container.querySelectorAll('.clickable-team').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-remove-team')) return;
+        openPlayerProfile(el.dataset.id);
+      });
+    });
 
     // Attach remove handlers
     container.querySelectorAll('.btn-remove-team').forEach((btn) => {
@@ -1811,22 +1829,42 @@
     slot.appendChild(avatar);
 
     // Player name (primary display in bracket)
+    const nameWrapper = document.createElement('div');
+    nameWrapper.style.display = 'flex';
+    nameWrapper.style.flexDirection = 'column';
+    nameWrapper.style.overflow = 'hidden';
+
     const nameSpan = document.createElement('span');
     nameSpan.className = 'team-name-bracket';
     nameSpan.textContent = team.playerName || team.teamName;
     nameSpan.title = `${team.teamName} â€” ${team.playerName}`;
+    nameWrapper.appendChild(nameSpan);
+
+    // Full name in small text if available
+    const participant = state.participants ? state.participants.find(p => (p.id === team.id) || (p.name === team.playerName)) : null;
+    if (participant && participant.name) {
+      const fullNameSpan = document.createElement('span');
+      fullNameSpan.style.fontSize = '9px';
+      fullNameSpan.style.color = 'var(--text-tertiary)';
+      fullNameSpan.style.marginTop = '-2px';
+      fullNameSpan.style.whiteSpace = 'nowrap';
+      fullNameSpan.style.overflow = 'hidden';
+      fullNameSpan.style.textOverflow = 'ellipsis';
+      fullNameSpan.textContent = participant.name;
+      nameWrapper.appendChild(fullNameSpan);
+    }
 
     // Make player name clickable to show profile
-    const teamRecord = state.teams.find(t => t.playerName === team.playerName && t.teamName === team.teamName);
+    const teamRecord = state.teams.find(t => t.id === team.id) || state.teams.find(t => t.playerName === team.playerName && t.teamName === team.teamName);
     if (teamRecord) {
-      nameSpan.classList.add('clickable');
-      nameSpan.addEventListener('click', (e) => {
+      slot.classList.add('clickable');
+      slot.addEventListener('click', (e) => {
         e.stopPropagation();
         openPlayerProfile(teamRecord.id);
       });
     }
 
-    slot.appendChild(nameSpan);
+    slot.appendChild(nameWrapper);
 
     // Score
     if (team.score !== null && team.score !== undefined) {
@@ -4037,6 +4075,11 @@
     const clientFlagSelect = $('#client-flag');
     if (clientFlagSelect) {
       clientFlagSelect.addEventListener('change', () => updateFlagPreview('client-flag', 'client-flag-preview'));
+    }
+
+    const playerFlagInput = $('#player-flag-input');
+    if (playerFlagInput) {
+      playerFlagInput.addEventListener('change', () => updateFlagPreview('player-flag-input', 'player-flag-preview'));
     }
   }
 
