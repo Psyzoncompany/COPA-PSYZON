@@ -2406,6 +2406,25 @@
       select.appendChild(option);
     });
 
+    // Populate flag select for clients as well
+    const flagSel = $('#client-flag');
+    if (flagSel) {
+      flagSel.innerHTML = '<option value="">-- Escolher Aleatória --</option>';
+      const currentFlagVal = flagSel.value;
+      const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
+      
+      WORLD_FLAGS.forEach(flag => {
+        const isCurrentSelection = (state.teams.find(t => t.id === currentVal) || {}).flagId === flag.id;
+        // Permite mostrar a bandeira se ela estiver disponível ou se for a que o jogador já está usando
+        if (!takenFlags.includes(flag.id) || isCurrentSelection) {
+          const opt = document.createElement('option');
+          opt.value = flag.id;
+          opt.textContent = flag.name;
+          flagSel.appendChild(opt);
+        }
+      });
+    }
+
     // Restore previous selection if still valid
     if (currentVal && state.teams.some(t => t.id === currentVal)) {
       select.value = currentVal;
@@ -2425,6 +2444,28 @@
     }
 
     fields.style.display = '';
+
+    // Repopulate flag options ensuring the current one is visible even if "taken"
+    const flagSel = $('#client-flag');
+    if (flagSel) {
+      flagSel.innerHTML = '<option value="">-- Escolher Aleatória --</option>';
+      const team = state.teams.find(t => t.id === teamId);
+      const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
+      
+      WORLD_FLAGS.forEach(flag => {
+        const isCurrentSelection = team && team.flagId === flag.id;
+        if (!takenFlags.includes(flag.id) || isCurrentSelection) {
+          const opt = document.createElement('option');
+          opt.value = flag.id;
+          opt.textContent = flag.name;
+          flagSel.appendChild(opt);
+        }
+      });
+      if (team && team.flagId) {
+        flagSel.value = team.flagId;
+      }
+      updateFlagPreview('client-flag', 'client-flag-preview');
+    }
 
     // Load existing stats
     const stats = (state.playerStats && state.playerStats[teamId]) || {};
@@ -2465,11 +2506,58 @@
       goalDiff: parseInt(($('#client-goal-diff') || {}).value, 10) || 0
     };
 
+    // Save Flag and update Photo if it was a flag-based photo
+    const flagSel = $('#client-flag');
+    if (flagSel) {
+      const team = state.teams.find(t => t.id === teamId);
+      const participant = (state.participants || []).find(p => p.id === teamId);
+      const newFlagId = flagSel.value;
+      
+      if (team) {
+        // Se a foto atual era a da bandeira antiga ou não tinha foto, atualiza para a nova bandeira
+        const oldFlagUrl = team.flagId ? `https://flagcdn.com/${team.flagId}.svg` : null;
+        const isUsingFlagAsPhoto = !team.photo || (oldFlagUrl && team.photo === oldFlagUrl) || (team.photo && team.photo.includes('flagcdn.com'));
+        
+        team.flagId = newFlagId;
+        if (isUsingFlagAsPhoto && newFlagId) {
+          team.photo = `https://flagcdn.com/${newFlagId}.svg`;
+        }
+      }
+
+      if (participant) {
+        const oldFlagUrl = participant.flagId ? `https://flagcdn.com/${participant.flagId}.svg` : null;
+        const isUsingFlagAsPhoto = !participant.photo || (oldFlagUrl && participant.photo === oldFlagUrl) || (participant.photo && participant.photo.includes('flagcdn.com'));
+        
+        participant.flagId = newFlagId;
+        if (isUsingFlagAsPhoto && newFlagId) {
+          participant.photo = `https://flagcdn.com/${newFlagId}.svg`;
+        }
+      }
+
+      // Sync with bracket slots
+      if (state.bracket && state.bracket.rounds) {
+        state.bracket.rounds.forEach(round => {
+          round.matches.forEach(match => {
+            const team = state.teams.find(t => t.id === teamId);
+            if (!team) return;
+            if (match.team1 && match.team1.id === teamId) {
+              match.team1.photo = team.photo;
+            }
+            if (match.team2 && match.team2.id === teamId) {
+              match.team2.photo = team.photo;
+            }
+          });
+        });
+      }
+    }
+
     saveState();
     if ($('#ranking-tab').style.display !== 'none') {
       renderRankingTable();
     }
     renderTop3();
+    renderTeamList();
+    renderBracket();
     showToast('Dados do jogador salvos!', 'success');
   }
 
@@ -2999,8 +3087,36 @@
     { id: 'cm', name: 'Camarões' }, { id: 'gh', name: 'Gana' },
     { id: 'ng', name: 'Nigéria' }, { id: 'ec', name: 'Equador' },
     { id: 'pe', name: 'Peru' }, { id: 'cl', name: 'Chile' },
-    { id: 'ca', name: 'Canadá' }, { id: 'sa', name: 'Arábia Saudita' }
+    { id: 'ca', name: 'Canadá' }, { id: 'sa', name: 'Arábia Saudita' },
+    { id: 'eg', name: 'Egito' }, { id: 'dz', name: 'Argélia' },
+    { id: 'tn', name: 'Tunísia' }, { id: 'no', name: 'Noruega' },
+    { id: 'fi', name: 'Finlândia' }, { id: 'at', name: 'Áustria' },
+    { id: 'gr', name: 'Grécia' }, { id: 'tr', name: 'Turquia' },
+    { id: 'ua', name: 'Ucrânia' }, { id: 'cz', name: 'República Tcheca' },
+    { id: 'hu', name: 'Hungria' }, { id: 'ro', name: 'Romênia' },
+    { id: 'py', name: 'Paraguai' }, { id: 've', name: 'Venezuela' },
+    { id: 'bo', name: 'Bolívia' }, { id: 'cr', name: 'Costa Rica' },
+    { id: 'pa', name: 'Panamá' }, { id: 'jm', name: 'Jamaica' },
+    { id: 'za', name: 'África do Sul' }, { id: 'iv', name: 'Costa do Marfim' },
+    { id: 'ir', name: 'Irã' }, { id: 'iq', name: 'Iraque' },
+    { id: 'qa', name: 'Catar' }, { id: 'cn', name: 'China' },
+    { id: 'nz', name: 'Nova Zelândia' }
   ];
+
+  function updateFlagPreview(selectElId, previewImgId) {
+    const select = $(`#${selectElId}`);
+    const preview = $(`#${previewImgId}`);
+    if (!select || !preview) return;
+    
+    const val = select.value;
+    if (val) {
+      preview.src = `https://flagcdn.com/${val}.svg`;
+      preview.style.display = 'block';
+    } else {
+      preview.src = '';
+      preview.style.display = 'none';
+    }
+  }
 
   function populateFlagSelect() {
     const flagSel = $('#participant-flag');
@@ -3038,6 +3154,7 @@
     if (errorEl) errorEl.textContent = '';
     
     populateFlagSelect();
+    updateFlagPreview('participant-flag', 'participant-flag-preview');
   }
 
   /** Handle PARTICIPANTE button click on login screen */
@@ -3909,6 +4026,17 @@
       teamCountSelectForClients.addEventListener('change', () => {
         populateClientSelect();
       });
+    }
+
+    // Flag preview listeners
+    const participantFlagSelect = $('#participant-flag');
+    if (participantFlagSelect) {
+      participantFlagSelect.addEventListener('change', () => updateFlagPreview('participant-flag', 'participant-flag-preview'));
+    }
+
+    const clientFlagSelect = $('#client-flag');
+    if (clientFlagSelect) {
+      clientFlagSelect.addEventListener('change', () => updateFlagPreview('client-flag', 'client-flag-preview'));
     }
   }
 
