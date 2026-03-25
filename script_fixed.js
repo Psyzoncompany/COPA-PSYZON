@@ -3050,24 +3050,33 @@
 
   /** Export state to a JSON file */
   function handleExportBackup() {
-    if (!isAdmin) return;
+    console.log('Iniciando exportação de backup...');
     try {
-      // Remover valores circulares ou desnecessários se houver
-      const dataStr = JSON.stringify(state, null, 2);
+      // Garantir que temos os dados mais recentes e limpos (sem referências circulares ou DOM)
+      const cleanState = JSON.parse(JSON.stringify(state));
+      const dataStr = JSON.stringify(cleanState, null, 2);
+      
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const date = new Date().toISOString().split('T')[0];
+      
       a.href = url;
       a.download = `backup_copa_psyzon_${date}.json`;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      
+      // Pequeno delay antes de remover para garantir que o browser processe o download em alguns sistemas
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
       showToast('Backup exportado com sucesso!', 'success');
+      console.log('Backup exportado com sucesso.');
     } catch (err) {
       console.error('Erro ao exportar backup:', err);
-      showToast('Erro ao exportar backup.', 'error');
+      showToast('Erro ao exportar backup. Veja o console.', 'error');
     }
   }
 

@@ -3711,7 +3711,89 @@
   }
 
   /* ==========================================================
-     17. EVENT LISTENERS
+     17. BACKUP SYSTEM
+     ========================================================== */
+
+  /** Export state to a JSON file */
+  function handleExportBackup() {
+    console.log('Iniciando exportação de backup...');
+    try {
+      // Garantir que temos os dados mais recentes e limpos (sem referências circulares ou DOM)
+      const cleanState = JSON.parse(JSON.stringify(state));
+      const dataStr = JSON.stringify(cleanState, null, 2);
+      
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().split('T')[0];
+      
+      a.href = url;
+      a.download = `backup_copa_psyzon_${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Pequeno delay antes de remover para garantir que o download inicie
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      showToast('Backup exportado com sucesso!', 'success');
+      console.log('Backup exportado com sucesso.');
+    } catch (err) {
+      console.error('Erro ao exportar backup:', err);
+      showToast('Erro ao exportar backup. Veja o console.', 'error');
+    }
+  }
+
+  /** Trigger file input for import */
+  function handleImportClick() {
+    const input = $('#input-import-backup');
+    if (input) input.click();
+  }
+
+  /** Read and apply imported JSON backup */
+  function handleImportBackup(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!confirm('ATENÇÃO: Importar um backup irá SOBRESCREVER todos os dados atuais (times, chaveamento, histórico, etc). Deseja continuar?')) {
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      try {
+        const importedState = JSON.parse(event.target.result);
+        
+        // Basic validation
+        if (typeof importedState !== 'object' || !Array.isArray(importedState.teams)) {
+          throw new Error('Formato de arquivo inválido.');
+        }
+
+        // Merge imported state into current state
+        state = Object.assign(defaultState(), importedState);
+        
+        saveState();
+        showToast('Backup importado com sucesso! Recarregando...', 'success');
+        
+        // Clear input
+        e.target.value = '';
+        
+        // Reload to ensure all UI components sync with new state
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) {
+        console.error('Erro ao importar backup:', err);
+        showToast('Erro ao importar backup: ' + err.message, 'error');
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ==========================================================
+     18. EVENT LISTENERS
      ========================================================== */
 
   /** Set up all event listeners */
@@ -4079,6 +4161,22 @@
     const btnGenerateCodes = $('#btn-generate-codes');
     if (btnGenerateCodes) {
       btnGenerateCodes.addEventListener('click', handleGenerateCodes);
+    }
+
+    // ---------- BACKUP MANAGEMENT ----------
+    const btnExportBackup = $('#btn-export-backup');
+    if (btnExportBackup) {
+      btnExportBackup.addEventListener('click', handleExportBackup);
+    }
+
+    const btnImportBackup = $('#btn-import-backup');
+    if (btnImportBackup) {
+      btnImportBackup.addEventListener('click', handleImportClick);
+    }
+
+    const inputImportBackup = $('#input-import-backup');
+    if (inputImportBackup) {
+      inputImportBackup.addEventListener('change', handleImportBackup);
     }
 
     // Re-populate client select when teams change
