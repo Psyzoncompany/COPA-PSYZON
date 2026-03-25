@@ -74,6 +74,7 @@
     return {
       tournamentName: '',
       teamCount: 8,
+      twoLegged: false,
       teams: [],
       prize: '',
       bracket: null,
@@ -627,6 +628,9 @@
 
     const prizeInput = $('#prize-description');
     if (prizeInput) prizeInput.value = state.prize || '';
+
+    const twoLeggedCheck = $('#two-legged-tournament');
+    if (twoLeggedCheck) twoLeggedCheck.checked = !!state.twoLegged;
   }
 
   /** Save tournament name when it changes */
@@ -1351,7 +1355,11 @@
 
       const s1 = document.createElement('div');
       s1.className = 'match-list-score';
-      s1.textContent = (match.team1 && match.team1.score !== null) ? match.team1.score : '';
+      if (state.twoLegged && match.scoreIda1 !== undefined) {
+        s1.innerHTML = `${match.team1.score} <small style="font-size:9px; opacity:0.6; display:block; line-height:1; font-weight:400;">(${match.scoreIda1}-${match.scoreVolta1})</small>`;
+      } else {
+        s1.textContent = (match.team1 && match.team1.score !== null) ? match.team1.score : '';
+      }
 
       const sx = document.createElement('div');
       sx.className = 'match-list-x';
@@ -1359,7 +1367,11 @@
 
       const s2 = document.createElement('div');
       s2.className = 'match-list-score';
-      s2.textContent = (match.team2 && match.team2.score !== null) ? match.team2.score : '';
+      if (state.twoLegged && match.scoreIda1 !== undefined) {
+        s2.innerHTML = `${match.team2.score} <small style="font-size:9px; opacity:0.6; display:block; line-height:1; font-weight:400;">(${match.scoreIda2}-${match.scoreVolta2})</small>`;
+      } else {
+        s2.textContent = (match.team2 && match.team2.score !== null) ? match.team2.score : '';
+      }
 
       cCenter.appendChild(s1);
       cCenter.appendChild(sx);
@@ -1893,7 +1905,14 @@
     if (team.score !== null && team.score !== undefined) {
       const scoreSpan = document.createElement('span');
       scoreSpan.className = 'score-display';
-      scoreSpan.textContent = String(team.score);
+
+      if (state.twoLegged && match.scoreIda1 !== undefined) {
+        const ida = teamNum === 1 ? match.scoreIda1 : match.scoreIda2;
+        const volta = teamNum === 1 ? match.scoreVolta1 : match.scoreVolta2;
+        scoreSpan.innerHTML = `${team.score} <small style="font-size:9px; opacity:0.6; font-weight:400; display:block; line-height:1;">(${ida}-${volta})</small>`;
+      } else {
+        scoreSpan.textContent = String(team.score);
+      }
       slot.appendChild(scoreSpan);
     }
 
@@ -1924,6 +1943,12 @@
     const modal = $('#score-modal');
     if (!modal) return;
 
+    const isTwoLegged = !!state.twoLegged;
+
+    // Toggle visibility of rows
+    $$('.single-leg-only').forEach(el => el.style.display = isTwoLegged ? 'none' : '');
+    $$('.two-leg-only').forEach(el => el.style.display = isTwoLegged ? 'flex' : 'none');
+
     // Populate team names
     const t1Name = $('#modal-team1-name');
     const t2Name = $('#modal-team2-name');
@@ -1931,10 +1956,21 @@
     if (t2Name) t2Name.textContent = match.team2.playerName;
 
     // Scores
-    const s1 = $('#modal-team1-score');
-    const s2 = $('#modal-team2-score');
-    if (s1) s1.value = match.team1.score !== null ? match.team1.score : 0;
-    if (s2) s2.value = match.team2.score !== null ? match.team2.score : 0;
+    if (isTwoLegged) {
+      const s1Ida = $('#modal-team1-score-ida');
+      const s2Ida = $('#modal-team2-score-ida');
+      const s1Volta = $('#modal-team1-score-volta');
+      const s2Volta = $('#modal-team2-score-volta');
+      if (s1Ida) s1Ida.value = match.scoreIda1 !== undefined ? match.scoreIda1 : 0;
+      if (s2Ida) s2Ida.value = match.scoreIda2 !== undefined ? match.scoreIda2 : 0;
+      if (s1Volta) s1Volta.value = match.scoreVolta1 !== undefined ? match.scoreVolta1 : 0;
+      if (s2Volta) s2Volta.value = match.scoreVolta2 !== undefined ? match.scoreVolta2 : 0;
+    } else {
+      const s1 = $('#modal-team1-score');
+      const s2 = $('#modal-team2-score');
+      if (s1) s1.value = match.team1.score !== null ? match.team1.score : 0;
+      if (s2) s2.value = match.team2.score !== null ? match.team2.score : 0;
+    }
 
     // Penalty team names
     const pt1 = $('#penalty-team1-name');
@@ -1947,6 +1983,11 @@
     const penCheck = $('#penalties-check');
     const penInputs = $('#penalties-inputs');
     if (penSection) penSection.style.display = '';
+
+    const isTie = isTwoLegged
+      ? ((parseInt(($('#modal-team1-score-ida') || {}).value) + parseInt(($('#modal-team1-score-volta') || {}).value)) === (parseInt(($('#modal-team2-score-ida') || {}).value) + parseInt(($('#modal-team2-score-volta') || {}).value)))
+      : (match.team1.score === match.team2.score && match.team1.score !== null);
+
     if (penCheck) penCheck.checked = match.penalties ? true : false;
     if (penInputs) penInputs.style.display = (match.penalties || (penCheck && penCheck.checked)) ? '' : 'none';
 
@@ -1991,8 +2032,16 @@
 
   /** Auto-show penalties when scores are equal */
   function handleScoreChange() {
-    const s1 = parseInt(($('#modal-team1-score') || {}).value, 10);
-    const s2 = parseInt(($('#modal-team2-score') || {}).value, 10);
+    const isTwoLegged = !!state.twoLegged;
+    let s1, s2;
+
+    if (isTwoLegged) {
+      s1 = (parseInt($('#modal-team1-score-ida').value, 10) || 0) + (parseInt($('#modal-team1-score-volta').value, 10) || 0);
+      s2 = (parseInt($('#modal-team2-score-ida').value, 10) || 0) + (parseInt($('#modal-team2-score-volta').value, 10) || 0);
+    } else {
+      s1 = parseInt(($('#modal-team1-score') || {}).value, 10);
+      s2 = parseInt(($('#modal-team2-score') || {}).value, 10);
+    }
 
     if (!isNaN(s1) && !isNaN(s2) && s1 === s2) {
       const penSection = $('#penalties-section');
@@ -2016,12 +2065,32 @@
     const match = bracket.rounds[rIdx].matches[mIdx];
     if (!match) return;
 
-    const score1 = parseInt(($('#modal-team1-score') || {}).value, 10);
-    const score2 = parseInt(($('#modal-team2-score') || {}).value, 10);
+    const isTwoLegged = !!state.twoLegged;
+    let score1, score2;
+    let sIda1, sIda2, sVolta1, sVolta2;
 
-    if (isNaN(score1) || isNaN(score2) || score1 < 0 || score2 < 0) {
-      showToast('Insira placares válidos (números >= 0).', 'error');
-      return;
+    if (isTwoLegged) {
+      sIda1 = parseInt($('#modal-team1-score-ida').value, 10) || 0;
+      sIda2 = parseInt($('#modal-team2-score-ida').value, 10) || 0;
+      sVolta1 = parseInt($('#modal-team1-score-volta').value, 10) || 0;
+      sVolta2 = parseInt($('#modal-team2-score-volta').value, 10) || 0;
+
+      score1 = sIda1 + sVolta1;
+      score2 = sIda2 + sVolta2;
+
+      // Validation for 2 legs (only if used)
+      if (isNaN(score1) || isNaN(score2)) {
+        showToast('Insira placares válidos.', 'error');
+        return;
+      }
+    } else {
+      score1 = parseInt(($('#modal-team1-score') || {}).value, 10);
+      score2 = parseInt(($('#modal-team2-score') || {}).value, 10);
+
+      if (isNaN(score1) || isNaN(score2) || score1 < 0 || score2 < 0) {
+        showToast('Insira placares válidos (números >= 0).', 'error');
+        return;
+      }
     }
 
     let winnerNum = null;
@@ -2075,6 +2144,19 @@
     match.winner = winnerNum;
     match.penalties = penalties;
 
+    if (isTwoLegged) {
+      match.scoreIda1 = sIda1;
+      match.scoreIda2 = sIda2;
+      match.scoreVolta1 = sVolta1;
+      match.scoreVolta2 = sVolta2;
+    } else {
+      // Clear 2-leg fields if switching back
+      delete match.scoreIda1;
+      delete match.scoreIda2;
+      delete match.scoreVolta1;
+      delete match.scoreVolta2;
+    }
+
     const totalRounds = bracket.rounds.length;
 
     // --- APPLY NEW STATS ---
@@ -2119,6 +2201,61 @@
     saveState();
     closeScoreModal();
     renderBracket();
+  }
+
+  /** Reset a match to unplayed state */
+  function handleResetMatch() {
+    if (!confirm('Deseja resetar o resultado desta partida? Isso apagará os gols e o vencedor.')) return;
+
+    const rIdx = modalMatch.roundIdx;
+    const mIdx = modalMatch.matchIdx;
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    // Revert stats if they were applied
+    if (match.statsApplied) {
+      revertMatchStats(match);
+    }
+
+    // Reset scores and winner
+    if (match.team1) match.team1.score = null;
+    if (match.team2) match.team2.score = null;
+    match.winner = null;
+    match.penalties = null;
+
+    // Reset Ida/Volta if they exist
+    delete match.scoreIda1;
+    delete match.scoreIda2;
+    delete match.scoreVolta1;
+    delete match.scoreVolta2;
+
+    const totalRounds = bracket.rounds.length;
+
+    // If it's the final, clear champion
+    if (rIdx === totalRounds - 1) {
+      if (currentViewingBracketId) {
+        const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
+        if (hist) hist.champion = null;
+      } else {
+        state.champion = null;
+      }
+    }
+
+    // Clear winner in the next rounds
+    if (rIdx < totalRounds - 1) {
+      const nextMatchIdx = Math.floor(mIdx / 2);
+      const slot = mIdx % 2 === 0 ? 'team1' : 'team2';
+      const nextMatch = bracket.rounds[rIdx + 1].matches[nextMatchIdx];
+      if (nextMatch) nextMatch[slot] = null;
+    }
+
+    saveState();
+    closeScoreModal();
+    renderBracket();
+    showToast('Partida resetada.', 'info');
   }
 
   /** Initialize missing stats for a team ID */
@@ -2217,43 +2354,103 @@
 
     let sourceMatch = null;
     let targetMatch = null;
+    let sRIdx = -1, tRIdx = -1;
 
-    state.bracket.rounds.forEach(r => {
+    state.bracket.rounds.forEach((r, rIdx) => {
       r.matches.forEach(m => {
-        if (m.id === source.matchId) sourceMatch = m;
-        if (m.id === target.matchId) targetMatch = m;
+        if (m.id === source.matchId) {
+          sourceMatch = m;
+          sRIdx = rIdx;
+        }
+        if (m.id === target.matchId) {
+          targetMatch = m;
+          tRIdx = rIdx;
+        }
       });
     });
 
     if (!sourceMatch || !targetMatch) return;
 
-    // Obter referências aos times
+    // --- CASO 1: TROCA DENTRO DA MESMA PARTIDA (INVERTER LADOS) ---
+    if (sourceMatch === targetMatch) {
+      if (source.teamNum === target.teamNum) return; // Mesmo slot
+
+      // Inverter times
+      const tempTeam = sourceMatch.team1;
+      sourceMatch.team1 = sourceMatch.team2;
+      sourceMatch.team2 = tempTeam;
+
+      // Inverter placares se existirem para manter a lógica do resultado no slot correto
+      if (sourceMatch.winner) {
+        if (sourceMatch.winner === 1) sourceMatch.winner = 2;
+        else if (sourceMatch.winner === 2) sourceMatch.winner = 1;
+
+        if (sourceMatch.penalties) {
+          const p1 = sourceMatch.penalties.team1;
+          sourceMatch.penalties.team1 = sourceMatch.penalties.team2;
+          sourceMatch.penalties.team2 = p1;
+        }
+
+        // Ida / Volta
+        const ida1 = sourceMatch.scoreIda1;
+        sourceMatch.scoreIda1 = sourceMatch.scoreIda2;
+        sourceMatch.scoreIda2 = ida1;
+
+        const v1 = sourceMatch.scoreVolta1;
+        sourceMatch.scoreVolta1 = sourceMatch.scoreVolta2;
+        sourceMatch.scoreVolta2 = v1;
+      }
+
+      saveState();
+      renderBracket();
+      showToast('Posições invertidas.', 'info');
+      return;
+    }
+
+    // --- CASO 2: MOVER PARA OUTRA PARTIDA (RESETAR RESULTADO) ---
+    // Reverter estatísticas antes de resetar os placares para null
+    if (sourceMatch.statsApplied) revertMatchStats(sourceMatch);
+    if (targetMatch.statsApplied) revertMatchStats(targetMatch);
+
     const teamA = source.teamNum === 1 ? sourceMatch.team1 : sourceMatch.team2;
     const teamB = target.teamNum === 1 ? targetMatch.team1 : targetMatch.team2;
 
-    // Realizar a troca
+    // Efetuar a troca dos objetos de time
     if (source.teamNum === 1) sourceMatch.team1 = teamB;
     else sourceMatch.team2 = teamB;
 
     if (target.teamNum === 1) targetMatch.team1 = teamA;
     else targetMatch.team2 = teamA;
 
-    // Resetar os resultados se alguém foi movido (opcional)
-    sourceMatch.winner = null;
-    sourceMatch.penalties = null;
-    if (sourceMatch.team1) sourceMatch.team1.score = null;
-    if (sourceMatch.team2) sourceMatch.team2.score = null;
+    // Resetar resultados já que os oponentes mudaram
+    const resetMatch = (m, rIdx, mIdx) => {
+      m.winner = null;
+      m.penalties = null;
+      if (m.team1) m.team1.score = null;
+      if (m.team2) m.team2.score = null;
+      delete m.scoreIda1; delete m.scoreIda2;
+      delete m.scoreVolta1; delete m.scoreVolta2;
 
-    if (sourceMatch !== targetMatch) {
-      targetMatch.winner = null;
-      targetMatch.penalties = null;
-      if (targetMatch.team1) targetMatch.team1.score = null;
-      if (targetMatch.team2) targetMatch.team2.score = null;
-    }
+      // Limpar progresso na próxima fase
+      const totalRounds = state.bracket.rounds.length;
+      if (rIdx < totalRounds - 1) {
+        const nextMatchIdx = Math.floor(mIdx / 2);
+        const slot = mIdx % 2 === 0 ? 'team1' : 'team2';
+        const nextMatch = state.bracket.rounds[rIdx + 1].matches[nextMatchIdx];
+        if (nextMatch) nextMatch[slot] = null;
+      }
+    };
+
+    // Encontrar os índices reais para o reset progressivo
+    const sMIdx = state.bracket.rounds[sRIdx].matches.indexOf(sourceMatch);
+    const tMIdx = state.bracket.rounds[tRIdx].matches.indexOf(targetMatch);
+
+    resetMatch(sourceMatch, sRIdx, sMIdx);
+    resetMatch(targetMatch, tRIdx, tMIdx);
 
     saveState();
     renderBracket();
-    showToast('Times trocados com sucesso!', 'info');
+    showToast('Jogadores movidos. Resultados resetados.', 'info');
   }
 
   /* ==========================================================
@@ -3721,23 +3918,23 @@
       // Garantir que temos os dados mais recentes e limpos (sem referências circulares ou DOM)
       const cleanState = JSON.parse(JSON.stringify(state));
       const dataStr = JSON.stringify(cleanState, null, 2);
-      
+
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const date = new Date().toISOString().split('T')[0];
-      
+
       a.href = url;
       a.download = `backup_copa_psyzon_${date}.json`;
       document.body.appendChild(a);
       a.click();
-      
+
       // Pequeno delay antes de remover para garantir que o download inicie
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }, 100);
-      
+
       showToast('Backup exportado com sucesso!', 'success');
       console.log('Backup exportado com sucesso.');
     } catch (err) {
@@ -3763,10 +3960,10 @@
     }
 
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       try {
         const importedState = JSON.parse(event.target.result);
-        
+
         // Basic validation
         if (typeof importedState !== 'object' || !Array.isArray(importedState.teams)) {
           throw new Error('Formato de arquivo inválido.');
@@ -3774,13 +3971,13 @@
 
         // Merge imported state into current state
         state = Object.assign(defaultState(), importedState);
-        
+
         saveState();
         showToast('Backup importado com sucesso! Recarregando...', 'success');
-        
+
         // Clear input
         e.target.value = '';
-        
+
         // Reload to ensure all UI components sync with new state
         setTimeout(() => window.location.reload(), 1500);
       } catch (err) {
@@ -3901,6 +4098,12 @@
     const btnCancel = $('#btn-cancel-modal');
     if (btnCancel) {
       btnCancel.addEventListener('click', closeScoreModal);
+    }
+
+    // Score modal: reset match
+    const btnResetMatch = $('#btn-reset-match');
+    if (btnResetMatch) {
+      btnResetMatch.addEventListener('click', handleResetMatch);
     }
 
     // Score modal: backdrop click
@@ -4178,6 +4381,25 @@
     if (inputImportBackup) {
       inputImportBackup.addEventListener('change', handleImportBackup);
     }
+
+    // ---------- TOURNAMENT CONFIG ----------
+    const twoLeggedCheck = $('#two-legged-tournament');
+    if (twoLeggedCheck) {
+      twoLeggedCheck.addEventListener('change', () => {
+        state.twoLegged = twoLeggedCheck.checked;
+        saveState();
+        showToast(`Sistema de ida/volta ${state.twoLegged ? 'ativado' : 'desativado'}`, 'info');
+        renderBracket();
+      });
+    }
+
+    const s1Ida = $('#modal-team1-score-ida');
+    const s2Ida = $('#modal-team2-score-ida');
+    const s1Volta = $('#modal-team1-score-volta');
+    const s2Volta = $('#modal-team2-score-volta');
+    [s1Ida, s2Ida, s1Volta, s2Volta].forEach(inp => {
+      if (inp) inp.addEventListener('input', handleScoreChange);
+    });
 
     // Re-populate client select when teams change
     const teamCountSelectForClients = $('#team-count');
