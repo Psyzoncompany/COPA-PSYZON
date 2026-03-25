@@ -827,16 +827,15 @@
     state.teams.forEach((team) => {
       // Get the full name from participants state if available
       const p = state.participants ? state.participants.find(part => part.id === team.id) : null;
-      const fullName = p ? p.name : '';
+      const fullName = p ? p.name : team.playerName;
 
       html += `
         <div class="team-item clickable-team" data-id="${sanitize(team.id)}">
           <div class="team-item-info">
             <div class="team-avatar">${team.photo ? '<img src="' + sanitize(team.photo) + '" alt="">' : '<span class="av-placeholder">' + sanitize(initials(team.playerName)) + '</span>'}</div>
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${sanitize(team.teamName)}</div>
-              <div style="font-size:12px;color:var(--text-secondary);">${sanitize(team.playerName)}</div>
-              ${fullName ? `<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">${sanitize(fullName)}</div>` : ''}
+              <div style="font-size:13px;font-weight:700;color:#ffffff;">${sanitize(team.teamName)}</div>
+              <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">${sanitize(fullName)}</div>
             </div>
           </div>
           <button type="button" class="btn-remove-team icon-btn" data-team-id="${sanitize(team.id)}" title="Remover time" aria-label="Remover time"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
@@ -1305,23 +1304,43 @@
       const versusWrap = document.createElement('div');
       versusWrap.className = 'match-list-versus';
 
-      // Helper function for building a team side
-      function buildTeamSide(teamData) {
-        const t = document.createElement('div');
-        t.className = 'match-list-team';
-        
-        let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
-        let nameHtml = 'A definir';
-        
-        if (teamData) {
-          const initials = teamData.playerName ? teamData.playerName.substring(0,2).toUpperCase() : teamData.teamName.substring(0,2).toUpperCase();
-          imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initials)}</span>`;
-          nameHtml = sanitize(teamData.teamName || teamData.playerName);
+        // Helper function for building a team side
+        function buildTeamSide(teamData) {
+          const t = document.createElement('div');
+          t.className = 'match-list-team';
+          
+          let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
+          let nameHtml = 'A definir';
+          
+          if (teamData) {
+            const initialsText = initials(teamData.playerName || teamData.teamName);
+            imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initialsText)}</span>`;
+            
+            // Get full name from participants
+            const p = state.participants ? state.participants.find(part => part.id === teamData.id) : null;
+            const fullName = p ? p.name : (teamData.playerName !== teamData.teamName ? teamData.playerName : '');
+            
+            nameHtml = `
+              <div style="display:flex; flex-direction:column; align-items: center; line-height: 1.1; text-align: center;">
+                <span class="nickname-bold" style="font-weight:700; font-size:14px; color:#ffffff;">${sanitize(teamData.teamName || teamData.playerName)}</span>
+                ${fullName ? `<span class="fullname-small" style="font-size:9px; color:rgba(255, 255, 255, 0.6); margin-top:2px;">${sanitize(fullName)}</span>` : ''}
+              </div>
+            `;
+
+            // Open profile on click
+            t.classList.add('clickable');
+            const teamRecord = state.teams.find(tr => tr.id === teamData.id) || state.teams.find(tr => tr.playerName === teamData.playerName && tr.teamName === teamData.teamName);
+            if (teamRecord) {
+              t.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPlayerProfile(teamRecord.id);
+              });
+            }
+          }
+          
+          t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
+          return t;
         }
-        
-        t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
-        return t;
-      }
 
       const t1 = buildTeamSide(match.team1);
       const t2 = buildTeamSide(match.team2);
@@ -1836,13 +1855,17 @@
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'team-name-bracket';
-    nameSpan.textContent = team.playerName || team.teamName;
-    nameSpan.title = `${team.teamName} â€” ${team.playerName}`;
+    nameSpan.style.fontWeight = '700'; // Nickname in BOLD
+    nameSpan.style.color = '#ffffff'; // White color for nickname
+    nameSpan.textContent = team.teamName || team.playerName;
+    nameSpan.title = `${team.teamName} — ${team.playerName}`;
     nameWrapper.appendChild(nameSpan);
 
     // Full name in small text if available
     const participant = state.participants ? state.participants.find(p => (p.id === team.id) || (p.name === team.playerName)) : null;
-    if (participant && participant.name) {
+    const fullNameText = participant ? participant.name : (team.playerName !== team.teamName ? team.playerName : '');
+    
+    if (fullNameText) {
       const fullNameSpan = document.createElement('span');
       fullNameSpan.style.fontSize = '9px';
       fullNameSpan.style.color = 'var(--text-tertiary)';
@@ -1850,7 +1873,7 @@
       fullNameSpan.style.whiteSpace = 'nowrap';
       fullNameSpan.style.overflow = 'hidden';
       fullNameSpan.style.textOverflow = 'ellipsis';
-      fullNameSpan.textContent = participant.name;
+      fullNameSpan.textContent = fullNameText;
       nameWrapper.appendChild(fullNameSpan);
     }
 
