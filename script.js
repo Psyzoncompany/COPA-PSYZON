@@ -720,7 +720,7 @@
     function finishAddTeam(photoData) {
       let assignedFlagId = null;
       let finalPhoto = photoData;
-      
+
       const flagInput = $('#player-flag-input');
       const selectedFlag = flagInput ? flagInput.value : '';
 
@@ -731,8 +731,8 @@
         const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
         const availableFlags = WORLD_FLAGS.filter(f => !takenFlags.includes(f.id));
         if (availableFlags.length > 0) {
-           assignedFlagId = availableFlags[Math.floor(Math.random() * availableFlags.length)].id;
-           finalPhoto = `https://flagcdn.com/${assignedFlagId}.svg`;
+          assignedFlagId = availableFlags[Math.floor(Math.random() * availableFlags.length)].id;
+          finalPhoto = `https://flagcdn.com/${assignedFlagId}.svg`;
         }
       }
 
@@ -743,7 +743,7 @@
         flagId: assignedFlagId,
         photo: finalPhoto
       };
-      
+
       state.teams.push(team);
       saveState();
 
@@ -1104,7 +1104,7 @@
     if (state.champion) {
       renderChampionBannerIfNeeded();
     }
-    
+
     // Render list view side-by-side
     renderListView();
   }
@@ -1124,22 +1124,22 @@
     }
 
     if (lastListBracketRef !== bracket) {
-       lastListBracketRef = bracket;
-       currentListPhaseIndex = -1;
+      lastListBracketRef = bracket;
+      currentListPhaseIndex = -1;
     }
 
     if (currentListPhaseIndex === -1) {
-       let found = 0;
-       for (let r = 0; r < bracket.rounds.length; r++) {
-         if (bracket.rounds[r].matches.some(m => !m.winner)) {
-            found = r;
-            break;
-         }
-       }
-       if (found === 0 && bracket.rounds.length > 0 && bracket.rounds[bracket.rounds.length-1].matches.every(m=>m.winner)) {
-         found = bracket.rounds.length - 1;
-       }
-       currentListPhaseIndex = found;
+      let found = 0;
+      for (let r = 0; r < bracket.rounds.length; r++) {
+        if (bracket.rounds[r].matches.some(m => !m.winner)) {
+          found = r;
+          break;
+        }
+      }
+      if (found === 0 && bracket.rounds.length > 0 && bracket.rounds[bracket.rounds.length - 1].matches.every(m => m.winner)) {
+        found = bracket.rounds.length - 1;
+      }
+      currentListPhaseIndex = found;
     }
 
     if (currentListPhaseIndex >= bracket.rounds.length) {
@@ -1169,10 +1169,10 @@
     btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
     btnPrev.style.cursor = btnPrev.disabled ? 'default' : 'pointer';
     btnPrev.onclick = () => {
-       if (currentListPhaseIndex > 0) {
-           currentListPhaseIndex--;
-           renderListView();
-       }
+      if (currentListPhaseIndex > 0) {
+        currentListPhaseIndex--;
+        renderListView();
+      }
     };
 
     const phaseTitle = document.createElement('div');
@@ -1187,10 +1187,10 @@
     btnNext.style.opacity = btnNext.disabled ? '0.3' : '1';
     btnNext.style.cursor = btnNext.disabled ? 'default' : 'pointer';
     btnNext.onclick = () => {
-       if (currentListPhaseIndex < bracket.rounds.length - 1) {
-           currentListPhaseIndex++;
-           renderListView();
-       }
+      if (currentListPhaseIndex < bracket.rounds.length - 1) {
+        currentListPhaseIndex++;
+        renderListView();
+      }
     };
 
     headerRow.appendChild(btnPrev);
@@ -1217,7 +1217,7 @@
       header.className = 'match-list-header';
       header.style.flexWrap = 'wrap';
       header.style.gap = '8px';
-      
+
       const badge = document.createElement('span');
       badge.className = 'match-list-badge';
       badge.textContent = `${round.name.split(' ')[0]} ${mIdx + 1}`;
@@ -1240,7 +1240,7 @@
         const dateInp = document.createElement('input');
         dateInp.type = 'date';
         dateInp.style.cssText = inptStyle;
-        
+
         const divi = document.createElement('div');
         divi.style.width = '1px';
         divi.style.height = '12px';
@@ -1284,13 +1284,13 @@
           const parts = match.dateTime.split('T');
           let text = '';
           if (parts[0] && parts[0] !== 'HOJE') {
-             const dp = parts[0].split('-');
-             text = dp.length === 3 ? `${dp[2]}/${dp[1]}` : parts[0];
+            const dp = parts[0].split('-');
+            text = dp.length === 3 ? `${dp[2]}/${dp[1]}` : parts[0];
           } else if (parts[0] === 'HOJE') {
-             text = 'Hoje';
+            text = 'Hoje';
           }
           if (parts[1]) {
-             text += (text ? ' • ' : '') + parts[1];
+            text += (text ? ' • ' : '') + parts[1];
           }
           dtSpan.innerHTML = `<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${text}`;
         } else {
@@ -1304,43 +1304,43 @@
       const versusWrap = document.createElement('div');
       versusWrap.className = 'match-list-versus';
 
-        // Helper function for building a team side
-        function buildTeamSide(teamData) {
-          const t = document.createElement('div');
-          t.className = 'match-list-team';
-          
-          let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
-          let nameHtml = 'A definir';
-          
-          if (teamData) {
-            const initialsText = initials(teamData.playerName || teamData.teamName);
-            imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initialsText)}</span>`;
-            
-            // Get full name from participants
-            const p = state.participants ? state.participants.find(part => part.id === teamData.id) : null;
-            const fullName = p ? p.name : (teamData.playerName !== teamData.teamName ? teamData.playerName : '');
-            
-            nameHtml = `
+      // Helper function for building a team side
+      function buildTeamSide(teamData) {
+        const t = document.createElement('div');
+        t.className = 'match-list-team';
+
+        let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
+        let nameHtml = 'A definir';
+
+        if (teamData) {
+          const initialsText = initials(teamData.playerName || teamData.teamName);
+          imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initialsText)}</span>`;
+
+          // Get full name from participants
+          const p = state.participants ? state.participants.find(part => part.id === teamData.id) : null;
+          const fullName = p ? p.name : (teamData.playerName !== teamData.teamName ? teamData.playerName : '');
+
+          nameHtml = `
               <div style="display:flex; flex-direction:column; align-items: center; line-height: 1.1; text-align: center;">
                 <span class="nickname-bold" style="font-weight:700; font-size:14px; color:#ffffff;">${sanitize(teamData.teamName || teamData.playerName)}</span>
                 ${fullName ? `<span class="fullname-small" style="font-size:9px; color:rgba(255, 255, 255, 0.6); margin-top:2px;">${sanitize(fullName)}</span>` : ''}
               </div>
             `;
 
-            // Open profile on click
-            t.classList.add('clickable');
-            const teamRecord = state.teams.find(tr => tr.id === teamData.id) || state.teams.find(tr => tr.playerName === teamData.playerName && tr.teamName === teamData.teamName);
-            if (teamRecord) {
-              t.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openPlayerProfile(teamRecord.id);
-              });
-            }
+          // Open profile on click
+          t.classList.add('clickable');
+          const teamRecord = state.teams.find(tr => tr.id === teamData.id) || state.teams.find(tr => tr.playerName === teamData.playerName && tr.teamName === teamData.teamName);
+          if (teamRecord) {
+            t.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openPlayerProfile(teamRecord.id);
+            });
           }
-          
-          t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
-          return t;
         }
+
+        t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
+        return t;
+      }
 
       const t1 = buildTeamSide(match.team1);
       const t2 = buildTeamSide(match.team2);
@@ -1348,11 +1348,11 @@
       // Center X
       const cCenter = document.createElement('div');
       cCenter.className = 'match-list-score-container';
-      
+
       const s1 = document.createElement('div');
       s1.className = 'match-list-score';
       s1.textContent = (match.team1 && match.team1.score !== null) ? match.team1.score : '';
-      
+
       const sx = document.createElement('div');
       sx.className = 'match-list-x';
       sx.textContent = 'X';
@@ -1360,11 +1360,11 @@
       const s2 = document.createElement('div');
       s2.className = 'match-list-score';
       s2.textContent = (match.team2 && match.team2.score !== null) ? match.team2.score : '';
-      
+
       cCenter.appendChild(s1);
       cCenter.appendChild(sx);
       cCenter.appendChild(s2);
-      
+
       versusWrap.appendChild(t1);
       versusWrap.appendChild(cCenter);
       versusWrap.appendChild(t2);
@@ -1384,9 +1384,9 @@
 
       // Edit hook for Admin
       if (isAdmin && match.team1 && match.team2) {
-         card.style.cursor = 'pointer';
-         card.title = "Clique para registrar/editar resultado";
-         card.addEventListener('click', () => openScoreModal(currentListPhaseIndex, mIdx));
+        card.style.cursor = 'pointer';
+        card.title = "Clique para registrar/editar resultado";
+        card.addEventListener('click', () => openScoreModal(currentListPhaseIndex, mIdx));
       }
 
       cardsContainer.appendChild(card);
@@ -1402,7 +1402,7 @@
       const listRadio = document.getElementById('mode-list');
       const bContainer = document.getElementById('bracket-container');
       const lContainer = document.getElementById('list-container');
-      
+
       if (bContainer && lContainer && listRadio) {
         if (listRadio.checked) {
           bContainer.style.display = 'none';
@@ -1864,7 +1864,7 @@
     // Full name in small text if available
     const participant = state.participants ? state.participants.find(p => (p.id === team.id) || (p.name === team.playerName)) : null;
     const fullNameText = participant ? participant.name : (team.playerName !== team.teamName ? team.playerName : '');
-    
+
     if (fullNameText) {
       const fullNameSpan = document.createElement('span');
       fullNameSpan.style.fontSize = '9px';
@@ -2473,7 +2473,7 @@
       flagSel.innerHTML = '<option value="">-- Escolher Aleatória --</option>';
       const currentFlagVal = flagSel.value;
       const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
-      
+
       WORLD_FLAGS.forEach(flag => {
         const isCurrentSelection = (state.teams.find(t => t.id === currentVal) || {}).flagId === flag.id;
         // Permite mostrar a bandeira se ela estiver disponível ou se for a que o jogador já está usando
@@ -2512,7 +2512,7 @@
       flagSel.innerHTML = '<option value="">-- Escolher Aleatória --</option>';
       const team = state.teams.find(t => t.id === teamId);
       const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
-      
+
       WORLD_FLAGS.forEach(flag => {
         const isCurrentSelection = team && team.flagId === flag.id;
         if (!takenFlags.includes(flag.id) || isCurrentSelection) {
@@ -2573,12 +2573,12 @@
       const team = state.teams.find(t => t.id === teamId);
       const participant = (state.participants || []).find(p => p.id === teamId);
       const newFlagId = flagSel.value;
-      
+
       if (team) {
         // Se a foto atual era a da bandeira antiga ou não tinha foto, atualiza para a nova bandeira
         const oldFlagUrl = team.flagId ? `https://flagcdn.com/${team.flagId}.svg` : null;
         const isUsingFlagAsPhoto = !team.photo || (oldFlagUrl && team.photo === oldFlagUrl) || (team.photo && team.photo.includes('flagcdn.com'));
-        
+
         team.flagId = newFlagId;
         if (isUsingFlagAsPhoto && newFlagId) {
           team.photo = `https://flagcdn.com/${newFlagId}.svg`;
@@ -2588,7 +2588,7 @@
       if (participant) {
         const oldFlagUrl = participant.flagId ? `https://flagcdn.com/${participant.flagId}.svg` : null;
         const isUsingFlagAsPhoto = !participant.photo || (oldFlagUrl && participant.photo === oldFlagUrl) || (participant.photo && participant.photo.includes('flagcdn.com'));
-        
+
         participant.flagId = newFlagId;
         if (isUsingFlagAsPhoto && newFlagId) {
           participant.photo = `https://flagcdn.com/${newFlagId}.svg`;
@@ -2638,37 +2638,37 @@
     if (state.codes) {
       const codeEntry = state.codes.find(c => c.participantId === participantId);
       if (codeEntry) {
-         codeEntry.status = 'available';
-         codeEntry.participantId = null;
+        codeEntry.status = 'available';
+        codeEntry.participantId = null;
       }
     }
     if (state.bracket && state.bracket.rounds) {
       state.bracket.rounds.forEach(round => {
-         round.matches.forEach(match => {
-            if (match.team1 && match.team1.id === participantId) {
-               match.team1 = null;
-               match.score1 = null;
-               if (match.penalties) delete match.penalties.score1;
-            }
-            if (match.team2 && match.team2.id === participantId) {
-               match.team2 = null;
-               match.score2 = null;
-               if (match.penalties) delete match.penalties.score2;
-            }
-            if (match.winner && match.winner.id === participantId) {
-               match.winner = null;
-            }
-         });
+        round.matches.forEach(match => {
+          if (match.team1 && match.team1.id === participantId) {
+            match.team1 = null;
+            match.score1 = null;
+            if (match.penalties) delete match.penalties.score1;
+          }
+          if (match.team2 && match.team2.id === participantId) {
+            match.team2 = null;
+            match.score2 = null;
+            if (match.penalties) delete match.penalties.score2;
+          }
+          if (match.winner && match.winner.id === participantId) {
+            match.winner = null;
+          }
+        });
       });
     }
 
     saveState();
-    
+
     // UI Updates
     renderTeamList();
     renderBracket();
     if (isAdmin) renderCodesList();
-    
+
     const rankEl = $('#ranking-tab');
     if (rankEl && rankEl.style.display !== 'none') renderRankingTable();
     renderTop3();
@@ -3168,7 +3168,7 @@
     const select = $(`#${selectElId}`);
     const preview = $(`#${previewImgId}`);
     if (!select || !preview) return;
-    
+
     const val = select.value;
     if (val) {
       preview.src = `https://flagcdn.com/${val}.svg`;
@@ -3183,7 +3183,7 @@
     const flagSel = $('#participant-flag');
     if (!flagSel) return;
     flagSel.innerHTML = '<option value="">-- Escolher Aleatória --</option>';
-    
+
     const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
     WORLD_FLAGS.forEach(flag => {
       if (!takenFlags.includes(flag.id)) {
@@ -3213,7 +3213,7 @@
     if (form) form.reset();
     const errorEl = $('#participant-form-error');
     if (errorEl) errorEl.textContent = '';
-    
+
     populateFlagSelect();
     updateFlagPreview('participant-flag', 'participant-flag-preview');
   }
@@ -3397,7 +3397,7 @@
         const takenFlags = state.teams.map(t => t.flagId).filter(f => f);
         const availableFlags = WORLD_FLAGS.filter(f => !takenFlags.includes(f.id));
         if (availableFlags.length > 0) {
-           assignedFlagId = availableFlags[Math.floor(Math.random() * availableFlags.length)].id;
+          assignedFlagId = availableFlags[Math.floor(Math.random() * availableFlags.length)].id;
         }
       }
 
@@ -3580,7 +3580,7 @@
       if (!confirm('Este processo irá resetar partidas em andamento e recriar o chaveamento. Deseja continuar?')) {
         return;
       }
-      
+
       // Revert all match stats to prevent leaking trophies or goals
       state.bracket.rounds.forEach(round => {
         round.matches.forEach(m => {
