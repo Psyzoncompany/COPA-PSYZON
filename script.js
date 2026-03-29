@@ -1941,20 +1941,57 @@
       const ida1 = match.scoreIda1 || 0;
       const ida2 = match.scoreIda2 || 0;
 
-      let agg1, agg2, legLabel;
+      let agg1, agg2;
       if (match.currentLeg === 'volta') {
         agg1 = ida1 + s1;
         agg2 = ida2 + s2;
-        legLabel = `Ida: ${ida1}×${ida2} | Volta: ${s1}×${s2}`;
       } else {
         agg1 = s1;
         agg2 = s2;
-        legLabel = `Ida: ${s1}×${s2}`;
       }
 
       const aggBar = document.createElement('div');
       aggBar.className = 'match-aggregate-bar';
-      aggBar.innerHTML = `${sanitize(legLabel)} — Agregado: <strong>${agg1} × ${agg2}</strong>`;
+
+      if (match.currentLeg === 'volta') {
+        aggBar.innerHTML = `
+          <div class="agg-legs">
+            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${ida1} × ${ida2}</strong></span>
+            <span class="agg-leg-divider">|</span>
+            <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${s1} × ${s2}</strong></span>
+          </div>
+          <div class="agg-total">Agregado: <strong>${agg1} × ${agg2}</strong></div>
+        `;
+      } else {
+        aggBar.innerHTML = `
+          <div class="agg-legs">
+            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${s1} × ${s2}</strong></span>
+          </div>
+          <div class="agg-total">Agregado: <strong>${agg1} × ${agg2}</strong></div>
+        `;
+      }
+      card.appendChild(aggBar);
+    }
+
+    // Also show ida/volta detail for finished two-legged matches
+    if (isFinished && state.twoLegged && match.scoreIda1 !== undefined) {
+      const ida1 = match.scoreIda1 || 0;
+      const ida2 = match.scoreIda2 || 0;
+      const volta1 = match.scoreVolta1 || 0;
+      const volta2 = match.scoreVolta2 || 0;
+      const agg1 = ida1 + volta1;
+      const agg2 = ida2 + volta2;
+
+      const aggBar = document.createElement('div');
+      aggBar.className = 'match-aggregate-bar match-aggregate-finished';
+      aggBar.innerHTML = `
+        <div class="agg-legs">
+          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${ida1} × ${ida2}</strong></span>
+          <span class="agg-leg-divider">|</span>
+          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${volta1} × ${volta2}</strong></span>
+        </div>
+        <div class="agg-total">Agregado: <strong>${agg1} × ${agg2}</strong></div>
+      `;
       card.appendChild(aggBar);
     }
 
@@ -2033,6 +2070,9 @@
         }
       }
 
+      // In two-legged tournaments, only allow finalizing during the volta (return) leg
+      const canFinalize = !isTwoLegged || match.currentLeg === 'volta';
+
       if (isLive) {
         const pauseBtn = document.createElement('button');
         pauseBtn.type = 'button';
@@ -2041,12 +2081,14 @@
         pauseBtn.addEventListener('click', () => pauseLiveMatch(rIdx, mIdx));
         controls.appendChild(pauseBtn);
 
-        const endBtn = document.createElement('button');
-        endBtn.type = 'button';
-        endBtn.className = 'live-ctrl-btn btn-end-live';
-        endBtn.textContent = '✓ Encerrar partida';
-        endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
-        controls.appendChild(endBtn);
+        if (canFinalize) {
+          const endBtn = document.createElement('button');
+          endBtn.type = 'button';
+          endBtn.className = 'live-ctrl-btn btn-end-live';
+          endBtn.textContent = '✓ Encerrar partida';
+          endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
+          controls.appendChild(endBtn);
+        }
 
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
@@ -2064,12 +2106,14 @@
         resumeBtn.addEventListener('click', () => resumeLiveMatch(rIdx, mIdx));
         controls.appendChild(resumeBtn);
 
-        const endBtn = document.createElement('button');
-        endBtn.type = 'button';
-        endBtn.className = 'live-ctrl-btn btn-end-live';
-        endBtn.textContent = '✓ Encerrar partida';
-        endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
-        controls.appendChild(endBtn);
+        if (canFinalize) {
+          const endBtn = document.createElement('button');
+          endBtn.type = 'button';
+          endBtn.className = 'live-ctrl-btn btn-end-live';
+          endBtn.textContent = '✓ Encerrar partida';
+          endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
+          controls.appendChild(endBtn);
+        }
 
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
@@ -2177,23 +2221,29 @@
     if (isTwoLegged && match.scoreIda1 !== undefined) {
       const ida1 = match.scoreIda1 || 0;
       const ida2 = match.scoreIda2 || 0;
-      const volta1 = match.scoreVolta1 || 0;
-      const volta2 = match.scoreVolta2 || 0;
 
       let agg1, agg2;
       if (match.currentLeg === 'volta') {
-        // During volta: current scores are volta scores, ida already recorded
         agg1 = ida1 + s1;
         agg2 = ida2 + s2;
       } else {
-        // During ida: current scores ARE the ida scores, no volta yet
         agg1 = s1;
         agg2 = s2;
       }
 
       const aggDiv = document.createElement('div');
       aggDiv.className = 'live-area-aggregate';
-      aggDiv.innerHTML = `Agregado: <strong>${agg1} × ${agg2}</strong>`;
+      if (match.currentLeg === 'volta') {
+        aggDiv.innerHTML = `
+          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> ${ida1}×${ida2}</span>
+          <span class="agg-leg-divider">|</span>
+          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> ${s1}×${s2}</span>
+          <span class="agg-leg-divider">—</span>
+          <strong>${agg1} × ${agg2}</strong>
+        `;
+      } else {
+        aggDiv.innerHTML = `<span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> ${s1}×${s2}</span>`;
+      }
       card.appendChild(aggDiv);
     }
 

@@ -215,7 +215,8 @@ img {
 
 .btn-primary:hover {
   opacity: 0.95;
-  box-shadow: 0 8px 20px rgba(74, 142, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(74, 142, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -4166,11 +4167,15 @@ textarea::placeholder {
 }
 
 .live-area-card .live-area-aggregate {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
   font-size: 10px;
   font-weight: 600;
   color: var(--text-tertiary);
-  padding: 4px 8px 6px;
+  padding: 5px 8px 6px;
   background: rgba(255, 255, 255, 0.03);
   border-top: 1px solid var(--border-color);
 }
@@ -4210,13 +4215,155 @@ textarea::placeholder {
   font-size: 10px;
   font-weight: 600;
   color: var(--text-tertiary);
-  padding: 4px 12px;
+  padding: 6px 12px;
   background: rgba(255, 255, 255, 0.02);
   border-top: 1px solid var(--border-color);
 }
 
 .match-aggregate-bar strong {
   color: var(--primary);
+  font-weight: 800;
+}
+
+/* Aggregate legs detail layout */
+.agg-legs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+}
+
+.agg-leg-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.agg-leg-label {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.agg-leg-ida {
+  background: rgba(173, 199, 255, 0.1);
+  border: 1px solid rgba(173, 199, 255, 0.15);
+}
+
+.agg-leg-ida .agg-leg-label {
+  color: var(--primary);
+}
+
+.agg-leg-volta {
+  background: rgba(255, 149, 0, 0.1);
+  border: 1px solid rgba(255, 149, 0, 0.15);
+}
+
+.agg-leg-volta .agg-leg-label {
+  color: var(--accent-orange);
+}
+
+.agg-leg-divider {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+.agg-total {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.agg-total strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.match-aggregate-finished {
+  background: rgba(102, 223, 117, 0.04);
+  border-top-color: rgba(102, 223, 117, 0.12);
+}
+
+/* Two-leg label styling in score modal */
+.two-leg-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.two-leg-label-ida {
+  color: var(--primary);
+  background: rgba(173, 199, 255, 0.1);
+  border: 1px solid rgba(173, 199, 255, 0.15);
+}
+
+.two-leg-label-volta {
+  color: var(--accent-orange);
+  background: rgba(255, 149, 0, 0.1);
+  border: 1px solid rgba(255, 149, 0, 0.15);
+  margin-top: 4px;
+}
+
+.score-input-ida {
+  border-color: rgba(173, 199, 255, 0.3) !important;
+}
+
+.score-input-ida:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(74, 142, 255, 0.15);
+}
+
+.score-input-volta {
+  border-color: rgba(255, 149, 0, 0.3) !important;
+}
+
+.score-input-volta:focus {
+  border-color: var(--accent-orange) !important;
+  box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.15);
+}
+
+/* Match card entrance animation */
+@keyframes matchCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.match-card {
+  animation: matchCardIn 0.35s ease both;
+}
+
+/* Button hover lift effect */
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Live control buttons improved active states */
+.live-ctrl-btn:active {
+  transform: scale(0.95);
+}
+
+.live-ctrl-btn.btn-end-live {
   font-weight: 800;
 }
 
