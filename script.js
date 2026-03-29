@@ -1109,6 +1109,9 @@
       bracketResizeObserver.observe(container);
     }
 
+    // Ensure connectors are redrawn after full layout settles
+    scheduleRedrawConnectors();
+
     // Show champion if already determined
     if (state.champion) {
       renderChampionBannerIfNeeded();
@@ -1462,9 +1465,11 @@
     svgWrap.style.width = '100%';
     col.appendChild(svgWrap);
 
-    // Defer SVG drawing until after layout
+    // Use double requestAnimationFrame to ensure layout is fully settled
     requestAnimationFrame(() => {
-      drawConnectors(svgWrap, col, prevMatchCount, roundIndex);
+      requestAnimationFrame(() => {
+        drawConnectors(svgWrap, col, prevMatchCount, roundIndex);
+      });
     });
 
     return col;
@@ -1480,6 +1485,9 @@
       const bracketEl = container.querySelector('.bracket');
       if (!bracketEl) return;
 
+      // Adjust card positions for perfect bracket alignment before drawing connectors
+      adjustBracketAlignment();
+
       const children = Array.from(bracketEl.children);
       children.forEach((col, idx) => {
         if (col.classList.contains('connector-col')) {
@@ -1492,9 +1500,12 @@
       });
     };
 
-    // Redesenha imediatamente e apÃ³s um pequeno delay para garantir que o layout finalizou
-    requestAnimationFrame(redraw);
-    connectorRedrawTimeout = setTimeout(redraw, 100);
+    // Double RAF for immediate redraw after layout settles
+    requestAnimationFrame(() => {
+      requestAnimationFrame(redraw);
+    });
+    // Backup redraw after a delay to handle late layout changes (fonts, images, etc.)
+    connectorRedrawTimeout = setTimeout(redraw, 150);
   }
 
   let bracketResizeObserver = null;
@@ -1505,6 +1516,76 @@
   }
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', scheduleRedrawConnectors);
+  }
+
+  /**
+   * Adjust bracket card positions to ensure each card in rounds after the first
+   * is perfectly centered between its two predecessor matches.
+   * Uses position: relative + top to shift cards without affecting flexbox layout.
+   */
+  function adjustBracketAlignment() {
+    const container = document.getElementById('bracket-container');
+    if (!container || container.style.display === 'none') return;
+    const bracket = container.querySelector('.bracket');
+    if (!bracket) return;
+
+    const rounds = bracket.querySelectorAll('.round:not(.connector-col)');
+    if (rounds.length < 2) return;
+
+    // Reset any previous adjustments before recalculating
+    rounds.forEach(round => {
+      round.querySelectorAll('.match-card').forEach(card => {
+        card.style.top = '';
+      });
+    });
+
+    // Force layout recalc after reset
+    bracket.offsetHeight;
+
+    // Collect center Y of each card per round
+    const roundCenters = [];
+    rounds.forEach(round => {
+      const cards = round.querySelectorAll('.match-card');
+      const centers = [];
+      cards.forEach(card => {
+        const teams = card.querySelectorAll('.match-team');
+        let centerY;
+        if (teams.length >= 2) {
+          const t1 = teams[0].getBoundingClientRect();
+          const t2 = teams[1].getBoundingClientRect();
+          centerY = (t1.bottom + t2.top) / 2;
+        } else {
+          const rect = card.getBoundingClientRect();
+          centerY = rect.top + rect.height / 2;
+        }
+        centers.push(centerY);
+      });
+      roundCenters.push(centers);
+    });
+
+    // Adjust subsequent rounds so each card is centered between its two predecessors
+    for (let r = 1; r < rounds.length; r++) {
+      const prevCenters = roundCenters[r - 1];
+      const cards = rounds[r].querySelectorAll('.match-card');
+
+      for (let m = 0; m < cards.length; m++) {
+        const p1 = m * 2;
+        const p2 = m * 2 + 1;
+        if (p1 >= prevCenters.length || p2 >= prevCenters.length) continue;
+
+        const idealCenter = (prevCenters[p1] + prevCenters[p2]) / 2;
+        const actualCenter = roundCenters[r][m];
+        const offset = idealCenter - actualCenter;
+
+        if (Math.abs(offset) > 0.5) {
+          // Use relative positioning to shift without affecting flex siblings
+          cards[m].style.position = 'relative';
+          cards[m].style.top = offset + 'px';
+          // Update center for cascading adjustments to later rounds
+          roundCenters[r][m] = idealCenter;
+        }
+      }
+    }
   }
 
   /**
