@@ -1084,7 +1084,7 @@
       container.appendChild(timeMachineBar);
     }
 
-    // Match filter bar
+    // Match filter bar - rendered OUTSIDE bracket scroll container (sticky)
     const counts = getMatchStatusCounts(bracket);
     if (counts.all > 0) {
       const filterBar = document.createElement('div');
@@ -1111,6 +1111,29 @@
       });
 
       container.appendChild(filterBar);
+
+      // Live Matches Area (shown when there are live matches)
+      const liveMatches = [];
+      bracket.rounds.forEach((round, rIdx) => {
+        round.matches.forEach((match, mIdx) => {
+          ensureLiveFields(match);
+          if (match.status === 'live' || match.status === 'paused') {
+            liveMatches.push({ match, rIdx, mIdx, roundName: round.name });
+          }
+        });
+      });
+
+      if (liveMatches.length > 0) {
+        const liveArea = document.createElement('div');
+        liveArea.className = 'live-matches-area';
+
+        liveMatches.forEach(({ match, rIdx, mIdx, roundName }) => {
+          const card = createLiveAreaCard(match, rIdx, mIdx, roundName);
+          liveArea.appendChild(card);
+        });
+
+        container.appendChild(liveArea);
+      }
     }
 
     bracket.rounds.forEach((round, rIdx) => {
@@ -1789,6 +1812,14 @@
       txt.textContent = isLive ? 'AO VIVO' : 'PAUSADO';
       liveBadge.appendChild(txt);
 
+      // Ida/Volta leg indicator
+      if (state.twoLegged && match.currentLeg) {
+        const legBadge = document.createElement('span');
+        legBadge.className = 'live-leg-badge';
+        legBadge.textContent = match.currentLeg === 'ida' ? 'Ida' : 'Volta';
+        liveBadge.appendChild(legBadge);
+      }
+
       // Timer display
       const timerEl = document.createElement('span');
       timerEl.className = 'live-timer';
@@ -1903,6 +1934,30 @@
     // Team 2 slot
     card.appendChild(createTeamSlot(match.team2, match, 2));
 
+    // Aggregate score display for two-legged matches (live or finished)
+    if (state.twoLegged && match.scoreIda1 !== undefined && (isLive || isPaused) && match.currentLeg) {
+      const s1 = match.team1 ? (match.team1.score || 0) : 0;
+      const s2 = match.team2 ? (match.team2.score || 0) : 0;
+      const ida1 = match.scoreIda1 || 0;
+      const ida2 = match.scoreIda2 || 0;
+
+      let agg1, agg2, legLabel;
+      if (match.currentLeg === 'volta') {
+        agg1 = ida1 + s1;
+        agg2 = ida2 + s2;
+        legLabel = `Ida: ${ida1}×${ida2} | Volta: ${s1}×${s2}`;
+      } else {
+        agg1 = s1;
+        agg2 = s2;
+        legLabel = `Ida: ${s1}×${s2}`;
+      }
+
+      const aggBar = document.createElement('div');
+      aggBar.className = 'match-aggregate-bar';
+      aggBar.innerHTML = `${sanitize(legLabel)} — Agregado: <strong>${agg1} × ${agg2}</strong>`;
+      card.appendChild(aggBar);
+    }
+
     // Penalty info
     if (match.penalties) {
       const penDiv = document.createElement('div');
@@ -1948,6 +2003,8 @@
       controls.className = 'live-admin-controls';
       controls.addEventListener('click', e => e.stopPropagation());
 
+      const isTwoLegged = !!state.twoLegged;
+
       if (!isLive && !isPaused) {
         // Show "Iniciar ao vivo" button
         const startBtn = document.createElement('button');
@@ -1956,6 +2013,24 @@
         startBtn.innerHTML = '<span class="live-dot" style="width:6px;height:6px;animation:livePulse 1.2s ease-in-out infinite;"></span> Iniciar ao vivo';
         startBtn.addEventListener('click', () => startLiveMatch(rIdx, mIdx));
         controls.appendChild(startBtn);
+
+        // Ida/Volta selector for two-legged tournaments
+        if (isTwoLegged) {
+          const legSelect = document.createElement('select');
+          legSelect.className = 'live-ctrl-btn';
+          legSelect.style.cssText = 'padding: 3px 6px; font-size: 9px; background: rgba(255,255,255,0.06); color: var(--on-surface); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; cursor: pointer;';
+          legSelect.innerHTML = `
+            <option value="ida" ${match.currentLeg === 'volta' ? '' : 'selected'}>Jogo de Ida</option>
+            <option value="volta" ${match.currentLeg === 'volta' ? 'selected' : ''}>Jogo de Volta</option>
+          `;
+          legSelect.addEventListener('change', () => {
+            const bracket = getCurrentBracket();
+            if (!bracket) return;
+            const m = bracket.rounds[rIdx].matches[mIdx];
+            if (m) { m.currentLeg = legSelect.value; saveState(); }
+          });
+          controls.appendChild(legSelect);
+        }
       }
 
       if (isLive) {
@@ -1972,6 +2047,13 @@
         endBtn.textContent = '✓ Encerrar partida';
         endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
         controls.appendChild(endBtn);
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'live-ctrl-btn btn-cancel-live';
+        cancelBtn.textContent = '✕ Cancelar ao vivo';
+        cancelBtn.addEventListener('click', () => cancelLiveMatch(rIdx, mIdx));
+        controls.appendChild(cancelBtn);
       }
 
       if (isPaused) {
@@ -1988,6 +2070,13 @@
         endBtn.textContent = '✓ Encerrar partida';
         endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
         controls.appendChild(endBtn);
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'live-ctrl-btn btn-cancel-live';
+        cancelBtn.textContent = '✕ Cancelar ao vivo';
+        cancelBtn.addEventListener('click', () => cancelLiveMatch(rIdx, mIdx));
+        controls.appendChild(cancelBtn);
       }
 
       card.appendChild(controls);
@@ -2016,7 +2105,99 @@
     return card;
   }
 
-  let activeTouchGhost = null;
+  /**
+   * Create a live area card for the top live matches strip.
+   */
+  function createLiveAreaCard(match, rIdx, mIdx, roundName) {
+    const card = document.createElement('div');
+    card.className = 'live-area-card';
+
+    const isLive = match.status === 'live';
+    const isPaused = match.status === 'paused';
+    const isTwoLegged = !!state.twoLegged;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'live-area-header';
+
+    const dot = document.createElement('span');
+    dot.className = 'live-dot';
+    header.appendChild(dot);
+
+    const txt = document.createElement('span');
+    txt.className = isLive ? 'live-text' : 'paused-text';
+    txt.textContent = isLive ? 'AO VIVO' : 'PAUSADO';
+    header.appendChild(txt);
+
+    // Ida/Volta indicator
+    if (isTwoLegged && match.currentLeg) {
+      const legBadge = document.createElement('span');
+      legBadge.className = 'live-leg-indicator';
+      legBadge.textContent = match.currentLeg === 'ida' ? 'Jogo de Ida' : 'Jogo de Volta';
+      header.appendChild(legBadge);
+    }
+
+    const timerEl = document.createElement('span');
+    timerEl.className = 'live-timer';
+    timerEl.textContent = formatElapsed(getMatchElapsedSeconds(match));
+    header.appendChild(timerEl);
+
+    if (isLive) {
+      setTimeout(() => startLiveTimerDisplay(match.id + '-area', timerEl, match), 0);
+    }
+
+    card.appendChild(header);
+
+    // Body - teams and scores
+    const body = document.createElement('div');
+    body.className = 'live-area-body';
+
+    const t1 = match.team1;
+    const t2 = match.team2;
+    const t1Name = t1 ? (t1.teamName || t1.playerName || '?') : 'A definir';
+    const t2Name = t2 ? (t2.teamName || t2.playerName || '?') : 'A definir';
+    const s1 = t1 ? (t1.score || 0) : 0;
+    const s2 = t2 ? (t2.score || 0) : 0;
+
+    body.innerHTML = `
+      <div class="live-area-team">
+        <span class="live-area-team-name">${sanitize(t1Name)}</span>
+        <span class="live-area-score">${s1}</span>
+      </div>
+      <div class="live-area-vs">×</div>
+      <div class="live-area-team">
+        <span class="live-area-team-name">${sanitize(t2Name)}</span>
+        <span class="live-area-score">${s2}</span>
+      </div>
+    `;
+
+    card.appendChild(body);
+
+    // Aggregate display for two-legged
+    if (isTwoLegged && (match.scoreIda1 !== undefined || match.scoreVolta1 !== undefined)) {
+      const ida1 = match.scoreIda1 || 0;
+      const ida2 = match.scoreIda2 || 0;
+      const volta1 = match.scoreVolta1 || 0;
+      const volta2 = match.scoreVolta2 || 0;
+
+      let agg1, agg2;
+      if (match.currentLeg === 'volta') {
+        agg1 = ida1 + s1;
+        agg2 = ida2 + s2;
+      } else {
+        agg1 = s1 + volta1;
+        agg2 = s2 + volta2;
+      }
+
+      const aggDiv = document.createElement('div');
+      aggDiv.className = 'live-area-aggregate';
+      aggDiv.innerHTML = `Agregado: <strong>${agg1} × ${agg2}</strong>`;
+      card.appendChild(aggDiv);
+    }
+
+    return card;
+  }
+
   let activeTouchData = null;
 
   function createTeamSlot(team, match, teamNum) {
@@ -2251,7 +2432,7 @@
       if (state.twoLegged && match.scoreIda1 !== undefined) {
         const ida = teamNum === 1 ? match.scoreIda1 : match.scoreIda2;
         const volta = teamNum === 1 ? match.scoreVolta1 : match.scoreVolta2;
-        scoreSpan.innerHTML = `${team.score} <small style="font-size:9px; opacity:0.6; font-weight:400; display:block; line-height:1;">(${ida}-${volta})</small>`;
+        scoreSpan.innerHTML = `<span>${team.score}</span><span class="score-detail-small">(${ida}-${volta})</span>`;
       } else {
         scoreSpan.textContent = String(team.score);
       }
@@ -2297,6 +2478,11 @@
     match.liveStartedAt = Date.now();
     if (!match.team1.score && match.team1.score !== 0) match.team1.score = 0;
     if (!match.team2.score && match.team2.score !== 0) match.team2.score = 0;
+
+    // Set default leg for two-legged tournaments
+    if (state.twoLegged && !match.currentLeg) {
+      match.currentLeg = 'ida';
+    }
 
     addLiveEvent(match, 'start', 'Partida iniciada');
     saveState();
@@ -2346,6 +2532,36 @@
   }
 
   /**
+   * Cancel live mode — revert to previous status without finalizing.
+   */
+  function cancelLiveMatch(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    ensureLiveFields(match);
+
+    // Accumulate elapsed time before canceling
+    if (match.liveStartedAt) {
+      match.liveElapsed = (match.liveElapsed || 0) + (Date.now() - match.liveStartedAt);
+      match.liveStartedAt = null;
+    }
+
+    // Revert to appropriate previous status
+    if (match.dateTime) {
+      match.status = 'scheduled';
+    } else {
+      match.status = 'not_started';
+    }
+
+    addLiveEvent(match, 'cancel', 'Ao vivo cancelado');
+    saveState();
+    renderBracket();
+    showToast('Ao vivo cancelado. A partida não foi finalizada.', 'info');
+  }
+
+  /**
    * Update live score for a team.
    */
   function updateLiveScore(rIdx, mIdx, teamNum, delta) {
@@ -2362,6 +2578,17 @@
     const oldScore = team.score || 0;
     const newScore = Math.max(0, oldScore + delta);
     team.score = newScore;
+
+    // Update ida/volta leg scores for two-legged mode
+    if (state.twoLegged && match.currentLeg) {
+      if (match.currentLeg === 'ida') {
+        if (teamNum === 1) match.scoreIda1 = newScore;
+        else match.scoreIda2 = newScore;
+      } else if (match.currentLeg === 'volta') {
+        if (teamNum === 1) match.scoreVolta1 = newScore;
+        else match.scoreVolta2 = newScore;
+      }
+    }
 
     if (delta > 0) {
       const teamName = team.teamName || team.playerName;
