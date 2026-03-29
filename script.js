@@ -673,12 +673,12 @@
   /** Render prize display banner */
   function renderPrize() {
     const display = $('#prize-display');
-    const text = $('#prize-text');
-    if (!display || !text) return;
+    const valueEl = $('#prize-value');
+    if (!display || !valueEl) return;
 
     if (state.prize) {
-      text.textContent = state.prize;
-      display.style.display = '';
+      valueEl.textContent = state.prize;
+      display.style.display = 'flex';
     } else {
       display.style.display = 'none';
     }
