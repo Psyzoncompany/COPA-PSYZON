@@ -84,7 +84,11 @@ body {
   font-size: 15px;
   line-height: 1.5;
   color: var(--text-primary);
-  background: var(--bg-primary);
+  background: linear-gradient(rgba(11, 19, 35, 0.9), rgba(11, 19, 35, 0.9)), 
+              url('img/wp10059640-fifa-4k-wallpapers.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -269,7 +273,10 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, #0d1526 0%, #050a14 100%);
+  background: radial-gradient(circle at center, rgba(13, 21, 38, 0.7) 0%, rgba(5, 10, 20, 0.9) 100%), 
+              url('img/wp10059640-fifa-4k-wallpapers.jpg');
+  background-size: cover;
+  background-position: center;
   color: var(--login-on-surface);
   font-family: 'Inter', sans-serif;
   overflow: auto;
@@ -906,28 +913,12 @@ textarea::placeholder {
 
 /* ---------- 14. Bracket Container ---------- */
 #bracket-tab {
-  background-image: url('img/IAMGEM-FUNDO.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  background: transparent;
   border-radius: var(--radius-md);
   padding-bottom: 24px;
   min-height: 100%;
   position: relative;
   isolation: isolate;
-}
-
-#bracket-tab::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(0, 0, 0, 0.15);
-  pointer-events: none;
-  border-radius: inherit;
 }
 
 /* Destaque das fontes para o fundo escuro */
@@ -3363,10 +3354,7 @@ textarea::placeholder {
 /* Mobile Bracket Background Fix */
 @media (max-width: 768px) {
   #bracket-tab {
-    background-image: url('img/imagem-de-mobile.jfif');
-    background-attachment: scroll;
-    background-size: cover;
-    background-position: center top;
-    min-height: 100vh;
+    background: transparent;
+    min-height: auto;
   }
 }

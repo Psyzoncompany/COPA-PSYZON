@@ -4297,21 +4297,23 @@
         // Renderizar dinamicamente se for para aba de Histórico/Ranking
         if (targetId === 'ranking-tab') {
           renderRankingTable();
-          // Trigger scroll hint
-          if (target) {
-            target.classList.remove('scroll-hint-animation');
-            void target.offsetWidth; // force reflow
-            target.classList.add('scroll-hint-animation');
+          // Trigger scroll hint na tabela
+          const tableWrap = target.querySelector('.table-responsive');
+          if (tableWrap) {
+            tableWrap.classList.remove('scroll-hint-animation');
+            void tableWrap.offsetWidth; // force reflow
+            tableWrap.classList.add('scroll-hint-animation');
           }
         } else if (targetId === 'history-tab') {
           renderHistory();
         } else if (targetId === 'bracket-tab') {
           renderBracket();
-          // Trigger scroll hint
-          if (target) {
-            target.classList.remove('scroll-hint-animation');
-            void target.offsetWidth; // force reflow
-            target.classList.add('scroll-hint-animation');
+          // Trigger scroll hint no chaveamento
+          const bracketWrap = $('#bracket-container');
+          if (bracketWrap) {
+            bracketWrap.classList.remove('scroll-hint-animation');
+            void bracketWrap.offsetWidth; // force reflow
+            bracketWrap.classList.add('scroll-hint-animation');
           }
         }
       });
