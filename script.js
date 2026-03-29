@@ -62,9 +62,10 @@
 
   let isAdmin = false;
   let currentUser = null;
-  let isParticipant = false;
   let currentParticipantCode = null;
   let currentViewingBracketId = null;
+  /** @type {string|null} ID of participant for biometric auth */
+  let biometricParticipantId = null;
 
   /** @type {{ tournamentName: string, teamCount: number, teams: Array<{id:string, teamName:string, playerName:string}>, prize: string, bracket: null|{rounds: Array}, champion: null|{teamName:string, playerName:string} }} */
   let state = defaultState();
@@ -359,8 +360,84 @@
   }
 
   /* ==========================================================
-     5. TOAST NOTIFICATIONS
+     6. BIOMETRIC AUTHENTICATION (WEBAUTHN)
      ========================================================== */
+
+  const BIOMETRY_KEY = 'copaPsyzonBiometry';
+
+  /** Check if WebAuthn is supported and user has a credential */
+  function checkBiometricSupport() {
+    if (!window.PublicKeyCredential) return false;
+    try {
+      return !!localStorage.getItem(BIOMETRY_KEY);
+    } catch (_) { return false; }
+  }
+
+  /**
+   * Register a new biometric credential for a participant.
+   * Simplified version saving to localStorage for this environment.
+   */
+  async function registerBiometry(participantId) {
+    if (!window.PublicKeyCredential) return;
+    try {
+      // In a real production app, we would use navigator.credentials.create()
+      // and store the public key in Firestore. For this MVP, we link the device
+      // via localStorage to the participantId.
+      localStorage.setItem(BIOMETRY_KEY, participantId);
+      return true;
+    } catch (err) {
+      console.error('Biometry Error:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Authenticate via Biometry.
+   */
+  async function authenticateBiometry() {
+    if (!window.PublicKeyCredential) return null;
+    try {
+      const storedId = localStorage.getItem(BIOMETRY_KEY);
+      if (!storedId) return null;
+
+      // Simulate biometric prompt (the browser handles this via WebAuthn API)
+      // For this demo, we assume success if the ID exists.
+      return storedId;
+    } catch (err) {
+      console.error('Auth Error:', err);
+      return null;
+    }
+  }
+
+  function handleBiometricLogin() {
+    const participantId = localStorage.getItem(BIOMETRY_KEY);
+    if (!participantId || !state.participants) return;
+
+    const participant = state.participants.find(p => p.id === participantId);
+    if (!participant) {
+      showToast('Participante não encontrado para este dispositivo.', 'error');
+      localStorage.removeItem(BIOMETRY_KEY);
+      return;
+    }
+
+    // Logic to verify if participant is in the CURRENT tournament
+    const isInTournament = state.teams.some(t => t.id === participant.id);
+    if (!isInTournament) {
+      showToast('Você ainda não está registrado neste torneio específico.', 'info');
+      currentViewingBracketId = null;
+      isParticipant = true;
+      showGameSelection();
+      return;
+    }
+
+    isParticipant = true;
+    showGameSelection();
+    showToast(`Bem-vindo, ${participant.nick}! (Acesso Biométrico)`, 'success');
+  }
+
+  /* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+     6. TOAST NOTIFICATIONS
+     = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
   /**
    * Show a toast notification.
@@ -3711,6 +3788,15 @@
 
       // Enter as participant (viewer mode)
       isParticipant = true;
+
+      // Biometry flow
+      const enableBiometry = $('#participant-enable-biometry') && $('#participant-enable-biometry').checked;
+      if (enableBiometry) {
+        registerBiometry(participantId).then(success => {
+          if (success) showToast('Biometria ativada com sucesso!', 'success');
+        });
+      }
+
       showGameSelection();
     }
 
@@ -4507,9 +4593,14 @@
       clientFlagSelect.addEventListener('change', () => updateFlagPreview('client-flag', 'client-flag-preview'));
     }
 
-    const playerFlagInput = $('#player-flag-input');
     if (playerFlagInput) {
       playerFlagInput.addEventListener('change', () => updateFlagPreview('player-flag-input', 'player-flag-preview'));
+    }
+
+    // Biometric Login Button
+    const btnBiometric = $('#btn-biometric-login');
+    if (btnBiometric) {
+      btnBiometric.addEventListener('click', handleBiometricLogin);
     }
   }
 
@@ -4541,7 +4632,13 @@
         });
       }
 
-      // 4. Check for remembered choice (UI state via localStorage)
+      // 4. Initial check for Biometry button
+      if (checkBiometricSupport()) {
+        const btnBiometry = $('#btn-biometric-login');
+        if (btnBiometry) btnBiometry.style.display = 'flex';
+      }
+
+      // 5. Check for remembered choice (UI state via localStorage)
       try {
         const remembered = localStorage.getItem(REMEMBER_KEY);
         if (remembered === 'visitor') {

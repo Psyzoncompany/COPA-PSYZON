@@ -174,6 +174,12 @@
           </svg> CONFIRMAR CÓDIGO
         </button>
         <p id="code-error" class="login-error" role="alert"></p>
+        
+        <!-- Biometric Login Button (Hidden by default) -->
+        <button type="button" id="btn-biometric-login" class="btn btn-outline btn-block" style="display:none; margin-top: 12px; border-color: var(--primary); color: var(--primary);">
+          <span class="material-symbols-outlined">fingerprint</span>
+          ENTRAR COM BIOMETRIA
+        </button>
       </form>
       <button type="button" id="btn-code-back" class="btn btn-outline btn-block" style="margin-top:12px;">
         <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -290,7 +296,18 @@
           <label for="participant-nick">Nick (exibido na tabela)</label>
           <input type="text" id="participant-nick" placeholder="Seu nick no jogo" required maxlength="30">
         </div>
-        <button type="submit" class="btn btn-success btn-block">
+        <div class="form-group" style="margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+          <label class="login-toggle" style="margin-bottom: 0; display: flex; align-items: center; gap: 12px; cursor: pointer;">
+            <input type="checkbox" id="participant-enable-biometry">
+            <span class="login-toggle-slider"></span>
+            <span class="login-toggle-label" style="font-size: 13px; color: var(--text-primary);">Ativar acesso rápido por Biometria</span>
+          </label>
+          <p style="font-size: 11px; color: var(--text-tertiary); margin-top: 8px; margin-left: 52px; line-height: 1.3;">
+            Use Digital ou FaceID para entrar nas próximas vezes sem precisar digitar o código.
+          </p>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block" style="margin-top:24px;">
           <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
