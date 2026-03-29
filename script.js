@@ -3072,8 +3072,10 @@
         ? '<img src="' + sanitize(r.team.photo) + '" alt="' + sanitize(r.team.playerName) + '">'
         : '<span class="av-placeholder top3-av-placeholder">' + sanitize(initials(r.team.playerName)) + '</span>';
 
+      const championClass = i === 0 ? 'champion-glow-border' : '';
+
       html += `
-        <li class="top3-item" data-team-id="${sanitize(r.team.id)}">
+        <li class="top3-item ${championClass}" data-team-id="${sanitize(r.team.id)}">
           <span class="top3-position ${posColors[i]}">${posLabels[i]}</span>
           <div class="top3-avatar">${avatar}</div>
           <span class="top3-name">${sanitize(r.team.playerName)}</span>
