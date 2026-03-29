@@ -1588,6 +1588,9 @@
     line.setAttribute('y1', y1);
     line.setAttribute('x2', x2);
     line.setAttribute('y2', y2);
+    line.setAttribute('stroke', 'rgba(173, 199, 255, 0.15)');
+    line.setAttribute('stroke-width', '2.5');
+    line.setAttribute('stroke-linecap', 'round');
     svg.appendChild(line);
   }
 
@@ -3313,7 +3316,7 @@
         : '<span class="av-placeholder" style="font-size:12px;">' + sanitize(initials(r.name)) + '</span>';
 
       html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
-        '<td class="col-pos">' + (i + 1) + 'Âº</td>' +
+        '<td class="col-pos">' + (i + 1) + 'º</td>' +
         '<td class="col-player">' +
         '<div class="ranking-avatar">' + avatarHtml + '</div>' +
         '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
@@ -4294,10 +4297,22 @@
         // Renderizar dinamicamente se for para aba de Histórico/Ranking
         if (targetId === 'ranking-tab') {
           renderRankingTable();
+          // Trigger scroll hint
+          if (target) {
+            target.classList.remove('scroll-hint-animation');
+            void target.offsetWidth; // force reflow
+            target.classList.add('scroll-hint-animation');
+          }
         } else if (targetId === 'history-tab') {
           renderHistory();
         } else if (targetId === 'bracket-tab') {
           renderBracket();
+          // Trigger scroll hint
+          if (target) {
+            target.classList.remove('scroll-hint-animation');
+            void target.offsetWidth; // force reflow
+            target.classList.add('scroll-hint-animation');
+          }
         }
       });
     });

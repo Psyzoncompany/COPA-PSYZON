@@ -1,33 +1,57 @@
-/* ======================================================
-   COPA PSYZON â€” iOS-Inspired Light Theme
-   ====================================================== */
-
-/* ---------- 1. CSS Custom Properties / Variables ---------- */
 :root {
-  --bg-primary: #f5f5f7;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #e8e8ed;
-  --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-tertiary: #86868b;
-  --accent-blue: #007aff;
-  --accent-green: #34c759;
-  --accent-red: #ff3b30;
+  /* Surfaces - The No-Line Rule: Layout boundaries via bg color shifts, not borders */
+  --surface: #0b1323;
+  --surface-container-lowest: #060e1e;
+  --surface-container-low: #141b2c;
+  --surface-container: #182030;
+  --surface-container-high: #222a3b;
+  --surface-container-highest: #2d3546;
+  --surface-variant: #2d3546;
+
+  /* On-Surfaces */
+  --on-surface: #dbe2f9;
+  --on-surface-variant: #c1c6d7;
+
+  /* Accents */
+  --primary: #adc7ff;
+  --primary-container: #4a8eff;
+  --secondary: #66df75;
+  --on-secondary: #00390f;
+  --error: #ffb4ab;
+  --accent-blue: var(--primary);
+  --accent-green: var(--secondary);
+  --accent-red: var(--error);
   --accent-orange: #ff9500;
   --accent-yellow: #ffcc00;
   --accent-gold: #af8a2e;
-  --border-color: #d2d2d7;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
+
+  /* Legacy Mapping (mapping old to new to minimize breakage) */
+  --bg-primary: var(--surface);
+  --bg-secondary: var(--surface-container);
+  --bg-tertiary: var(--surface-container-low);
+  --text-primary: var(--on-surface);
+  --text-secondary: var(--on-surface-variant);
+  --text-tertiary: #8b90a0;
+  --border-color: rgba(65, 71, 84, 0.2); /* outline_variant at 20% opacity */
+
+  /* Shadows - Ambient Shadows & Tonal Lift */
+  --shadow-sm: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.4);
+
+  /* Radius */
+  --radius-sm: 1rem;
+  --radius-md: 1.5rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+
+  /* Dimensions */
   --sidebar-width: 340px;
-  --header-height: 64px;
-  --transition: 0.2s ease;
-  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-    'Helvetica Neue', system-ui, sans-serif;
+  --header-height: 72px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-headline: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font: var(--font-body);
 }
 
 /* ---------- 2. Reset / Base ---------- */
@@ -37,6 +61,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+@keyframes scrollHint {
+  0% { transform: translateX(0); }
+  30% { transform: translateX(40px); }
+  60% { transform: translateX(-30px); }
+  100% { transform: translateX(0); }
+}
+
+.scroll-hint-animation {
+  animation: scrollHint 0.8s ease-out;
 }
 
 html {
@@ -87,63 +122,53 @@ img {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 20px;
-  font-family: var(--font);
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-headline);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.4;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background var(--transition), transform var(--transition),
-    box-shadow var(--transition), opacity var(--transition);
+  transition: var(--transition);
   white-space: nowrap;
   user-select: none;
   -webkit-user-select: none;
   position: relative;
   overflow: hidden;
-}
-
-.btn:hover {
-  opacity: 0.88;
+  letter-spacing: -0.01em;
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
-  transform: none;
+  filter: grayscale(1);
 }
 
 .btn-primary {
-  background: var(--accent-blue);
-  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-container));
+  color: #001a41; /* on_primary_fixed */
+  box-shadow: 0 4px 12px rgba(74, 142, 255, 0.2);
 }
 
 .btn-primary:hover {
-  background: #0069d9;
+  opacity: 0.95;
+  box-shadow: 0 8px 20px rgba(74, 142, 255, 0.3);
 }
 
 .btn-secondary {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.btn-secondary:hover {
-  background: #d8d8dd;
+  background: var(--secondary);
+  color: var(--on-secondary);
 }
 
 .btn-success {
-  background: var(--accent-green);
-  color: #fff;
-}
-
-.btn-success:hover {
-  background: #2db84e;
+  background: var(--secondary);
+  color: var(--on-secondary);
 }
 
 .btn-warning {
@@ -151,33 +176,24 @@ img {
   color: #fff;
 }
 
-.btn-warning:hover {
-  background: #e68600;
-}
-
 .btn-danger {
   background: var(--accent-red);
   color: #fff;
 }
 
-.btn-danger:hover {
-  background: #e0332a;
-}
-
 .btn-outline {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1.5px solid var(--border-color);
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+  border: 1px solid var(--border-color);
 }
 
 .btn-outline:hover {
-  background: var(--bg-tertiary);
+  background: var(--surface-container-highest);
 }
 
 .btn-sm {
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-size: 13px;
-  border-radius: 8px;
 }
 
 .btn-block {
@@ -246,93 +262,303 @@ textarea::placeholder {
   color: var(--text-tertiary);
 }
 
-/* ---------- 5. Login Screen ---------- */
-.login-screen {
+/* ---------- 5. Login Screen (PREMIUM STYLE) ---------- */
+.login-screen-new {
+  position: fixed;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
-  background: linear-gradient(160deg, #f5f5f7 0%, #e8e8ed 100%);
+  background: radial-gradient(circle at center, #0d1526 0%, #050a14 100%);
+  color: var(--login-on-surface);
+  font-family: 'Inter', sans-serif;
+  overflow: auto;
+  z-index: 9999;
 }
 
-.login-card {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 48px 40px;
+.login-bg-layers {
+  display: none; /* Simplificado conforme solicitado */
+}
+
+.login-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, #182030 0%, #060e1e 100%);
+}
+
+.login-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 2px 2px, rgba(173, 199, 255, 0.05) 1px, transparent 0);
+  background-size: 40px 40px;
+  opacity: 0.4;
+}
+
+.login-bg-glow-1 {
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 60%;
+  height: 60%;
+  background: rgba(173, 199, 255, 0.1);
+  filter: blur(120px);
+  border-radius: 50%;
+}
+
+.login-bg-glow-2 {
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 50%;
+  height: 50%;
+  background: rgba(102, 223, 117, 0.05);
+  filter: blur(100px);
+  border-radius: 50%;
+}
+
+.login-canvas {
+  position: relative;
+  z-index: 10;
   width: 100%;
-  max-width: 420px;
-  animation: fadeIn 0.5s ease;
+  max-width: 480px;
+  padding: 24px;
 }
 
-.login-branding {
+.login-card-new {
+  background: #182030;
+  border-radius: 48px; /* Cantos mais arredondados conforme a imagem */
+  padding: 64px 48px;
+  border: none;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   text-align: center;
-  margin-bottom: 32px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
 }
 
-.login-emoji {
-  font-size: 56px;
+/* Fix para outras telas de login/seleÃ§Ã£o */
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.login-brand-identity {
+  margin-bottom: 40px;
+}
+
+.login-logo-container {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #060e1e;
+  margin: 0 auto 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  line-height: 1.2;
-  color: var(--text-primary);
+  border: 1px solid rgba(139, 144, 160, 0.4);
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+  overflow: hidden; /* Garante o formato redondo */
 }
 
-.login-title {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
+.login-logo-img-new {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Preenche o circulo */
+  transform: scale(1.45); /* Efeito de Zoom levemente reduzido */
+  border-radius: 50%;
 }
 
-.login-subtitle {
+.login-title-new {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  font-size: 44px;
+  letter-spacing: -0.05em;
+  color: #fff;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.login-subtitle-new {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  opacity: 0.6;
+}
+
+.login-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Grudados conforme a imagem */
+  margin-bottom: 48px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 18px 24px;
+  border-radius: 4px;
+  border: none;
+  font-family: var(--font-headline);
+  font-weight: 700;
   font-size: 15px;
-  color: var(--text-secondary);
-  margin-top: 4px;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.login-section {
-  margin-bottom: 20px;
+.login-btn-text {
+  flex: 1;
+  text-align: left;
 }
 
-.login-form {
-  margin-top: 16px;
-  animation: slideUp 0.3s ease;
+.login-btn:active {
+  transform: scale(0.98);
 }
 
-.login-error {
-  color: var(--accent-red);
-  font-size: 13px;
-  text-align: center;
-  margin-top: 12px;
-  min-height: 18px;
+.login-btn-primary {
+  background: linear-gradient(to right, #72a5ff, #83b1ff);
+  color: #002e68;
 }
 
-.login-divider {
+.login-btn-secondary {
+  background: #66df75;
+  color: #00390f;
+}
+
+.login-btn-tertiary {
+  background: rgba(45, 53, 70, 0.4);
+  color: #fff;
+}
+
+.login-btn-chevron {
+  opacity: 0.6;
+  font-size: 18px;
+}
+
+.login-form-new {
+  background: rgba(0,0,0,0.2);
+  padding: 20px;
+  border-radius: 16px;
+  margin-top: -8px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideDown 0.3s ease;
+}
+
+.login-form-group input {
+  width: 100%;
+  background: #060e1e;
+  border: 1px solid rgba(139, 144, 160, 0.3);
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+.login-form-group input:focus {
+  border-color: var(--login-primary);
+}
+
+.login-btn-submit {
+  background: var(--login-primary);
+  color: var(--login-on-primary-container);
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-error-new {
+  color: #ffb4ab;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.login-toggle {
   display: flex;
   align-items: center;
-  margin: 24px 0;
-  gap: 16px;
+  gap: 12px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
 }
 
-.login-divider::before,
-.login-divider::after {
+.login-toggle:hover {
+  opacity: 1;
+}
+
+.login-toggle input {
+  display: none;
+}
+
+.login-toggle-slider {
+  width: 40px;
+  height: 20px;
+  background: #2d3546;
+  border-radius: 20px;
+  position: relative;
+  transition: 0.3s;
+}
+
+.login-toggle-slider::after {
   content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-color);
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
 }
 
-.login-divider span {
-  font-size: 13px;
-  color: var(--text-tertiary);
+.login-toggle input:checked + .login-toggle-slider {
+  background: var(--primary);
+}
+
+.login-toggle input:checked + .login-toggle-slider::after {
+  left: 23px;
+}
+
+.login-toggle-label {
+  font-size: 12px;
   font-weight: 500;
-  text-transform: lowercase;
+  color: var(--on-surface-variant);
+}
+
+.login-footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 10px;
+  color: rgba(193, 198, 215, 0.2);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.login-visual-polish {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0.3;
+  background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+  mix-blend-mode: overlay;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ---------- 6. App Header ---------- */
@@ -344,10 +570,11 @@ textarea::placeholder {
   align-items: center;
   justify-content: space-between;
   height: var(--header-height);
-  padding: 0 24px;
-  background: var(--bg-secondary);
+  padding: 0 32px;
+  background: rgba(24, 32, 48, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
 }
 
 .header-left {
@@ -356,10 +583,11 @@ textarea::placeholder {
 }
 
 .header-logo {
-  font-size: 20px;
+  font-family: var(--font-headline);
+  font-size: 24px;
   font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
+  letter-spacing: -0.05em;
+  color: #fff;
 }
 
 .header-right {
@@ -407,24 +635,23 @@ textarea::placeholder {
 }
 
 .sidebar-section {
-  padding-bottom: 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.sidebar-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
+  padding: 24px;
+  margin-bottom: 8px;
+  background: var(--surface-container-low);
+  border-radius: var(--radius-md);
 }
 
 .sidebar-heading {
-  font-size: 15px;
+  font-family: var(--font-headline);
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
 .sidebar-actions {
@@ -566,7 +793,7 @@ textarea::placeholder {
 }
 
 .team-item:hover {
-  background: var(--bg-secondary);
+  background: var(--surface-container-highest);
   box-shadow: var(--shadow-sm);
 }
 
@@ -609,15 +836,15 @@ textarea::placeholder {
 
 /* ---------- 11. Prize Display ---------- */
 .prize-display {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border: 1px solid #f6d860;
+  background: var(--surface-container-high);
+  border: 1px solid rgba(175, 138, 46, 0.2);
   border-radius: var(--radius-md);
-  padding: 20px 24px;
+  padding: 24px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(175, 138, 46, 0.1);
+  gap: 20px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-md);
 }
 
 .prize-icon {
@@ -1057,13 +1284,19 @@ textarea::placeholder {
 
 /* ---------- 14b. Match Card ---------- */
 .match-card {
-  background: var(--bg-secondary);
+  background: var(--surface-container-highest);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition), transform var(--transition);
-  width: 250px;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  width: 280px;
+}
+
+.match-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(173, 199, 255, 0.4);
 }
 
 .match-datetime-bar {
@@ -1177,16 +1410,17 @@ textarea::placeholder {
 }
 
 .match-team.winner {
-  background: rgba(52, 199, 89, 0.08);
+  background: rgba(102, 223, 117, 0.05);
 }
 
 .match-team.winner .team-name-bracket {
-  font-weight: 700;
-  color: var(--accent-green);
+  font-weight: 800;
+  color: var(--secondary);
 }
 
 .match-team.winner .team-avatar {
-  box-shadow: 0 0 0 2px var(--accent-green);
+  box-shadow: 0 0 10px var(--secondary);
+  border: 1.5px solid var(--secondary);
 }
 
 .match-team.loser {
@@ -1233,13 +1467,16 @@ textarea::placeholder {
 
 .team-name-bracket {
   flex: 1;
+  font-family: var(--font-headline);
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--on-surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .team-name-bracket.tbd {

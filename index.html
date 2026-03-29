@@ -13,80 +13,92 @@
     }
   </style>
   <link rel="stylesheet" href="style.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@100;200;300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
 
   <!-- ============================================
-       1. LOGIN SCREEN
+       1. LOGIN SCREEN (NEW PREMIUM DESIGN)
        ============================================ -->
-  <section id="login-screen" class="login-screen">
-    <div class="login-card">
-      <!-- Branding -->
-      <div class="login-branding">
-        <div class="login-logo-circle">
-          <img src="img/psyzon-logo.png" alt="Logo COPA PSYZON">
-        </div>
-        <h1 class="login-title">COPA PSYZON</h1>
-        <p class="login-subtitle">Torneio Eliminatório</p>
-      </div>
-
-      <!-- Admin Login -->
-      <div class="login-section">
-        <button type="button" id="btn-show-login" class="btn btn-primary btn-block">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg> ORGANIZADOR
-        </button>
-
-        <form id="login-form" class="login-form" style="display:none;" autocomplete="off">
-          <div class="form-group">
-            <label for="login-email">E-mail</label>
-            <input type="email" id="login-email" placeholder="seu@email.com" required>
-          </div>
-          <div class="form-group">
-            <label for="login-password">Senha</label>
-            <input type="password" id="login-password" placeholder="••••••••" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block">ENTRAR</button>
-          <p id="login-error" class="login-error" role="alert"></p>
-        </form>
-      </div>
-
-      <!-- Divider -->
-      <div class="login-divider">
-        <span>ou</span>
-      </div>
-
-      <!-- Participant Entry -->
-      <button type="button" id="btn-participant" class="btn btn-accent btn-block">
-        <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <line x1="19" x2="19" y1="8" y2="14" />
-          <line x1="22" x2="16" y1="11" y2="11" />
-        </svg> PARTICIPANTE
-      </button>
-
-      <!-- Visitor Entry -->
-      <button type="button" id="btn-visitor" class="btn btn-secondary btn-block">
-        <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" />
-        </svg> ENTRAR COMO VISITANTE
-      </button>
-
-      <!-- Remember Choice -->
-      <label class="remember-choice-label" for="remember-choice">
-        <input type="checkbox" id="remember-choice">
-        <span>Lembrar escolha</span>
-      </label>
-
+  <section id="login-screen" class="login-screen-new">
+    <!-- Background Layering -->
+    <div class="login-bg-layers">
+      <div class="login-bg-gradient"></div>
+      <div class="login-bg-grid"></div>
+      <div class="login-bg-glow-1"></div>
+      <div class="login-bg-glow-2"></div>
     </div>
+
+    <!-- Main Entry Canvas -->
+    <main class="login-canvas">
+      <div class="login-card-new">
+        <!-- Brand Identity -->
+        <div class="login-brand-identity">
+          <div class="login-logo-container">
+            <img src="img/psyzon-logo.png" alt="Logo" class="login-logo-img-new">
+          </div>
+          <h1 class="login-title-new">COPA PSYZON</h1>
+          <p class="login-subtitle-new">EXCEDA OS LIMITES</p>
+        </div>
+
+        <!-- Action Stack -->
+        <div class="login-action-stack">
+          <!-- Primary: ORGANIZADOR -->
+          <button type="button" id="btn-show-login" class="login-btn login-btn-primary">
+            <span class="material-symbols-outlined">lock</span>
+            <span class="login-btn-text">ORGANIZADOR</span>
+            <span class="material-symbols-outlined login-btn-chevron">chevron_right</span>
+          </button>
+
+          <!-- Admin Login Form (Hidden initially) -->
+          <form id="login-form" class="login-form-new" style="display:none;" autocomplete="off">
+            <div class="login-form-group">
+              <input type="email" id="login-email" placeholder="E-mail" required>
+            </div>
+            <div class="login-form-group">
+              <input type="password" id="login-password" placeholder="Senha" required>
+            </div>
+            <button type="submit" class="login-btn-submit">ENTRAR</button>
+            <p id="login-error" class="login-error-new" role="alert"></p>
+          </form>
+
+          <!-- Secondary: PARTICIPANTE -->
+          <button type="button" id="btn-participant" class="login-btn login-btn-secondary">
+            <span class="material-symbols-outlined">person_add</span>
+            <span class="login-btn-text">PARTICIPANTE</span>
+            <span class="material-symbols-outlined login-btn-chevron">chevron_right</span>
+          </button>
+
+          <!-- Tertiary: VISITANTE -->
+          <button type="button" id="btn-visitor" class="login-btn login-btn-tertiary">
+            <span class="material-symbols-outlined">visibility</span>
+            <span class="login-btn-text">ENTRAR COMO VISITANTE</span>
+            <span class="material-symbols-outlined login-btn-chevron">chevron_right</span>
+          </button>
+        </div>
+
+        <!-- Settings -->
+        <div class="login-accessibility">
+          <label class="login-toggle">
+            <input type="checkbox" id="remember-choice">
+            <span class="login-toggle-slider"></span>
+            <span class="login-toggle-label">Lembrar escolha</span>
+          </label>
+        </div>
+      </div>
+
+      <footer class="login-footer">
+        Powered by Psyzon Global Arena System Â© 2024
+      </footer>
+    </main>
+
+    <!-- Visual Polish Overlay -->
+    <div class="login-visual-polish"></div>
   </section>
 
   <!-- ============================================
@@ -786,8 +798,13 @@
       <div class="modal-actions" style="display: flex; flex-direction: column; gap: 10px;">
         <button type="button" id="btn-confirm-score" class="btn btn-primary btn-block">Confirmar Resultado</button>
         <div style="display: flex; gap: 8px; width: 100%;">
-          <button type="button" id="btn-reset-match" class="btn btn-outline btn-sm" style="flex: 1; border-color: var(--accent-red); color: var(--accent-red);">
-            <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Resetar Partida
+          <button type="button" id="btn-reset-match" class="btn btn-outline btn-sm"
+            style="flex: 1; border-color: var(--accent-red); color: var(--accent-red);">
+            <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5" stroke-linecap="round"
+              style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg> Resetar Partida
           </button>
           <button type="button" id="btn-cancel-modal" class="btn btn-outline btn-sm" style="flex: 1;">Cancelar</button>
         </div>
