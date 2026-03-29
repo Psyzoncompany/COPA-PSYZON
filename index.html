@@ -744,93 +744,105 @@
     <div class="modal-card">
       <h2 id="modal-title" class="modal-title">Registrar Resultado</h2>
 
-      <!-- Date/Time Section -->
-      <div class="modal-datetime">
-        <div class="form-group">
-          <label for="modal-match-date">Data da Partida</label>
-          <div class="datetime-row">
-            <input type="date" id="modal-match-date" class="datetime-input">
-            <input type="time" id="modal-match-time" class="datetime-input">
-          </div>
+      <!-- ÁREA 1: AGENDAMENTO DA PARTIDA -->
+      <div class="modal-section modal-section-schedule">
+        <div class="modal-section-label">
+          <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Agendamento da Partida
         </div>
+        <div class="datetime-row">
+          <input type="date" id="modal-match-date" class="datetime-input" placeholder="Data">
+          <input type="time" id="modal-match-time" class="datetime-input" placeholder="Hora">
+        </div>
+        <button type="button" id="btn-save-schedule" class="btn btn-outline btn-sm btn-block-mobile" style="margin-top:10px;">
+          <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;margin-right:4px;margin-bottom:2px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Salvar Agendamento
+        </button>
       </div>
 
-      <div class="modal-teams">
-        <!-- Team 1 -->
-        <div class="modal-team">
-          <span id="modal-team1-name" class="modal-team-name">Time A</span>
-          <div class="score-inputs-wrapper"
-            style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
-            <div class="score-row single-leg-only">
-              <input type="number" id="modal-team1-score" class="score-input" min="0" value="0" placeholder="0">
+      <!-- ÁREA 2: RESULTADO DA PARTIDA -->
+      <div class="modal-section modal-section-result">
+        <div class="modal-section-label">
+          <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Resultado da Partida
+        </div>
+
+        <div class="modal-teams">
+          <!-- Team 1 -->
+          <div class="modal-team">
+            <span id="modal-team1-name" class="modal-team-name">Time A</span>
+            <div class="score-inputs-wrapper"
+              style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+              <div class="score-row single-leg-only">
+                <input type="number" id="modal-team1-score" class="score-input" min="0" value="0" placeholder="0">
+              </div>
+              <div class="score-row two-leg-only" style="display: none; flex-direction: column; gap: 4px;">
+                <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700;">IDA</div>
+                <input type="number" id="modal-team1-score-ida" class="score-input" min="0" value="0" placeholder="0">
+                <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; margin-top: 4px;">VOLTA</div>
+                <input type="number" id="modal-team1-score-volta" class="score-input" min="0" value="0" placeholder="0">
+              </div>
             </div>
-            <div class="score-row two-leg-only" style="display: none; flex-direction: column; gap: 4px;">
-              <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700;">IDA</div>
-              <input type="number" id="modal-team1-score-ida" class="score-input" min="0" value="0" placeholder="0">
-              <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; margin-top: 4px;">VOLTA</div>
-              <input type="number" id="modal-team1-score-volta" class="score-input" min="0" value="0" placeholder="0">
+          </div>
+
+          <!-- VS Divider -->
+          <div class="modal-vs" style="margin-top: 20px;">VS</div>
+
+          <!-- Team 2 -->
+          <div class="modal-team">
+            <span id="modal-team2-name" class="modal-team-name">Time B</span>
+            <div class="score-inputs-wrapper"
+              style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+              <div class="score-row single-leg-only">
+                <input type="number" id="modal-team2-score" class="score-input" min="0" value="0" placeholder="0">
+              </div>
+              <div class="score-row two-leg-only" style="display: none; flex-direction: column; gap: 4px;">
+                <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700;">IDA</div>
+                <input type="number" id="modal-team2-score-ida" class="score-input" min="0" value="0" placeholder="0">
+                <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; margin-top: 4px;">VOLTA</div>
+                <input type="number" id="modal-team2-score-volta" class="score-input" min="0" value="0" placeholder="0">
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- VS Divider -->
-        <div class="modal-vs" style="margin-top: 20px;">VS</div>
-
-        <!-- Team 2 -->
-        <div class="modal-team">
-          <span id="modal-team2-name" class="modal-team-name">Time B</span>
-          <div class="score-inputs-wrapper"
-            style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
-            <div class="score-row single-leg-only">
-              <input type="number" id="modal-team2-score" class="score-input" min="0" value="0" placeholder="0">
+        <!-- Penalties Section (hidden by default) -->
+        <div id="penalties-section" class="penalties-section" style="display:none;">
+          <label class="penalties-label">
+            <input type="checkbox" id="penalties-check"> Decidido nos Pênaltis?
+          </label>
+          <div id="penalties-inputs" class="penalties-inputs" style="display:none;">
+            <div class="penalty-group">
+              <span id="penalty-team1-name" class="penalty-team-name">Time A</span>
+              <input type="number" id="penalty-team1-score" class="score-input score-input-sm" min="0" value="0"
+                placeholder="0">
             </div>
-            <div class="score-row two-leg-only" style="display: none; flex-direction: column; gap: 4px;">
-              <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700;">IDA</div>
-              <input type="number" id="modal-team2-score-ida" class="score-input" min="0" value="0" placeholder="0">
-              <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; margin-top: 4px;">VOLTA</div>
-              <input type="number" id="modal-team2-score-volta" class="score-input" min="0" value="0" placeholder="0">
+            <span class="penalty-x"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg></span>
+            <div class="penalty-group">
+              <span id="penalty-team2-name" class="penalty-team-name">Time B</span>
+              <input type="number" id="penalty-team2-score" class="score-input score-input-sm" min="0" value="0"
+                placeholder="0">
             </div>
           </div>
         </div>
+
+        <button type="button" id="btn-confirm-score" class="btn btn-primary btn-block" style="margin-top:16px;">Confirmar Resultado</button>
       </div>
 
-      <!-- Penalties Section (hidden by default) -->
-      <div id="penalties-section" class="penalties-section" style="display:none;">
-        <label class="penalties-label">
-          <input type="checkbox" id="penalties-check"> Decidido nos Pênaltis?
-        </label>
-        <div id="penalties-inputs" class="penalties-inputs" style="display:none;">
-          <div class="penalty-group">
-            <span id="penalty-team1-name" class="penalty-team-name">Time A</span>
-            <input type="number" id="penalty-team1-score" class="score-input score-input-sm" min="0" value="0"
-              placeholder="0">
-          </div>
-          <span class="penalty-x"><svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg></span>
-          <div class="penalty-group">
-            <span id="penalty-team2-name" class="penalty-team-name">Time B</span>
-            <input type="number" id="penalty-team2-score" class="score-input score-input-sm" min="0" value="0"
-              placeholder="0">
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Actions -->
-      <div class="modal-actions" style="display: flex; flex-direction: column; gap: 10px;">
-        <button type="button" id="btn-confirm-score" class="btn btn-primary btn-block">Confirmar Resultado</button>
-        <div style="display: flex; gap: 8px; width: 100%;">
-          <button type="button" id="btn-reset-match" class="btn btn-outline btn-sm"
-            style="flex: 1; border-color: var(--accent-red); color: var(--accent-red);">
-            <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.5" stroke-linecap="round"
-              style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;">
-              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg> Resetar Partida
-          </button>
-          <button type="button" id="btn-cancel-modal" class="btn btn-outline btn-sm" style="flex: 1;">Cancelar</button>
-        </div>
+      <!-- Modal Bottom Actions -->
+      <div class="modal-actions" style="display: flex; gap: 8px; margin-top: 12px;">
+        <button type="button" id="btn-reset-match" class="btn btn-outline btn-sm"
+          style="flex: 1; border-color: var(--accent-red); color: var(--accent-red);">
+          <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" stroke-linecap="round"
+            style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg> Resetar Partida
+        </button>
+        <button type="button" id="btn-cancel-modal" class="btn btn-outline btn-sm" style="flex: 1;">Cancelar</button>
       </div>
     </div>
   </div>

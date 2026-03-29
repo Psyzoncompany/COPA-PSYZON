@@ -1723,27 +1723,17 @@
     if (canEdit && !match.winner) {
       const dtBar = document.createElement('div');
       dtBar.className = 'list-mode-dtbar';
-      dtBar.style.display = 'flex';
-      dtBar.style.alignItems = 'center';
-      dtBar.style.justifyContent = 'center';
-      dtBar.style.gap = '8px';
-      dtBar.style.background = 'rgba(255, 255, 255, 0.08)';
-      dtBar.style.margin = '4px 12px 0 12px';
-      dtBar.style.borderRadius = '6px';
-      dtBar.style.padding = '4px 8px';
       // Prevent bubbling
       dtBar.addEventListener('click', e => e.stopPropagation());
 
-      const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; text-align: center; max-width: 90px;';
+      const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; text-align: center; flex: 1; min-width: 70px;';
 
       const dateInp = document.createElement('input');
       dateInp.type = 'date';
       dateInp.style.cssText = inptStyle;
 
       const divi = document.createElement('div');
-      divi.style.width = '1px';
-      divi.style.height = '12px';
-      divi.style.backgroundColor = 'rgba(255,255,255,0.2)';
+      divi.className = 'dtbar-divider';
 
       const timeInp = document.createElement('input');
       timeInp.type = 'time';
@@ -2152,7 +2142,7 @@
 
     // Modal title
     const title = $('#modal-title');
-    if (title) title.textContent = 'Registrar Resultado';
+    if (title) title.textContent = match.winner ? 'Editar Resultado' : 'Registrar Resultado';
 
     modal.style.display = 'flex';
   }
@@ -2170,6 +2160,31 @@
     const penInputs = $('#penalties-inputs');
     if (!penCheck || !penInputs) return;
     penInputs.style.display = penCheck.checked ? '' : 'none';
+  }
+
+  /** Save only date/time scheduling for the current match */
+  function handleSaveSchedule() {
+    const rIdx = modalMatch.roundIdx;
+    const mIdx = modalMatch.matchIdx;
+    if (rIdx < 0 || mIdx < 0) return;
+
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    const matchDateVal = ($('#modal-match-date') || {}).value || '';
+    const matchTimeVal = ($('#modal-match-time') || {}).value || '';
+    if (matchDateVal || matchTimeVal) {
+      match.dateTime = (matchDateVal || 'HOJE') + (matchTimeVal ? 'T' + matchTimeVal : '');
+    } else {
+      match.dateTime = null;
+    }
+
+    saveState();
+    renderBracket();
+    showToast('Agendamento salvo!', 'success');
   }
 
   /** Auto-show penalties when scores are equal */
@@ -2264,15 +2279,6 @@
 
       penalties = { team1: pen1, team2: pen2 };
       winnerNum = pen1 > pen2 ? 1 : 2;
-    }
-
-    // Save date/time
-    const matchDateVal = ($('#modal-match-date') || {}).value || '';
-    const matchTimeVal = ($('#modal-match-time') || {}).value || '';
-    if (matchDateVal || matchTimeVal) {
-      match.dateTime = (matchDateVal || 'HOJE') + (matchTimeVal ? 'T' + matchTimeVal : '');
-    } else {
-      match.dateTime = null;
     }
 
     // --- REVERT OLD STATS IF EDITING ---
@@ -4236,6 +4242,12 @@
     const btnConfirm = $('#btn-confirm-score');
     if (btnConfirm) {
       btnConfirm.addEventListener('click', handleConfirmScore);
+    }
+
+    // Score modal: save schedule (date/time only)
+    const btnSaveSchedule = $('#btn-save-schedule');
+    if (btnSaveSchedule) {
+      btnSaveSchedule.addEventListener('click', handleSaveSchedule);
     }
 
     // Score modal: cancel
