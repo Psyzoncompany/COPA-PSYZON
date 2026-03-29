@@ -1758,7 +1758,7 @@
     ensureLiveFields(match);
 
     const card = document.createElement('div');
-    card.className = 'match-card';
+    card.className = 'match-card match-card-animate';
     card.dataset.matchId = match.id;
 
     const isLive = match.status === 'live';
@@ -1956,18 +1956,18 @@
       if (match.currentLeg === 'volta') {
         aggBar.innerHTML = `
           <div class="agg-legs">
-            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${ida1} × ${ida2}</strong></span>
+            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(ida1))} × ${sanitize(String(ida2))}</strong></span>
             <span class="agg-leg-divider">|</span>
-            <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${s1} × ${s2}</strong></span>
+            <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${sanitize(String(s1))} × ${sanitize(String(s2))}</strong></span>
           </div>
-          <div class="agg-total">Agregado: <strong>${agg1} × ${agg2}</strong></div>
+          <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} × ${sanitize(String(agg2))}</strong></div>
         `;
       } else {
         aggBar.innerHTML = `
           <div class="agg-legs">
-            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${s1} × ${s2}</strong></span>
+            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(s1))} × ${sanitize(String(s2))}</strong></span>
           </div>
-          <div class="agg-total">Agregado: <strong>${agg1} × ${agg2}</strong></div>
+          <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} × ${sanitize(String(agg2))}</strong></div>
         `;
       }
       card.appendChild(aggBar);
@@ -1986,11 +1986,11 @@
       aggBar.className = 'match-aggregate-bar match-aggregate-finished';
       aggBar.innerHTML = `
         <div class="agg-legs">
-          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${ida1} × ${ida2}</strong></span>
+          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(ida1))} × ${sanitize(String(ida2))}</strong></span>
           <span class="agg-leg-divider">|</span>
-          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${volta1} × ${volta2}</strong></span>
+          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${sanitize(String(volta1))} × ${sanitize(String(volta2))}</strong></span>
         </div>
-        <div class="agg-total">Agregado: <strong>${agg1} × ${agg2}</strong></div>
+        <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} × ${sanitize(String(agg2))}</strong></div>
       `;
       card.appendChild(aggBar);
     }
@@ -2235,14 +2235,14 @@
       aggDiv.className = 'live-area-aggregate';
       if (match.currentLeg === 'volta') {
         aggDiv.innerHTML = `
-          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> ${ida1}×${ida2}</span>
+          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> ${sanitize(String(ida1))}×${sanitize(String(ida2))}</span>
           <span class="agg-leg-divider">|</span>
-          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> ${s1}×${s2}</span>
+          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> ${sanitize(String(s1))}×${sanitize(String(s2))}</span>
           <span class="agg-leg-divider">—</span>
-          <strong>${agg1} × ${agg2}</strong>
+          <strong>${sanitize(String(agg1))} × ${sanitize(String(agg2))}</strong>
         `;
       } else {
-        aggDiv.innerHTML = `<span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> ${s1}×${s2}</span>`;
+        aggDiv.innerHTML = `<span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> ${sanitize(String(s1))}×${sanitize(String(s2))}</span>`;
       }
       card.appendChild(aggDiv);
     }

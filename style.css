@@ -4345,7 +4345,7 @@ textarea::placeholder {
   }
 }
 
-.match-card {
+.match-card-animate {
   animation: matchCardIn 0.35s ease both;
 }
 
