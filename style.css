@@ -1773,6 +1773,8 @@ textarea::placeholder {
   padding: 32px;
   width: 100%;
   max-width: 480px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   margin: 20px;
   animation: slideUp 0.3s ease;
   z-index: 1;
@@ -2369,6 +2371,7 @@ textarea::placeholder {
   .modal-card {
     padding: 24px 20px;
     margin: 12px;
+    max-height: calc(100dvh - 24px);
   }
 
   .modal-teams {
@@ -2529,6 +2532,7 @@ textarea::placeholder {
 
   .modal-card {
     padding: 20px 16px;
+    max-height: calc(100dvh - 16px);
   }
 
   /* Date/time row stacks vertically on very small screens */
