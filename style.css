@@ -1584,6 +1584,7 @@ textarea::placeholder {
   padding: 10px 12px;
   transition: background var(--transition);
   position: relative;
+  min-height: 48px;
 }
 
 .match-team.dragging {
@@ -1693,6 +1694,13 @@ textarea::placeholder {
   min-width: 24px;
   text-align: center;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  margin-left: auto;
+  font-family: 'Space Grotesk', monospace;
 }
 
 .match-actions {
@@ -1989,10 +1997,18 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 0;
-  margin-bottom: 12px;
+  padding: 8px 12px;
+  margin-bottom: 0;
   flex-wrap: wrap;
   justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11, 19, 35, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
 }
 
 .match-filter-btn {
@@ -2086,16 +2102,7 @@ textarea::placeholder {
   flex: 1;
 }
 
-/* Score display in live mode */
-.score-display {
-  margin-left: auto;
-  font-weight: 800;
-  font-size: 16px;
-  color: var(--primary);
-  font-family: 'Space Grotesk', monospace;
-  min-width: 20px;
-  text-align: right;
-}
+/* Score display in live mode - inherits main .score-display */
 
 /* ---------- 15. Bracket Connectors (SVG) ---------- */
 .round.connector-col {
@@ -2150,6 +2157,8 @@ textarea::placeholder {
   padding: 32px;
   width: 100%;
   max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
   margin: 20px;
   animation: slideUp 0.3s ease;
   z-index: 1;
@@ -4022,7 +4031,7 @@ textarea::placeholder {
 
   .match-filter-bar {
     gap: 4px;
-    padding: 6px 0;
+    padding: 6px 8px;
   }
 
   .match-filter-btn {
@@ -4033,5 +4042,206 @@ textarea::placeholder {
   .finalize-confirm-card {
     padding: 20px;
     margin: 12px;
+  }
+
+  .live-matches-area {
+    flex-direction: column;
+  }
+
+  .live-matches-area .live-area-card {
+    min-width: unset;
+    width: 100%;
+  }
+}
+
+/* ========== LIVE MATCHES AREA (Ao Vivo cards next to filters) ========== */
+.live-matches-area {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  overflow-x: auto;
+  background: rgba(255, 59, 48, 0.04);
+  border-bottom: 1px solid rgba(255, 59, 48, 0.15);
+  -webkit-overflow-scrolling: touch;
+}
+
+.live-matches-area:empty {
+  display: none;
+}
+
+.live-area-card {
+  min-width: 260px;
+  max-width: 320px;
+  background: rgba(45, 53, 70, 0.7);
+  border: 1px solid rgba(255, 59, 48, 0.35);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.15);
+  animation: liveGlow 2s ease-in-out infinite;
+}
+
+.live-area-card .live-area-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 59, 48, 0.12);
+  border-bottom: 1px solid rgba(255, 59, 48, 0.2);
+}
+
+.live-area-card .live-area-header .live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff3b30;
+  animation: livePulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.live-area-card .live-area-header .live-text {
+  font-size: 10px;
+  font-weight: 800;
+  color: #ff3b30;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.live-area-card .live-area-header .live-timer {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: auto;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.live-area-card .live-area-header .live-leg-indicator {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-orange);
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: rgba(255, 149, 0, 0.15);
+  border-radius: 8px;
+}
+
+.live-area-card .live-area-body {
+  padding: 10px 12px;
+}
+
+.live-area-card .live-area-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.live-area-card .live-area-team-name {
+  flex: 1;
+  font-family: var(--font-headline);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.live-area-card .live-area-score {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  font-family: 'Space Grotesk', monospace;
+  min-width: 24px;
+  text-align: center;
+}
+
+.live-area-card .live-area-vs {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  padding: 2px 0;
+}
+
+.live-area-card .live-area-aggregate {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 4px 8px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid var(--border-color);
+}
+
+.live-area-card .live-area-aggregate strong {
+  color: var(--primary);
+}
+
+/* Cancel live button */
+.live-ctrl-btn.btn-cancel-live {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+}
+
+.live-ctrl-btn.btn-cancel-live:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+/* Ida/Volta leg indicator in match card */
+.live-leg-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-orange);
+  padding: 1px 6px;
+  background: rgba(255, 149, 0, 0.15);
+  border: 1px solid rgba(255, 149, 0, 0.25);
+  border-radius: 8px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+/* Aggregate score display in match card */
+.match-aggregate-bar {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--border-color);
+}
+
+.match-aggregate-bar strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+/* Score display two-leg detail */
+.score-detail-small {
+  font-size: 9px;
+  opacity: 0.6;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* Responsive: mobile live area */
+@media (max-width: 768px) {
+  .live-matches-area {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .live-area-card {
+    min-width: unset;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .modal-card {
+    max-height: 80vh;
   }
 }
