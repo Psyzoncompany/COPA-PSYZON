@@ -1935,7 +1935,7 @@
     card.appendChild(createTeamSlot(match.team2, match, 2));
 
     // Aggregate score display for two-legged matches (live or finished)
-    if (state.twoLegged && match.scoreIda1 !== undefined && (isLive || isPaused) && match.currentLeg) {
+    if (shouldShowAggregate(match)) {
       const s1 = match.team1 ? (match.team1.score || 0) : 0;
       const s2 = match.team2 ? (match.team2.score || 0) : 0;
       const ida1 = match.scoreIda1 || 0;
@@ -2174,7 +2174,7 @@
     card.appendChild(body);
 
     // Aggregate display for two-legged
-    if (isTwoLegged && (match.scoreIda1 !== undefined || match.scoreVolta1 !== undefined)) {
+    if (isTwoLegged && match.scoreIda1 !== undefined) {
       const ida1 = match.scoreIda1 || 0;
       const ida2 = match.scoreIda2 || 0;
       const volta1 = match.scoreVolta1 || 0;
@@ -2182,11 +2182,13 @@
 
       let agg1, agg2;
       if (match.currentLeg === 'volta') {
+        // During volta: current scores are volta scores, ida already recorded
         agg1 = ida1 + s1;
         agg2 = ida2 + s2;
       } else {
-        agg1 = s1 + volta1;
-        agg2 = s2 + volta2;
+        // During ida: current scores ARE the ida scores, no volta yet
+        agg1 = s1;
+        agg2 = s2;
       }
 
       const aggDiv = document.createElement('div');
@@ -2450,6 +2452,14 @@
 
   /** Current match filter state */
   let currentMatchFilter = 'all';
+
+  /**
+   * Check if aggregate score bar should be displayed for a match.
+   */
+  function shouldShowAggregate(match) {
+    return !!state.twoLegged && match.scoreIda1 !== undefined &&
+      (match.status === 'live' || match.status === 'paused') && !!match.currentLeg;
+  }
 
   /**
    * Ensure a match has the live system fields (backward compat for old data).
