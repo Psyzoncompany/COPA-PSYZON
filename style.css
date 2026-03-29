@@ -1584,6 +1584,7 @@ textarea::placeholder {
   padding: 10px 12px;
   transition: background var(--transition);
   position: relative;
+  min-height: 48px;
 }
 
 .match-team.dragging {
@@ -4227,17 +4228,6 @@ textarea::placeholder {
   line-height: 1;
 }
 
-/* Match team alignment fixes */
-.match-team {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  transition: background var(--transition);
-  position: relative;
-  min-height: 48px;
-}
-
 /* Responsive: mobile live area */
 @media (max-width: 768px) {
   .live-matches-area {
@@ -4254,5 +4244,4 @@ textarea::placeholder {
   .modal-card {
     max-height: 80vh;
   }
-}
 }
