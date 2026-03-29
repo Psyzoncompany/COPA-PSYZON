@@ -1023,6 +1023,7 @@ textarea::placeholder {
 
 .round:not(.connector-col) {
   flex-shrink: 0;
+  flex: 1; /* Permite que as colunas ocupem o espaÃ§o disponÃ­vel de forma organizada */
 }
 
 .round-title {
@@ -1048,9 +1049,10 @@ textarea::placeholder {
 .round-matches {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px; /* Aumentado para melhor visualizaÃ§Ã£o */
   justify-content: space-around;
   flex: 1;
+  width: 100%; /* Garante que os cards ocupem a largura da coluna */
 }
 
 /* ---------- 14b. Match Card ---------- */

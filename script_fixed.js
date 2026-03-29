@@ -1156,7 +1156,9 @@
       // Line from card2 right edge to midpoint
       addLine(svg, 0, y2, midX, y2);
       // Vertical line connecting the two
-      addLine(svg, midX, y1, midX, y2);
+      const minY = Math.min(y1, y2, yt);
+      const maxY = Math.max(y1, y2, yt);
+      addLine(svg, midX, minY, midX, maxY);
       // Horizontal line from midpoint to next round
       addLine(svg, midX, yt, colWidth, yt);
     }

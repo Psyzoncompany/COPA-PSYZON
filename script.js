@@ -1104,6 +1104,11 @@
 
     container.appendChild(bracketEl);
 
+    if (typeof bracketResizeObserver !== 'undefined' && bracketResizeObserver) {
+      bracketResizeObserver.disconnect();
+      bracketResizeObserver.observe(container);
+    }
+
     // Show champion if already determined
     if (state.champion) {
       renderChampionBannerIfNeeded();
@@ -1462,6 +1467,43 @@
     return col;
   }
 
+  let connectorRedrawTimeout = null;
+  function scheduleRedrawConnectors() {
+    if (connectorRedrawTimeout) clearTimeout(connectorRedrawTimeout);
+    
+    const redraw = () => {
+      const container = document.getElementById('bracket-container');
+      if (!container || container.style.display === 'none') return;
+      const bracketEl = container.querySelector('.bracket');
+      if (!bracketEl) return;
+
+      const children = Array.from(bracketEl.children);
+      children.forEach((col, idx) => {
+        if (col.classList.contains('connector-col')) {
+          const svgWrap = col.querySelector('div:last-child');
+          if (svgWrap) {
+            const roundIndex = (idx + 1) / 2;
+            drawConnectors(svgWrap, col, 0, roundIndex);
+          }
+        }
+      });
+    };
+
+    // Redesenha imediatamente e apÃ³s um pequeno delay para garantir que o layout finalizou
+    requestAnimationFrame(redraw);
+    connectorRedrawTimeout = setTimeout(redraw, 100);
+  }
+
+  let bracketResizeObserver = null;
+  if (typeof window !== 'undefined' && window.ResizeObserver) {
+    bracketResizeObserver = new ResizeObserver(() => {
+      scheduleRedrawConnectors();
+    });
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', scheduleRedrawConnectors);
+  }
+
   /**
    * Draw SVG connector lines inside the connector column.
    * Lines connect pairs of matches from the previous round to match slots in the next round.
@@ -1479,6 +1521,7 @@
     const nextCards = nextRound.querySelectorAll('.match-card');
     if (prevCards.length === 0 || nextCards.length === 0) return;
 
+    svgWrap.innerHTML = '';
     const svgWrapRect = svgWrap.getBoundingClientRect();
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1506,10 +1549,20 @@
       const r2 = card2.getBoundingClientRect();
       const rt = target.getBoundingClientRect();
 
+      const getCenterY = (cardRect, card) => {
+        const teams = card.querySelectorAll('.match-team');
+        if (teams.length >= 2) {
+          const t1Rect = teams[0].getBoundingClientRect();
+          const t2Rect = teams[1].getBoundingClientRect();
+          return (t1Rect.bottom + t2Rect.top) / 2 - svgWrapRect.top;
+        }
+        return cardRect.top + cardRect.height / 2 - svgWrapRect.top;
+      };
+
       // Y positions relative to the svg container
-      const y1 = r1.top + r1.height / 2 - svgWrapRect.top;
-      const y2 = r2.top + r2.height / 2 - svgWrapRect.top;
-      const yt = rt.top + rt.height / 2 - svgWrapRect.top;
+      const y1 = getCenterY(r1, card1);
+      const y2 = getCenterY(r2, card2);
+      const yt = getCenterY(rt, target);
 
       const midX = colWidth / 2;
 
@@ -1517,8 +1570,10 @@
       addLine(svg, 0, y1, midX, y1);
       // Line from card2 right edge to midpoint
       addLine(svg, 0, y2, midX, y2);
-      // Vertical line connecting the two
-      addLine(svg, midX, y1, midX, y2);
+      // Vertical line connecting all three points
+      const minY = Math.min(y1, y2, yt);
+      const maxY = Math.max(y1, y2, yt);
+      addLine(svg, midX, minY, midX, maxY);
       // Horizontal line from midpoint to next round
       addLine(svg, midX, yt, colWidth, yt);
     }
