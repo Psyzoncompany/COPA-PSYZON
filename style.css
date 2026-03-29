@@ -1446,6 +1446,8 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 
 .round-title .icon {
@@ -1718,8 +1720,8 @@ textarea::placeholder {
 
 /* ---------- 15. Bracket Connectors (SVG) ---------- */
 .round.connector-col {
-  min-width: 32px;
-  width: 32px;
+  min-width: 48px;
+  width: 48px;
   padding: 0;
   flex-shrink: 0;
 }
