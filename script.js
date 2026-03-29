@@ -164,7 +164,11 @@
           team2: null,
           winner: null,
           penalties: null,
-          dateTime: null
+          dateTime: null,
+          status: 'not_started',
+          liveEvents: [],
+          liveStartedAt: null,
+          liveElapsed: 0
         };
         // Fill first round with existing teams in order
         if (rIdx === 0) {
@@ -931,7 +935,11 @@
           team2: null,
           winner: null,
           penalties: null,
-          dateTime: null
+          dateTime: null,
+          status: 'not_started',
+          liveEvents: [],
+          liveStartedAt: null,
+          liveElapsed: 0
         };
 
         // First round: fill with already registered teams (remaining slots stay null/TBD)
@@ -1017,6 +1025,9 @@
     const emptyState = $('#empty-state');
     if (!container) return;
 
+    // Clear live timers
+    Object.keys(liveTimers).forEach(k => { clearInterval(liveTimers[k]); delete liveTimers[k]; });
+
     // Clear
     container.innerHTML = '';
 
@@ -1072,6 +1083,35 @@
       container.appendChild(timeMachineBar);
     }
 
+    // Match filter bar
+    const counts = getMatchStatusCounts(bracket);
+    if (counts.all > 0) {
+      const filterBar = document.createElement('div');
+      filterBar.className = 'match-filter-bar';
+      filterBar.addEventListener('click', e => e.stopPropagation());
+
+      const filters = [
+        { key: 'all', label: 'Todas', count: counts.all },
+        { key: 'live', label: 'Ao Vivo', count: counts.live },
+        { key: 'scheduled', label: 'Agendadas', count: counts.scheduled },
+        { key: 'finished', label: 'Finalizadas', count: counts.finished }
+      ];
+
+      filters.forEach(f => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'match-filter-btn' + (currentMatchFilter === f.key ? ' active' : '');
+        btn.innerHTML = f.label + `<span class="filter-count">${f.count}</span>`;
+        btn.addEventListener('click', () => {
+          currentMatchFilter = f.key;
+          renderBracket();
+        });
+        filterBar.appendChild(btn);
+      });
+
+      container.appendChild(filterBar);
+    }
+
     bracket.rounds.forEach((round, rIdx) => {
       // Add connector column between rounds (except before the first)
       if (rIdx > 0) {
@@ -1095,6 +1135,11 @@
 
       round.matches.forEach((match, mIdx) => {
         const card = createMatchCard(match, rIdx, mIdx);
+        // Apply filter visibility
+        if (currentMatchFilter !== 'all' && !matchPassesFilter(match)) {
+          card.style.opacity = '0.2';
+          card.style.pointerEvents = 'none';
+        }
         matchesEl.appendChild(card);
       });
 
@@ -1686,9 +1731,19 @@
    * @returns {HTMLElement}
    */
   function createMatchCard(match, rIdx, mIdx) {
+    ensureLiveFields(match);
+
     const card = document.createElement('div');
     card.className = 'match-card';
     card.dataset.matchId = match.id;
+
+    const isLive = match.status === 'live';
+    const isPaused = match.status === 'paused';
+    const isFinished = match.status === 'finished';
+    const isScheduled = match.status === 'scheduled';
+
+    if (isLive) card.classList.add('match-live');
+    if (isPaused) card.classList.add('match-paused');
 
     // Header
     const header = document.createElement('div');
@@ -1702,15 +1757,15 @@
     const bothTeams = match.team1 && match.team2;
     const canEdit = isAdmin && bothTeams;
 
-    // Edit button (admin only, even if there's a winner)
-    if (canEdit) {
+    // Edit button (admin only) — show "Resultado" only when not live/paused
+    if (canEdit && !isLive && !isPaused) {
       const editBtn = document.createElement('button');
       editBtn.className = 'match-schedule icon-btn';
       editBtn.type = 'button';
       editBtn.innerHTML = SVG.pencil + (match.winner ? ' Editar' : ' Resultado');
       editBtn.addEventListener('click', () => openScoreModal(rIdx, mIdx));
       header.appendChild(editBtn);
-    } else if (match.winner && !isAdmin) {
+    } else if (isFinished && !isAdmin) {
       const doneSpan = document.createElement('span');
       doneSpan.style.cssText = 'font-size:11px;color:var(--accent-green);font-weight:600;';
       doneSpan.innerHTML = SVG.checkCircle + ' Finalizado';
@@ -1719,8 +1774,45 @@
 
     card.appendChild(header);
 
-    // DATE/TIME BAR DIRECTLY INTO CARD
-    if (canEdit && !match.winner) {
+    // LIVE BADGE BAR
+    if (isLive || isPaused) {
+      const liveBadge = document.createElement('div');
+      liveBadge.className = 'live-badge-bar';
+
+      const dot = document.createElement('span');
+      dot.className = 'live-dot';
+      liveBadge.appendChild(dot);
+
+      const txt = document.createElement('span');
+      txt.className = isLive ? 'live-text' : 'paused-text';
+      txt.textContent = isLive ? 'AO VIVO' : 'PAUSADO';
+      liveBadge.appendChild(txt);
+
+      // Timer display
+      const timerEl = document.createElement('span');
+      timerEl.className = 'live-timer';
+      timerEl.textContent = formatElapsed(getMatchElapsedSeconds(match));
+      liveBadge.appendChild(timerEl);
+
+      card.appendChild(liveBadge);
+
+      // Start updating the timer if live
+      if (isLive) {
+        setTimeout(() => startLiveTimerDisplay(match.id, timerEl, match), 0);
+      }
+    }
+
+    // SCHEDULED BADGE
+    if (isScheduled && !isLive && !isPaused) {
+      const schedBadge = document.createElement('div');
+      schedBadge.className = 'scheduled-badge-bar';
+      const schedIcon = '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+      schedBadge.innerHTML = schedIcon + ' <span class="scheduled-text">Agendada</span>';
+      card.appendChild(schedBadge);
+    }
+
+    // DATE/TIME BAR DIRECTLY INTO CARD — only if not live/paused and not finished
+    if (canEdit && !match.winner && !isLive && !isPaused) {
       const dtBar = document.createElement('div');
       dtBar.className = 'list-mode-dtbar';
       dtBar.style.display = 'flex';
@@ -1731,7 +1823,6 @@
       dtBar.style.margin = '4px 12px 0 12px';
       dtBar.style.borderRadius = '6px';
       dtBar.style.padding = '4px 8px';
-      // Prevent bubbling
       dtBar.addEventListener('click', e => e.stopPropagation());
 
       const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; text-align: center; max-width: 90px;';
@@ -1760,14 +1851,20 @@
         const tVal = timeInp.value;
         if (dateInp.value || timeInp.value) {
           match.dateTime = dVal + (tVal ? 'T' + tVal : '');
+          if (match.status === 'not_started') {
+            match.status = 'scheduled';
+          }
         } else {
           match.dateTime = null;
+          if (match.status === 'scheduled') {
+            match.status = 'not_started';
+          }
         }
         saveState();
+        renderBracket();
       };
 
       dateInp.addEventListener('change', saveDateTime);
-      // Fallback para preencher data caso digite apenas o tempo primeiro
       timeInp.addEventListener('change', () => {
         if (!dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
         saveDateTime();
@@ -1777,7 +1874,7 @@
       dtBar.appendChild(divi);
       dtBar.appendChild(timeInp);
       card.appendChild(dtBar);
-    } else if (match.dateTime) {
+    } else if (match.dateTime && !isLive && !isPaused) {
       const dtBar = document.createElement('div');
       dtBar.className = 'match-datetime-bar readonly';
 
@@ -1805,12 +1902,115 @@
 
     // Team 2 slot
     card.appendChild(createTeamSlot(match.team2, match, 2));
+
     // Penalty info
     if (match.penalties) {
       const penDiv = document.createElement('div');
       penDiv.className = 'match-penalty-info';
       penDiv.innerHTML = `Pênaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
       card.appendChild(penDiv);
+    }
+
+    // LIVE SCORE CONTROLS (admin only, during live/paused)
+    if (isAdmin && (isLive || isPaused) && match.team1 && match.team2) {
+      const scoreControls = document.createElement('div');
+      scoreControls.className = 'live-score-controls';
+      scoreControls.addEventListener('click', e => e.stopPropagation());
+
+      const t1Name = (match.team1.teamName || match.team1.playerName || '').substring(0, 6);
+      const t2Name = (match.team2.teamName || match.team2.playerName || '').substring(0, 6);
+
+      scoreControls.innerHTML = `
+        <div class="live-score-team">
+          <button type="button" class="live-score-btn btn-minus-t1" title="−1 ${sanitize(t1Name)}">−</button>
+          <span class="live-score-value" data-team="1">${match.team1.score || 0}</span>
+          <button type="button" class="live-score-btn btn-plus-t1" title="+1 ${sanitize(t1Name)}">+</button>
+        </div>
+        <span class="live-score-vs">×</span>
+        <div class="live-score-team">
+          <button type="button" class="live-score-btn btn-minus-t2" title="−1 ${sanitize(t2Name)}">−</button>
+          <span class="live-score-value" data-team="2">${match.team2.score || 0}</span>
+          <button type="button" class="live-score-btn btn-plus-t2" title="+1 ${sanitize(t2Name)}">+</button>
+        </div>
+      `;
+
+      scoreControls.querySelector('.btn-plus-t1').addEventListener('click', () => updateLiveScore(rIdx, mIdx, 1, 1));
+      scoreControls.querySelector('.btn-minus-t1').addEventListener('click', () => updateLiveScore(rIdx, mIdx, 1, -1));
+      scoreControls.querySelector('.btn-plus-t2').addEventListener('click', () => updateLiveScore(rIdx, mIdx, 2, 1));
+      scoreControls.querySelector('.btn-minus-t2').addEventListener('click', () => updateLiveScore(rIdx, mIdx, 2, -1));
+
+      card.appendChild(scoreControls);
+    }
+
+    // ADMIN LIVE CONTROL BUTTONS
+    if (isAdmin && bothTeams && !isFinished) {
+      const controls = document.createElement('div');
+      controls.className = 'live-admin-controls';
+      controls.addEventListener('click', e => e.stopPropagation());
+
+      if (!isLive && !isPaused) {
+        // Show "Iniciar ao vivo" button
+        const startBtn = document.createElement('button');
+        startBtn.type = 'button';
+        startBtn.className = 'live-ctrl-btn btn-start-live';
+        startBtn.innerHTML = '<span class="live-dot" style="width:6px;height:6px;animation:livePulse 1.2s ease-in-out infinite;"></span> Iniciar ao vivo';
+        startBtn.addEventListener('click', () => startLiveMatch(rIdx, mIdx));
+        controls.appendChild(startBtn);
+      }
+
+      if (isLive) {
+        const pauseBtn = document.createElement('button');
+        pauseBtn.type = 'button';
+        pauseBtn.className = 'live-ctrl-btn btn-pause-live';
+        pauseBtn.textContent = '⏸ Pausar';
+        pauseBtn.addEventListener('click', () => pauseLiveMatch(rIdx, mIdx));
+        controls.appendChild(pauseBtn);
+
+        const endBtn = document.createElement('button');
+        endBtn.type = 'button';
+        endBtn.className = 'live-ctrl-btn btn-end-live';
+        endBtn.textContent = '✓ Encerrar partida';
+        endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
+        controls.appendChild(endBtn);
+      }
+
+      if (isPaused) {
+        const resumeBtn = document.createElement('button');
+        resumeBtn.type = 'button';
+        resumeBtn.className = 'live-ctrl-btn btn-start-live';
+        resumeBtn.textContent = '▶ Retomar';
+        resumeBtn.addEventListener('click', () => resumeLiveMatch(rIdx, mIdx));
+        controls.appendChild(resumeBtn);
+
+        const endBtn = document.createElement('button');
+        endBtn.type = 'button';
+        endBtn.className = 'live-ctrl-btn btn-end-live';
+        endBtn.textContent = '✓ Encerrar partida';
+        endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
+        controls.appendChild(endBtn);
+      }
+
+      card.appendChild(controls);
+    }
+
+    // LIVE EVENTS LOG (show recent events for live/paused matches)
+    if ((isLive || isPaused) && match.liveEvents && match.liveEvents.length > 0) {
+      const logDiv = document.createElement('div');
+      logDiv.className = 'live-events-log';
+
+      // Show most recent events (up to 5)
+      const recentEvents = match.liveEvents.slice(-5);
+      recentEvents.forEach(evt => {
+        const item = document.createElement('div');
+        item.className = 'live-event-item';
+        item.innerHTML = `
+          <span class="event-time">${sanitize(evt.time)}</span>
+          <span class="event-desc">${sanitize(evt.desc)}</span>
+        `;
+        logDiv.appendChild(item);
+      });
+
+      card.appendChild(logDiv);
     }
 
     return card;
@@ -2060,6 +2260,351 @@
 
     return slot;
   }
+  /* ==========================================================
+     12c. LIVE MATCH SYSTEM
+     ========================================================== */
+
+  /** Active live timer intervals keyed by match id */
+  const liveTimers = {};
+
+  /** Current match filter state */
+  let currentMatchFilter = 'all';
+
+  /**
+   * Ensure a match has the live system fields (backward compat for old data).
+   */
+  function ensureLiveFields(match) {
+    if (!match) return;
+    if (!match.status) {
+      match.status = match.winner ? 'finished' : (match.dateTime ? 'scheduled' : 'not_started');
+    }
+    if (!match.liveEvents) match.liveEvents = [];
+    if (typeof match.liveElapsed !== 'number') match.liveElapsed = 0;
+  }
+
+  /**
+   * Start a match in live mode.
+   */
+  function startLiveMatch(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match || !match.team1 || !match.team2) return;
+
+    ensureLiveFields(match);
+
+    match.status = 'live';
+    match.liveStartedAt = Date.now();
+    if (!match.team1.score && match.team1.score !== 0) match.team1.score = 0;
+    if (!match.team2.score && match.team2.score !== 0) match.team2.score = 0;
+
+    addLiveEvent(match, 'start', 'Partida iniciada');
+    saveState();
+    renderBracket();
+    showToast('Partida ao vivo!', 'success');
+  }
+
+  /**
+   * Pause a live match.
+   */
+  function pauseLiveMatch(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    ensureLiveFields(match);
+
+    // Accumulate elapsed time
+    if (match.liveStartedAt) {
+      match.liveElapsed = (match.liveElapsed || 0) + (Date.now() - match.liveStartedAt);
+      match.liveStartedAt = null;
+    }
+    match.status = 'paused';
+
+    addLiveEvent(match, 'pause', 'Partida pausada');
+    saveState();
+    renderBracket();
+  }
+
+  /**
+   * Resume a paused match.
+   */
+  function resumeLiveMatch(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    ensureLiveFields(match);
+    match.status = 'live';
+    match.liveStartedAt = Date.now();
+
+    addLiveEvent(match, 'resume', 'Partida retomada');
+    saveState();
+    renderBracket();
+  }
+
+  /**
+   * Update live score for a team.
+   */
+  function updateLiveScore(rIdx, mIdx, teamNum, delta) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    ensureLiveFields(match);
+
+    const team = teamNum === 1 ? match.team1 : match.team2;
+    if (!team) return;
+
+    const oldScore = team.score || 0;
+    const newScore = Math.max(0, oldScore + delta);
+    team.score = newScore;
+
+    if (delta > 0) {
+      const teamName = team.teamName || team.playerName;
+      addLiveEvent(match, 'goal', `⚽ Gol! ${teamName} (${newScore})`);
+    }
+
+    saveState();
+    // Update score display without full re-render for responsiveness
+    renderBracket();
+  }
+
+  /**
+   * Add an event to the match log.
+   */
+  function addLiveEvent(match, type, description) {
+    if (!match.liveEvents) match.liveEvents = [];
+    const elapsed = getMatchElapsedSeconds(match);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    match.liveEvents.push({
+      type: type,
+      desc: description,
+      time: timeStr,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Get elapsed seconds for a match.
+   */
+  function getMatchElapsedSeconds(match) {
+    let elapsed = match.liveElapsed || 0;
+    if (match.liveStartedAt && match.status === 'live') {
+      elapsed += Date.now() - match.liveStartedAt;
+    }
+    return Math.floor(elapsed / 1000);
+  }
+
+  /**
+   * Format elapsed seconds as MM:SS.
+   */
+  function formatElapsed(totalSeconds) {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  /**
+   * Show finalization confirmation dialog before ending a match.
+   */
+  function showFinalizeConfirm(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    ensureLiveFields(match);
+
+    const s1 = match.team1 ? (match.team1.score || 0) : 0;
+    const s2 = match.team2 ? (match.team2.score || 0) : 0;
+    const t1Name = match.team1 ? (match.team1.teamName || match.team1.playerName) : '?';
+    const t2Name = match.team2 ? (match.team2.teamName || match.team2.playerName) : '?';
+
+    // If tied, open score modal for penalties
+    if (s1 === s2) {
+      showToast('Empate! Use o modal de resultado para definir pênaltis.', 'info');
+      // Accumulate time first
+      if (match.liveStartedAt) {
+        match.liveElapsed = (match.liveElapsed || 0) + (Date.now() - match.liveStartedAt);
+        match.liveStartedAt = null;
+      }
+      match.status = 'paused';
+      saveState();
+      openScoreModal(rIdx, mIdx);
+      return;
+    }
+
+    const winnerName = s1 > s2 ? t1Name : t2Name;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'finalize-confirm-overlay';
+    overlay.innerHTML = `
+      <div class="modal-backdrop"></div>
+      <div class="finalize-confirm-card">
+        <h3>Finalizar Partida?</h3>
+        <p>
+          <strong>${sanitize(t1Name)} ${s1} × ${s2} ${sanitize(t2Name)}</strong><br>
+          O vencedor será <strong>${sanitize(winnerName)}</strong> e avançará no chaveamento.
+        </p>
+        <div class="finalize-confirm-actions">
+          <button type="button" class="btn btn-outline btn-sm btn-cancel-finalize">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-sm btn-confirm-finalize">Confirmar</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.btn-cancel-finalize').addEventListener('click', () => {
+      overlay.remove();
+    });
+
+    overlay.querySelector('.modal-backdrop').addEventListener('click', () => {
+      overlay.remove();
+    });
+
+    overlay.querySelector('.btn-confirm-finalize').addEventListener('click', () => {
+      overlay.remove();
+      finalizeLiveMatch(rIdx, mIdx);
+    });
+  }
+
+  /**
+   * Finalize a live match — set winner and advance.
+   */
+  function finalizeLiveMatch(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match || !match.team1 || !match.team2) return;
+
+    ensureLiveFields(match);
+
+    // Accumulate final time
+    if (match.liveStartedAt) {
+      match.liveElapsed = (match.liveElapsed || 0) + (Date.now() - match.liveStartedAt);
+      match.liveStartedAt = null;
+    }
+
+    const s1 = match.team1.score || 0;
+    const s2 = match.team2.score || 0;
+
+    if (s1 === s2) {
+      showToast('Empate! Defina pênaltis pelo modal de resultado.', 'error');
+      return;
+    }
+
+    // Revert old stats if editing
+    if (match.statsApplied) {
+      revertMatchStats(match);
+    }
+
+    const winnerNum = s1 > s2 ? 1 : 2;
+    match.winner = winnerNum;
+    match.status = 'finished';
+    match.penalties = null;
+
+    addLiveEvent(match, 'end', 'Partida finalizada');
+
+    const totalRounds = bracket.rounds.length;
+    const isFinal = rIdx === totalRounds - 1;
+    const isSemi = rIdx === totalRounds - 2;
+    applyMatchStats(match, isSemi, isFinal);
+
+    // Advance winner to next round
+    const winnerTeam = winnerNum === 1 ? match.team1 : match.team2;
+
+    if (rIdx < totalRounds - 1) {
+      const nextRound = bracket.rounds[rIdx + 1];
+      const nextMatchIdx = Math.floor(mIdx / 2);
+      const nextMatch = nextRound.matches[nextMatchIdx];
+      if (nextMatch) {
+        const slot = mIdx % 2 === 0 ? 'team1' : 'team2';
+        nextMatch[slot] = makeTeamSlotData(winnerTeam);
+      }
+    }
+
+    if (isFinal) {
+      const champData = {
+        teamName: winnerTeam.teamName,
+        playerName: winnerTeam.playerName
+      };
+      if (currentViewingBracketId) {
+        const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
+        if (hist) hist.champion = champData;
+      } else {
+        state.champion = champData;
+      }
+      showChampionCelebration();
+    } else {
+      showToast('Partida finalizada! Vencedor avança.', 'success');
+    }
+
+    saveState();
+    renderBracket();
+  }
+
+  /**
+   * Start a live timer for visual countdown in a match card.
+   */
+  function startLiveTimerDisplay(matchId, timerEl, match) {
+    // Clear existing timer if any
+    if (liveTimers[matchId]) {
+      clearInterval(liveTimers[matchId]);
+    }
+
+    const update = () => {
+      if (timerEl && timerEl.isConnected) {
+        const secs = getMatchElapsedSeconds(match);
+        timerEl.textContent = formatElapsed(secs);
+      } else {
+        clearInterval(liveTimers[matchId]);
+        delete liveTimers[matchId];
+      }
+    };
+
+    update();
+    liveTimers[matchId] = setInterval(update, 1000);
+  }
+
+  /**
+   * Get match status counts for filter display.
+   */
+  function getMatchStatusCounts(bracket) {
+    const counts = { all: 0, scheduled: 0, live: 0, finished: 0 };
+    if (!bracket || !bracket.rounds) return counts;
+
+    bracket.rounds.forEach(round => {
+      round.matches.forEach(match => {
+        if (!match.team1 && !match.team2) return;
+        ensureLiveFields(match);
+        counts.all++;
+        if (match.status === 'live' || match.status === 'paused') counts.live++;
+        else if (match.status === 'finished') counts.finished++;
+        else if (match.status === 'scheduled') counts.scheduled++;
+      });
+    });
+    return counts;
+  }
+
+  /**
+   * Check if a match should be visible based on current filter.
+   */
+  function matchPassesFilter(match) {
+    if (currentMatchFilter === 'all') return true;
+    ensureLiveFields(match);
+    if (currentMatchFilter === 'live') return match.status === 'live' || match.status === 'paused';
+    if (currentMatchFilter === 'finished') return match.status === 'finished';
+    if (currentMatchFilter === 'scheduled') return match.status === 'scheduled';
+    return true;
+  }
+
 
   /* ==========================================================
      13. SCORE MODAL
@@ -2285,6 +2830,12 @@
     match.team2.score = score2;
     match.winner = winnerNum;
     match.penalties = penalties;
+    match.status = 'finished';
+    // Clear live timer state
+    if (match.liveStartedAt) {
+      match.liveElapsed = (match.liveElapsed || 0) + (Date.now() - match.liveStartedAt);
+      match.liveStartedAt = null;
+    }
 
     if (isTwoLegged) {
       match.scoreIda1 = sIda1;
@@ -2367,6 +2918,12 @@
     if (match.team2) match.team2.score = null;
     match.winner = null;
     match.penalties = null;
+
+    // Reset live fields
+    match.status = match.dateTime ? 'scheduled' : 'not_started';
+    match.liveEvents = [];
+    match.liveStartedAt = null;
+    match.liveElapsed = 0;
 
     // Reset Ida/Volta if they exist
     delete match.scoreIda1;
@@ -3964,7 +4521,11 @@
           team2: null,
           winner: null,
           penalties: null,
-          dateTime: null
+          dateTime: null,
+          status: 'not_started',
+          liveEvents: [],
+          liveStartedAt: null,
+          liveElapsed: 0
         };
 
         // Fill first round with the shuffled teams
