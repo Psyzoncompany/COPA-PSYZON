@@ -124,15 +124,25 @@ body {
   font-size: 15px;
   line-height: 1.5;
   color: var(--text-primary);
+  min-height: 100vh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background: linear-gradient(rgba(6, 14, 30, 0.85), rgba(6, 14, 30, 0.85)),
     url('img/wp10059640-fifa-4k-wallpapers.jpg');
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background-attachment: scroll; /* Use scroll on the fixed element for iOS */
+  pointer-events: none;
 }
 
 h1,
@@ -182,6 +192,7 @@ img {
   position: relative;
   overflow: hidden;
   letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn:active {
@@ -322,6 +333,7 @@ textarea::placeholder {
   font-family: 'Inter', sans-serif;
   overflow: auto;
   z-index: 9999;
+  -webkit-overflow-scrolling: touch;
 }
 
 .login-bg-layers {
@@ -1000,6 +1012,8 @@ textarea::placeholder {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  /* Fix para flickering no Safari */
+  transform: translateZ(0);
 }
 
 #bracket-tab .match-header {
@@ -1145,6 +1159,7 @@ textarea::placeholder {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  transform: translateZ(0); /* GPU Acceleration */
 }
 
 .match-list-cards {
@@ -1165,6 +1180,7 @@ textarea::placeholder {
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform: translateZ(0); /* GPU Acceleration */
 }
 
 .match-list-card:hover {
@@ -1346,6 +1362,10 @@ textarea::placeholder {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transition: var(--transition);
   width: 260px; /* Reduzido levemente para caber melhor no mobile */
+  /* hardware acceleration para performance no mobile */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 }
 
 .match-card:hover {
@@ -3427,12 +3447,12 @@ textarea::placeholder {
 
 /* Mobile Global Background (Neymar) */
 @media (max-width: 768px) {
-  body {
+  body::before {
     background: linear-gradient(rgba(6, 14, 30, 0.85), rgba(6, 14, 30, 0.85)),
       url('img/neymar-fifa-19-hd-wallpapers.jpg');
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    background-attachment: scroll;
   }
 
   .login-screen-new {
@@ -3440,6 +3460,7 @@ textarea::placeholder {
       url('img/neymar-fifa-19-hd-wallpapers.jpg');
     background-size: cover;
     background-position: top center;
+    transform: translateZ(0);
   }
 
   #bracket-tab {
