@@ -293,7 +293,14 @@
     success: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
     error: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
     info: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-yellow, #ffcc00)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
-    clock: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+    clock: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+    pause: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
+    check: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    xMark: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    play: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+    goal: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>',
+    chevronDown: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+    chevronUp: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>'
   };
 
 
@@ -1769,17 +1776,77 @@
     if (isLive) card.classList.add('match-live');
     if (isPaused) card.classList.add('match-paused');
 
-    // Header
+    const bothTeams = match.team1 && match.team2;
+    const canEdit = isAdmin && bothTeams;
+
+    /* ── HEADER (STATUS BAR) ── */
     const header = document.createElement('div');
     header.className = 'match-header';
 
-    const matchLabel = document.createElement('span');
-    matchLabel.className = 'match-id';
-    matchLabel.textContent = `Jogo ${mIdx + 1}`;
-    header.appendChild(matchLabel);
+    const headerLeft = document.createElement('div');
+    headerLeft.className = 'match-header-left';
 
-    const bothTeams = match.team1 && match.team2;
-    const canEdit = isAdmin && bothTeams;
+    if (isLive || isPaused) {
+      // Live/Paused indicator with SVG dot
+      const statusIndicator = document.createElement('div');
+      statusIndicator.className = 'mc-status-indicator';
+
+      const dot = document.createElement('span');
+      dot.className = 'live-dot';
+      statusIndicator.appendChild(dot);
+
+      const txt = document.createElement('span');
+      txt.className = isLive ? 'live-text' : 'paused-text';
+      txt.textContent = isLive ? 'AO VIVO' : 'PAUSADO';
+      statusIndicator.appendChild(txt);
+
+      headerLeft.appendChild(statusIndicator);
+
+      // Ida/Volta leg indicator
+      if (state.twoLegged && match.currentLeg) {
+        const legBadge = document.createElement('span');
+        legBadge.className = 'live-leg-badge';
+        legBadge.textContent = match.currentLeg === 'ida' ? 'Ida' : 'Volta';
+        headerLeft.appendChild(legBadge);
+      }
+    } else {
+      const matchLabel = document.createElement('span');
+      matchLabel.className = 'match-id';
+      matchLabel.textContent = `Jogo ${mIdx + 1}`;
+      headerLeft.appendChild(matchLabel);
+
+      if (isScheduled) {
+        const schedBadge = document.createElement('span');
+        schedBadge.className = 'mc-scheduled-badge';
+        schedBadge.innerHTML = SVG.clock + ' <span>Agendada</span>';
+        headerLeft.appendChild(schedBadge);
+      }
+
+      if (isFinished && !isAdmin) {
+        const doneSpan = document.createElement('span');
+        doneSpan.className = 'mc-finished-badge';
+        doneSpan.innerHTML = SVG.checkCircle + ' Finalizado';
+        headerLeft.appendChild(doneSpan);
+      }
+    }
+
+    header.appendChild(headerLeft);
+
+    const headerRight = document.createElement('div');
+    headerRight.className = 'match-header-right';
+
+    if (isLive || isPaused) {
+      // Timer display
+      const timerEl = document.createElement('span');
+      timerEl.className = 'live-timer';
+      timerEl.textContent = formatElapsed(getMatchElapsedSeconds(match));
+      headerRight.appendChild(timerEl);
+
+      // Start updating the timer if live
+      if (isLive) {
+        setTimeout(() => startLiveTimerDisplay(match.id, timerEl, match), 0);
+      }
+    }
 
     // Edit button (admin only) — show "Resultado" only when not live/paused
     if (canEdit && !isLive && !isPaused) {
@@ -1788,84 +1855,157 @@
       editBtn.type = 'button';
       editBtn.innerHTML = SVG.pencil + (match.winner ? ' Editar' : ' Resultado');
       editBtn.addEventListener('click', () => openScoreModal(rIdx, mIdx));
-      header.appendChild(editBtn);
-    } else if (isFinished && !isAdmin) {
-      const doneSpan = document.createElement('span');
-      doneSpan.style.cssText = 'font-size:11px;color:var(--accent-green);font-weight:600;';
-      doneSpan.innerHTML = SVG.checkCircle + ' Finalizado';
-      header.appendChild(doneSpan);
+      headerRight.appendChild(editBtn);
     }
 
+    header.appendChild(headerRight);
     card.appendChild(header);
 
-    // LIVE BADGE BAR
-    if (isLive || isPaused) {
-      const liveBadge = document.createElement('div');
-      liveBadge.className = 'live-badge-bar';
+    /* ── SCORE AREA (PRIMARY FOCUS) ── */
+    const scoreArea = document.createElement('div');
+    scoreArea.className = 'mc-score-area';
+    if (isLive) scoreArea.classList.add('mc-score-live');
 
-      const dot = document.createElement('span');
-      dot.className = 'live-dot';
-      liveBadge.appendChild(dot);
+    const t1Name = match.team1 ? (match.team1.teamName || match.team1.playerName || 'A definir') : 'A definir';
+    const t2Name = match.team2 ? (match.team2.teamName || match.team2.playerName || 'A definir') : 'A definir';
 
-      const txt = document.createElement('span');
-      txt.className = isLive ? 'live-text' : 'paused-text';
-      txt.textContent = isLive ? 'AO VIVO' : 'PAUSADO';
-      liveBadge.appendChild(txt);
+    const hasScore = bothTeams && (isLive || isPaused || isFinished);
+    const s1 = match.team1 ? (match.team1.score || 0) : 0;
+    const s2 = match.team2 ? (match.team2.score || 0) : 0;
 
-      // Ida/Volta leg indicator
-      if (state.twoLegged && match.currentLeg) {
-        const legBadge = document.createElement('span');
-        legBadge.className = 'live-leg-badge';
-        legBadge.textContent = match.currentLeg === 'ida' ? 'Ida' : 'Volta';
-        liveBadge.appendChild(legBadge);
-      }
+    // Player 1 side
+    const p1Div = document.createElement('div');
+    p1Div.className = 'mc-player';
+    if (match.winner === 1) p1Div.classList.add('mc-winner');
+    if (match.winner === 2) p1Div.classList.add('mc-loser');
 
-      // Timer display
-      const timerEl = document.createElement('span');
-      timerEl.className = 'live-timer';
-      timerEl.textContent = formatElapsed(getMatchElapsedSeconds(match));
-      liveBadge.appendChild(timerEl);
+    const p1Avatar = createAvatarElement(match.team1);
+    p1Div.appendChild(p1Avatar);
 
-      card.appendChild(liveBadge);
+    const p1NameEl = document.createElement('span');
+    p1NameEl.className = 'mc-player-name';
+    p1NameEl.textContent = sanitize(t1Name);
+    p1Div.appendChild(p1NameEl);
 
-      // Start updating the timer if live
-      if (isLive) {
-        setTimeout(() => startLiveTimerDisplay(match.id, timerEl, match), 0);
-      }
+    // Score display
+    const scoreCenter = document.createElement('div');
+    scoreCenter.className = 'mc-score-center';
+
+    if (hasScore) {
+      scoreCenter.innerHTML = `<span class="mc-score-num">${sanitize(String(s1))}</span><span class="mc-score-x">x</span><span class="mc-score-num">${sanitize(String(s2))}</span>`;
+    } else if (bothTeams) {
+      scoreCenter.innerHTML = '<span class="mc-score-vs">VS</span>';
+    } else {
+      scoreCenter.innerHTML = '<span class="mc-score-vs">-</span>';
     }
 
-    // SCHEDULED BADGE
-    if (isScheduled && !isLive && !isPaused) {
-      const schedBadge = document.createElement('div');
-      schedBadge.className = 'scheduled-badge-bar';
-      schedBadge.innerHTML = SVG.clock + ' <span class="scheduled-text">Agendada</span>';
-      card.appendChild(schedBadge);
+    // Player 2 side
+    const p2Div = document.createElement('div');
+    p2Div.className = 'mc-player';
+    if (match.winner === 2) p2Div.classList.add('mc-winner');
+    if (match.winner === 1) p2Div.classList.add('mc-loser');
+
+    const p2Avatar = createAvatarElement(match.team2);
+    p2Div.appendChild(p2Avatar);
+
+    const p2NameEl = document.createElement('span');
+    p2NameEl.className = 'mc-player-name';
+    p2NameEl.textContent = sanitize(t2Name);
+    p2Div.appendChild(p2NameEl);
+
+    scoreArea.appendChild(p1Div);
+    scoreArea.appendChild(scoreCenter);
+    scoreArea.appendChild(p2Div);
+
+    // Transparent drag-and-drop overlay slots (positioned over score area)
+    const slot1 = createTeamSlot(match.team1, match, 1);
+    slot1.className += ' mc-dnd-overlay mc-dnd-left';
+    scoreArea.appendChild(slot1);
+    const slot2 = createTeamSlot(match.team2, match, 2);
+    slot2.className += ' mc-dnd-overlay mc-dnd-right';
+    scoreArea.appendChild(slot2);
+
+    card.appendChild(scoreArea);
+
+    /* ── AGGREGATE INFO (SECONDARY INFO) ── */
+    if (shouldShowAggregate(match)) {
+      const ida1 = match.scoreIda1 || 0;
+      const ida2 = match.scoreIda2 || 0;
+
+      let agg1, agg2;
+      if (match.currentLeg === 'volta') {
+        agg1 = ida1 + s1;
+        agg2 = ida2 + s2;
+      } else {
+        agg1 = s1;
+        agg2 = s2;
+      }
+
+      const aggBar = document.createElement('div');
+      aggBar.className = 'match-aggregate-bar';
+
+      if (match.currentLeg === 'volta') {
+        aggBar.innerHTML = `
+          <div class="agg-legs">
+            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(ida1))} x ${sanitize(String(ida2))}</strong></span>
+            <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${sanitize(String(s1))} x ${sanitize(String(s2))}</strong></span>
+          </div>
+          <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} x ${sanitize(String(agg2))}</strong></div>
+        `;
+      } else {
+        aggBar.innerHTML = `
+          <div class="agg-legs">
+            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(s1))} x ${sanitize(String(s2))}</strong></span>
+          </div>
+          <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} x ${sanitize(String(agg2))}</strong></div>
+        `;
+      }
+      card.appendChild(aggBar);
     }
 
-    // DATE/TIME BAR DIRECTLY INTO CARD — only if not live/paused and not finished
+    // Also show ida/volta detail for finished two-legged matches
+    if (isFinished && state.twoLegged && match.scoreIda1 !== undefined) {
+      const ida1 = match.scoreIda1 || 0;
+      const ida2 = match.scoreIda2 || 0;
+      const volta1 = match.scoreVolta1 || 0;
+      const volta2 = match.scoreVolta2 || 0;
+      const agg1 = ida1 + volta1;
+      const agg2 = ida2 + volta2;
+
+      const aggBar = document.createElement('div');
+      aggBar.className = 'match-aggregate-bar match-aggregate-finished';
+      aggBar.innerHTML = `
+        <div class="agg-legs">
+          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(ida1))} x ${sanitize(String(ida2))}</strong></span>
+          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${sanitize(String(volta1))} x ${sanitize(String(volta2))}</strong></span>
+        </div>
+        <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} x ${sanitize(String(agg2))}</strong></div>
+      `;
+      card.appendChild(aggBar);
+    }
+
+    // Penalty info
+    if (match.penalties) {
+      const penDiv = document.createElement('div');
+      penDiv.className = 'match-penalty-info';
+      penDiv.innerHTML = `Penaltis: ${match.penalties.team1 || 0} x ${match.penalties.team2 || 0}`;
+      card.appendChild(penDiv);
+    }
+
+    /* ── DATE/TIME BAR ── */
     if (canEdit && !match.winner && !isLive && !isPaused) {
       const dtBar = document.createElement('div');
-      dtBar.className = 'list-mode-dtbar';
-      dtBar.style.display = 'flex';
-      dtBar.style.alignItems = 'center';
-      dtBar.style.justifyContent = 'center';
-      dtBar.style.gap = '8px';
-      dtBar.style.background = 'rgba(255, 255, 255, 0.08)';
-      dtBar.style.margin = '4px 12px 0 12px';
-      dtBar.style.borderRadius = '6px';
-      dtBar.style.padding = '4px 8px';
+      dtBar.className = 'mc-datetime-bar';
       dtBar.addEventListener('click', e => e.stopPropagation());
 
-      const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; text-align: center; max-width: 90px;';
+      const inptStyle = 'background: transparent; border: none; color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600; font-family: inherit; outline: none; cursor: pointer; padding: 2px 0; text-align: center; max-width: 90px;';
 
       const dateInp = document.createElement('input');
       dateInp.type = 'date';
       dateInp.style.cssText = inptStyle;
 
       const divi = document.createElement('div');
-      divi.style.width = '1px';
-      divi.style.height = '12px';
-      divi.style.backgroundColor = 'rgba(255,255,255,0.2)';
+      divi.className = 'mc-dt-divider';
 
       const timeInp = document.createElement('input');
       timeInp.type = 'time';
@@ -1907,7 +2047,7 @@
       card.appendChild(dtBar);
     } else if (match.dateTime && !isLive && !isPaused) {
       const dtBar = document.createElement('div');
-      dtBar.className = 'match-datetime-bar readonly';
+      dtBar.className = 'mc-datetime-bar mc-datetime-readonly';
 
       try {
         const [datePart, timePart] = match.dateTime.split('T');
@@ -1919,110 +2059,35 @@
           formatted = 'Hoje';
         }
         if (timePart) {
-          formatted += (formatted ? ' às ' : '') + timePart;
+          formatted += (formatted ? ' \u00e0s ' : '') + timePart;
         }
-        dtBar.innerHTML = `<span style="font-size:11px;font-weight:700;color:inherit;display:flex;align-items:center;gap:4px;"><svg class="svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${formatted}</span>`;
+        dtBar.innerHTML = `<span class="mc-dt-text">${SVG.clock} ${sanitize(formatted)}</span>`;
       } catch (_) {
-        dtBar.textContent = match.dateTime;
+        dtBar.textContent = match.dateTime || '';
       }
       card.appendChild(dtBar);
     }
 
-    // Team 1 slot
-    card.appendChild(createTeamSlot(match.team1, match, 1));
-
-    // Team 2 slot
-    card.appendChild(createTeamSlot(match.team2, match, 2));
-
-    // Aggregate score display for two-legged matches (live or finished)
-    if (shouldShowAggregate(match)) {
-      const s1 = match.team1 ? (match.team1.score || 0) : 0;
-      const s2 = match.team2 ? (match.team2.score || 0) : 0;
-      const ida1 = match.scoreIda1 || 0;
-      const ida2 = match.scoreIda2 || 0;
-
-      let agg1, agg2;
-      if (match.currentLeg === 'volta') {
-        agg1 = ida1 + s1;
-        agg2 = ida2 + s2;
-      } else {
-        agg1 = s1;
-        agg2 = s2;
-      }
-
-      const aggBar = document.createElement('div');
-      aggBar.className = 'match-aggregate-bar';
-
-      if (match.currentLeg === 'volta') {
-        aggBar.innerHTML = `
-          <div class="agg-legs">
-            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(ida1))} × ${sanitize(String(ida2))}</strong></span>
-            <span class="agg-leg-divider">|</span>
-            <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${sanitize(String(s1))} × ${sanitize(String(s2))}</strong></span>
-          </div>
-          <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} × ${sanitize(String(agg2))}</strong></div>
-        `;
-      } else {
-        aggBar.innerHTML = `
-          <div class="agg-legs">
-            <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(s1))} × ${sanitize(String(s2))}</strong></span>
-          </div>
-          <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} × ${sanitize(String(agg2))}</strong></div>
-        `;
-      }
-      card.appendChild(aggBar);
-    }
-
-    // Also show ida/volta detail for finished two-legged matches
-    if (isFinished && state.twoLegged && match.scoreIda1 !== undefined) {
-      const ida1 = match.scoreIda1 || 0;
-      const ida2 = match.scoreIda2 || 0;
-      const volta1 = match.scoreVolta1 || 0;
-      const volta2 = match.scoreVolta2 || 0;
-      const agg1 = ida1 + volta1;
-      const agg2 = ida2 + volta2;
-
-      const aggBar = document.createElement('div');
-      aggBar.className = 'match-aggregate-bar match-aggregate-finished';
-      aggBar.innerHTML = `
-        <div class="agg-legs">
-          <span class="agg-leg-item agg-leg-ida"><span class="agg-leg-label">Ida</span> <strong>${sanitize(String(ida1))} × ${sanitize(String(ida2))}</strong></span>
-          <span class="agg-leg-divider">|</span>
-          <span class="agg-leg-item agg-leg-volta"><span class="agg-leg-label">Volta</span> <strong>${sanitize(String(volta1))} × ${sanitize(String(volta2))}</strong></span>
-        </div>
-        <div class="agg-total">Agregado: <strong>${sanitize(String(agg1))} × ${sanitize(String(agg2))}</strong></div>
-      `;
-      card.appendChild(aggBar);
-    }
-
-    // Penalty info
-    if (match.penalties) {
-      const penDiv = document.createElement('div');
-      penDiv.className = 'match-penalty-info';
-      penDiv.innerHTML = `Pênaltis: ${match.penalties.team1} <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;"><path d="M18 6 6 18M6 6l12 12"/></svg> ${match.penalties.team2}`;
-      card.appendChild(penDiv);
-    }
-
-    // LIVE SCORE CONTROLS (admin only, during live/paused)
+    /* ── LIVE SCORE CONTROLS (admin only) ── */
     if (isAdmin && (isLive || isPaused) && match.team1 && match.team2) {
       const scoreControls = document.createElement('div');
       scoreControls.className = 'live-score-controls';
       scoreControls.addEventListener('click', e => e.stopPropagation());
 
-      const t1Name = (match.team1.teamName || match.team1.playerName || '').substring(0, 6);
-      const t2Name = (match.team2.teamName || match.team2.playerName || '').substring(0, 6);
+      const t1Short = (match.team1.teamName || match.team1.playerName || '').substring(0, 6);
+      const t2Short = (match.team2.teamName || match.team2.playerName || '').substring(0, 6);
 
       scoreControls.innerHTML = `
         <div class="live-score-team">
-          <button type="button" class="live-score-btn btn-minus-t1" title="−1 ${sanitize(t1Name)}">−</button>
+          <button type="button" class="live-score-btn btn-minus-t1" title="-1 ${sanitize(t1Short)}">-</button>
           <span class="live-score-value" data-team="1">${match.team1.score || 0}</span>
-          <button type="button" class="live-score-btn btn-plus-t1" title="+1 ${sanitize(t1Name)}">+</button>
+          <button type="button" class="live-score-btn btn-plus-t1" title="+1 ${sanitize(t1Short)}">+</button>
         </div>
-        <span class="live-score-vs">×</span>
+        <span class="live-score-vs">x</span>
         <div class="live-score-team">
-          <button type="button" class="live-score-btn btn-minus-t2" title="−1 ${sanitize(t2Name)}">−</button>
+          <button type="button" class="live-score-btn btn-minus-t2" title="-1 ${sanitize(t2Short)}">-</button>
           <span class="live-score-value" data-team="2">${match.team2.score || 0}</span>
-          <button type="button" class="live-score-btn btn-plus-t2" title="+1 ${sanitize(t2Name)}">+</button>
+          <button type="button" class="live-score-btn btn-plus-t2" title="+1 ${sanitize(t2Short)}">+</button>
         </div>
       `;
 
@@ -2034,7 +2099,7 @@
       card.appendChild(scoreControls);
     }
 
-    // ADMIN LIVE CONTROL BUTTONS
+    /* ── ADMIN LIVE CONTROL BUTTONS ── */
     if (isAdmin && bothTeams && !isFinished) {
       const controls = document.createElement('div');
       controls.className = 'live-admin-controls';
@@ -2074,79 +2139,151 @@
       const canFinalize = !isTwoLegged || match.currentLeg === 'volta';
 
       if (isLive) {
+        // Line 1: Pausar + Finalizar
+        const row1 = document.createElement('div');
+        row1.className = 'mc-ctrl-row';
+
         const pauseBtn = document.createElement('button');
         pauseBtn.type = 'button';
         pauseBtn.className = 'live-ctrl-btn btn-pause-live';
-        pauseBtn.textContent = '⏸ Pausar';
+        pauseBtn.innerHTML = SVG.pause + ' Pausar';
         pauseBtn.addEventListener('click', () => pauseLiveMatch(rIdx, mIdx));
-        controls.appendChild(pauseBtn);
+        row1.appendChild(pauseBtn);
 
         if (canFinalize) {
           const endBtn = document.createElement('button');
           endBtn.type = 'button';
           endBtn.className = 'live-ctrl-btn btn-end-live';
-          endBtn.textContent = '✓ Encerrar partida';
+          endBtn.innerHTML = SVG.check + ' Finalizar';
           endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
-          controls.appendChild(endBtn);
+          row1.appendChild(endBtn);
         }
+
+        controls.appendChild(row1);
+
+        // Line 2: Cancelar
+        const row2 = document.createElement('div');
+        row2.className = 'mc-ctrl-row';
 
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
         cancelBtn.className = 'live-ctrl-btn btn-cancel-live';
-        cancelBtn.textContent = '✕ Cancelar ao vivo';
+        cancelBtn.innerHTML = SVG.xMark + ' Cancelar';
         cancelBtn.addEventListener('click', () => cancelLiveMatch(rIdx, mIdx));
-        controls.appendChild(cancelBtn);
+        row2.appendChild(cancelBtn);
+
+        controls.appendChild(row2);
       }
 
       if (isPaused) {
+        // Line 1: Retomar + Finalizar
+        const row1 = document.createElement('div');
+        row1.className = 'mc-ctrl-row';
+
         const resumeBtn = document.createElement('button');
         resumeBtn.type = 'button';
         resumeBtn.className = 'live-ctrl-btn btn-start-live';
-        resumeBtn.textContent = '▶ Retomar';
+        resumeBtn.innerHTML = SVG.play + ' Retomar';
         resumeBtn.addEventListener('click', () => resumeLiveMatch(rIdx, mIdx));
-        controls.appendChild(resumeBtn);
+        row1.appendChild(resumeBtn);
 
         if (canFinalize) {
           const endBtn = document.createElement('button');
           endBtn.type = 'button';
           endBtn.className = 'live-ctrl-btn btn-end-live';
-          endBtn.textContent = '✓ Encerrar partida';
+          endBtn.innerHTML = SVG.check + ' Finalizar';
           endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
-          controls.appendChild(endBtn);
+          row1.appendChild(endBtn);
         }
+
+        controls.appendChild(row1);
+
+        // Line 2: Cancelar
+        const row2 = document.createElement('div');
+        row2.className = 'mc-ctrl-row';
 
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
         cancelBtn.className = 'live-ctrl-btn btn-cancel-live';
-        cancelBtn.textContent = '✕ Cancelar ao vivo';
+        cancelBtn.innerHTML = SVG.xMark + ' Cancelar';
         cancelBtn.addEventListener('click', () => cancelLiveMatch(rIdx, mIdx));
-        controls.appendChild(cancelBtn);
+        row2.appendChild(cancelBtn);
+
+        controls.appendChild(row2);
       }
 
       card.appendChild(controls);
     }
 
-    // LIVE EVENTS LOG (show recent events for live/paused matches)
+    /* ── COLLAPSIBLE EVENT LOG ── */
     if ((isLive || isPaused) && match.liveEvents && match.liveEvents.length > 0) {
-      const logDiv = document.createElement('div');
-      logDiv.className = 'live-events-log';
+      const logWrapper = document.createElement('div');
+      logWrapper.className = 'mc-events-wrapper';
 
-      // Show most recent events (up to 5)
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'mc-events-toggle';
+      toggleBtn.innerHTML = SVG.chevronDown + ' <span>Ver eventos</span>';
+
+      const logDiv = document.createElement('div');
+      logDiv.className = 'live-events-log mc-events-collapsed';
+
       const recentEvents = match.liveEvents.slice(-5);
       recentEvents.forEach(evt => {
         const item = document.createElement('div');
         item.className = 'live-event-item';
+        const evtIcon = evt.type === 'goal' ? SVG.goal : '';
         item.innerHTML = `
-          <span class="event-time">${sanitize(evt.time)}</span>
-          <span class="event-desc">${sanitize(evt.desc)}</span>
+          <span class="event-time">${sanitize(evt.time || '00:00')}</span>
+          ${evtIcon ? '<span class="event-icon-svg">' + evtIcon + '</span>' : ''}
+          <span class="event-desc">${sanitize(evt.desc || '')}</span>
         `;
         logDiv.appendChild(item);
       });
 
-      card.appendChild(logDiv);
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isCollapsed = logDiv.classList.contains('mc-events-collapsed');
+        if (isCollapsed) {
+          logDiv.classList.remove('mc-events-collapsed');
+          toggleBtn.innerHTML = SVG.chevronUp + ' <span>Ocultar eventos</span>';
+        } else {
+          logDiv.classList.add('mc-events-collapsed');
+          toggleBtn.innerHTML = SVG.chevronDown + ' <span>Ver eventos</span>';
+        }
+      });
+
+      logWrapper.appendChild(toggleBtn);
+      logWrapper.appendChild(logDiv);
+      card.appendChild(logWrapper);
     }
 
     return card;
+  }
+
+  /**
+   * Helper to create an avatar element for the score area.
+   */
+  function createAvatarElement(team) {
+    const avatar = document.createElement('div');
+    avatar.className = 'mc-avatar';
+    if (!team) {
+      avatar.innerHTML = '<span class="mc-av-placeholder">?</span>';
+      return avatar;
+    }
+    if (team.photo) {
+      const img = document.createElement('img');
+      img.src = team.photo;
+      img.alt = team.teamName || team.playerName || '';
+      img.loading = 'lazy';
+      avatar.appendChild(img);
+    } else {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'mc-av-placeholder';
+      placeholder.textContent = (team.teamName || team.playerName || '?').charAt(0).toUpperCase();
+      avatar.appendChild(placeholder);
+    }
+    return avatar;
   }
 
   /**
@@ -2652,7 +2789,7 @@
 
     if (delta > 0) {
       const teamName = team.teamName || team.playerName;
-      addLiveEvent(match, 'goal', `⚽ Gol! ${teamName} (${newScore})`);
+      addLiveEvent(match, 'goal', `Gol! ${teamName} (${newScore})`);
     }
 
     saveState();
