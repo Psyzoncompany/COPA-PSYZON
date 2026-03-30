@@ -1603,8 +1603,8 @@
 
     // Reset any previous adjustments before recalculating
     rounds.forEach(round => {
-      round.querySelectorAll('.match-card').forEach(card => {
-        card.style.top = '';
+      round.querySelectorAll('.match-card-wrapper').forEach(wrapper => {
+        wrapper.style.top = '';
       });
     });
 
@@ -1614,9 +1614,11 @@
     // Collect center Y of each card per round
     const roundCenters = [];
     rounds.forEach(round => {
-      const cards = round.querySelectorAll('.match-card');
+      const wrappers = round.querySelectorAll('.match-card-wrapper');
       const centers = [];
-      cards.forEach(card => {
+      wrappers.forEach(wrapper => {
+        const card = wrapper.querySelector('.match-card');
+        if (!card) return;
         const teams = card.querySelectorAll('.match-team');
         let centerY;
         if (teams.length >= 2) {
@@ -1635,9 +1637,9 @@
     // Adjust subsequent rounds so each card is centered between its two predecessors
     for (let r = 1; r < rounds.length; r++) {
       const prevCenters = roundCenters[r - 1];
-      const cards = rounds[r].querySelectorAll('.match-card');
+      const wrappers = rounds[r].querySelectorAll('.match-card-wrapper');
 
-      for (let m = 0; m < cards.length; m++) {
+      for (let m = 0; m < wrappers.length; m++) {
         const p1 = m * 2;
         const p2 = m * 2 + 1;
         if (p1 >= prevCenters.length || p2 >= prevCenters.length) continue;
@@ -1648,8 +1650,8 @@
 
         if (Math.abs(offset) > 0.5) {
           // Use relative positioning to shift without affecting flex siblings
-          cards[m].style.position = 'relative';
-          cards[m].style.top = offset + 'px';
+          wrappers[m].style.position = 'relative';
+          wrappers[m].style.top = offset + 'px';
           // Update center for cascading adjustments to later rounds
           roundCenters[r][m] = idealCenter;
         }
@@ -1757,6 +1759,9 @@
   function createMatchCard(match, rIdx, mIdx) {
     ensureLiveFields(match);
 
+    const wrapper = document.createElement('div');
+    wrapper.className = 'match-card-wrapper';
+
     const card = document.createElement('div');
     card.className = 'match-card';
     card.dataset.matchId = match.id;
@@ -1840,92 +1845,6 @@
       schedBadge.className = 'scheduled-badge-bar';
       schedBadge.innerHTML = SVG.clock + ' <span class="scheduled-text">Agendada</span>';
       card.appendChild(schedBadge);
-    }
-
-    // DATE/TIME BAR DIRECTLY INTO CARD — only if not live/paused and not finished
-    if (canEdit && !match.winner && !isLive && !isPaused) {
-      const dtBar = document.createElement('div');
-      dtBar.className = 'list-mode-dtbar';
-      dtBar.style.display = 'flex';
-      dtBar.style.alignItems = 'center';
-      dtBar.style.justifyContent = 'center';
-      dtBar.style.gap = '8px';
-      dtBar.style.background = 'rgba(255, 255, 255, 0.08)';
-      dtBar.style.margin = '4px 12px 0 12px';
-      dtBar.style.borderRadius = '6px';
-      dtBar.style.padding = '4px 8px';
-      dtBar.addEventListener('click', e => e.stopPropagation());
-
-      const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; text-align: center; max-width: 90px;';
-
-      const dateInp = document.createElement('input');
-      dateInp.type = 'date';
-      dateInp.style.cssText = inptStyle;
-
-      const divi = document.createElement('div');
-      divi.style.width = '1px';
-      divi.style.height = '12px';
-      divi.style.backgroundColor = 'rgba(255,255,255,0.2)';
-
-      const timeInp = document.createElement('input');
-      timeInp.type = 'time';
-      timeInp.style.cssText = inptStyle;
-
-      if (match.dateTime) {
-        const parts = match.dateTime.split('T');
-        if (parts[0] && parts[0] !== 'HOJE') dateInp.value = parts[0];
-        if (parts[1]) timeInp.value = parts[1];
-      }
-
-      const saveDateTime = () => {
-        const dVal = dateInp.value || 'HOJE';
-        const tVal = timeInp.value;
-        if (dateInp.value || timeInp.value) {
-          match.dateTime = dVal + (tVal ? 'T' + tVal : '');
-          if (match.status === 'not_started') {
-            match.status = 'scheduled';
-          }
-        } else {
-          match.dateTime = null;
-          if (match.status === 'scheduled') {
-            match.status = 'not_started';
-          }
-        }
-        saveState();
-        renderBracket();
-      };
-
-      dateInp.addEventListener('change', saveDateTime);
-      timeInp.addEventListener('change', () => {
-        if (!dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
-        saveDateTime();
-      });
-
-      dtBar.appendChild(dateInp);
-      dtBar.appendChild(divi);
-      dtBar.appendChild(timeInp);
-      card.appendChild(dtBar);
-    } else if (match.dateTime && !isLive && !isPaused) {
-      const dtBar = document.createElement('div');
-      dtBar.className = 'match-datetime-bar readonly';
-
-      try {
-        const [datePart, timePart] = match.dateTime.split('T');
-        let formatted = '';
-        if (datePart && datePart !== 'HOJE') {
-          const parts = datePart.split('-');
-          formatted = parts.length === 3 ? `${parts[2]}/${parts[1]}` : datePart;
-        } else if (datePart === 'HOJE') {
-          formatted = 'Hoje';
-        }
-        if (timePart) {
-          formatted += (formatted ? ' às ' : '') + timePart;
-        }
-        dtBar.innerHTML = `<span style="font-size:11px;font-weight:700;color:inherit;display:flex;align-items:center;gap:4px;"><svg class="svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${formatted}</span>`;
-      } catch (_) {
-        dtBar.textContent = match.dateTime;
-      }
-      card.appendChild(dtBar);
     }
 
     // Team 1 slot
@@ -2041,12 +1960,21 @@
         pauseBtn.addEventListener('click', () => pauseLiveMatch(rIdx, mIdx));
         controls.appendChild(pauseBtn);
 
-        const endBtn = document.createElement('button');
-        endBtn.type = 'button';
-        endBtn.className = 'live-ctrl-btn btn-end-live';
-        endBtn.textContent = '✓ Encerrar partida';
-        endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
-        controls.appendChild(endBtn);
+        if (isTwoLegged && match.currentLeg === 'ida') {
+          const endIdaBtn = document.createElement('button');
+          endIdaBtn.type = 'button';
+          endIdaBtn.className = 'live-ctrl-btn btn-end-ida';
+          endIdaBtn.textContent = '✓ Encerrar Ida';
+          endIdaBtn.addEventListener('click', () => finalizeIdaLeg(rIdx, mIdx));
+          controls.appendChild(endIdaBtn);
+        } else {
+          const endBtn = document.createElement('button');
+          endBtn.type = 'button';
+          endBtn.className = 'live-ctrl-btn btn-end-live';
+          endBtn.textContent = '✓ Encerrar partida';
+          endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
+          controls.appendChild(endBtn);
+        }
 
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
@@ -2064,12 +1992,21 @@
         resumeBtn.addEventListener('click', () => resumeLiveMatch(rIdx, mIdx));
         controls.appendChild(resumeBtn);
 
-        const endBtn = document.createElement('button');
-        endBtn.type = 'button';
-        endBtn.className = 'live-ctrl-btn btn-end-live';
-        endBtn.textContent = '✓ Encerrar partida';
-        endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
-        controls.appendChild(endBtn);
+        if (isTwoLegged && match.currentLeg === 'ida') {
+          const endIdaBtn = document.createElement('button');
+          endIdaBtn.type = 'button';
+          endIdaBtn.className = 'live-ctrl-btn btn-end-ida';
+          endIdaBtn.textContent = '✓ Encerrar Ida';
+          endIdaBtn.addEventListener('click', () => finalizeIdaLeg(rIdx, mIdx));
+          controls.appendChild(endIdaBtn);
+        } else {
+          const endBtn = document.createElement('button');
+          endBtn.type = 'button';
+          endBtn.className = 'live-ctrl-btn btn-end-live';
+          endBtn.textContent = '✓ Encerrar partida';
+          endBtn.addEventListener('click', () => showFinalizeConfirm(rIdx, mIdx));
+          controls.appendChild(endBtn);
+        }
 
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
@@ -2102,7 +2039,88 @@
       card.appendChild(logDiv);
     }
 
-    return card;
+    // Add card to wrapper
+    wrapper.appendChild(card);
+
+    // DATE/TIME BAR OUTSIDE CARD — visible on the bracket, below the card
+    if (canEdit && !match.winner && !isLive && !isPaused) {
+      const dtBar = document.createElement('div');
+      dtBar.className = 'match-dt-footer';
+      dtBar.addEventListener('click', e => e.stopPropagation());
+
+      const inptStyle = 'background: transparent; border: none; color: #ccc; font-size: 11px; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding: 0; text-align: center; max-width: 90px;';
+
+      const dateInp = document.createElement('input');
+      dateInp.type = 'date';
+      dateInp.style.cssText = inptStyle;
+
+      const divi = document.createElement('div');
+      divi.style.width = '1px';
+      divi.style.height = '12px';
+      divi.style.backgroundColor = 'rgba(255,255,255,0.2)';
+
+      const timeInp = document.createElement('input');
+      timeInp.type = 'time';
+      timeInp.style.cssText = inptStyle;
+
+      if (match.dateTime) {
+        const parts = match.dateTime.split('T');
+        if (parts[0] && parts[0] !== 'HOJE') dateInp.value = parts[0];
+        if (parts[1]) timeInp.value = parts[1];
+      }
+
+      const saveDateTime = () => {
+        const dVal = dateInp.value || 'HOJE';
+        const tVal = timeInp.value;
+        if (dateInp.value || timeInp.value) {
+          match.dateTime = dVal + (tVal ? 'T' + tVal : '');
+          if (match.status === 'not_started') {
+            match.status = 'scheduled';
+          }
+        } else {
+          match.dateTime = null;
+          if (match.status === 'scheduled') {
+            match.status = 'not_started';
+          }
+        }
+        saveState();
+        renderBracket();
+      };
+
+      dateInp.addEventListener('change', saveDateTime);
+      timeInp.addEventListener('change', () => {
+        if (!dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
+        saveDateTime();
+      });
+
+      dtBar.appendChild(dateInp);
+      dtBar.appendChild(divi);
+      dtBar.appendChild(timeInp);
+      wrapper.appendChild(dtBar);
+    } else if (match.dateTime && !isLive && !isPaused) {
+      const dtBar = document.createElement('div');
+      dtBar.className = 'match-dt-footer readonly';
+
+      try {
+        const [datePart, timePart] = match.dateTime.split('T');
+        let formatted = '';
+        if (datePart && datePart !== 'HOJE') {
+          const parts = datePart.split('-');
+          formatted = parts.length === 3 ? `${parts[2]}/${parts[1]}` : datePart;
+        } else if (datePart === 'HOJE') {
+          formatted = 'Hoje';
+        }
+        if (timePart) {
+          formatted += (formatted ? ' às ' : '') + timePart;
+        }
+        dtBar.innerHTML = `<span style="font-size:11px;font-weight:700;color:inherit;display:flex;align-items:center;gap:4px;"><svg class="svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${formatted}</span>`;
+      } catch (_) {
+        dtBar.textContent = match.dateTime;
+      }
+      wrapper.appendChild(dtBar);
+    }
+
+    return wrapper;
   }
 
   /**
@@ -2645,6 +2663,47 @@
     const m = Math.floor(totalSeconds / 60);
     const s = totalSeconds % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  /**
+   * Finalize the ida (first) leg of a two-legged match.
+   * Saves ida scores, resets for volta, and transitions the match.
+   */
+  function finalizeIdaLeg(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+    const match = bracket.rounds[rIdx].matches[mIdx];
+    if (!match) return;
+
+    ensureLiveFields(match);
+
+    // Accumulate elapsed time
+    if (match.liveStartedAt) {
+      match.liveElapsed = (match.liveElapsed || 0) + (Date.now() - match.liveStartedAt);
+      match.liveStartedAt = null;
+    }
+
+    // Save ida scores
+    const s1 = match.team1 ? (match.team1.score || 0) : 0;
+    const s2 = match.team2 ? (match.team2.score || 0) : 0;
+    match.scoreIda1 = s1;
+    match.scoreIda2 = s2;
+
+    addLiveEvent(match, 'leg_end', `Jogo de Ida finalizado (${s1}×${s2})`);
+
+    // Transition to volta leg
+    match.currentLeg = 'volta';
+    match.status = match.dateTime ? 'scheduled' : 'not_started';
+    match.liveElapsed = 0;
+    match.liveStartedAt = null;
+
+    // Reset current scores for volta leg
+    if (match.team1) match.team1.score = 0;
+    if (match.team2) match.team2.score = 0;
+
+    saveState();
+    renderBracket();
+    showToast('Jogo de Ida finalizado! Prepare o Jogo de Volta.', 'success');
   }
 
   /**
