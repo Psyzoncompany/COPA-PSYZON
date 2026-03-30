@@ -2689,7 +2689,7 @@
     match.scoreIda1 = s1;
     match.scoreIda2 = s2;
 
-    addLiveEvent(match, 'end', `Jogo de Ida finalizado (${s1}×${s2})`);
+    addLiveEvent(match, 'leg_end', `Jogo de Ida finalizado (${s1}×${s2})`);
 
     // Transition to volta leg
     match.currentLeg = 'volta';
