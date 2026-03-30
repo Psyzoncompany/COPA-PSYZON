@@ -1917,15 +1917,15 @@
     scoreArea.appendChild(scoreCenter);
     scoreArea.appendChild(p2Div);
 
-    card.appendChild(scoreArea);
-
-    // Keep hidden team slots for drag-and-drop functionality
+    // Transparent drag-and-drop overlay slots (positioned over score area)
     const slot1 = createTeamSlot(match.team1, match, 1);
-    slot1.className += ' mc-hidden-slot';
-    card.appendChild(slot1);
+    slot1.className += ' mc-dnd-overlay mc-dnd-left';
+    scoreArea.appendChild(slot1);
     const slot2 = createTeamSlot(match.team2, match, 2);
-    slot2.className += ' mc-hidden-slot';
-    card.appendChild(slot2);
+    slot2.className += ' mc-dnd-overlay mc-dnd-right';
+    scoreArea.appendChild(slot2);
+
+    card.appendChild(scoreArea);
 
     /* ── AGGREGATE INFO (SECONDARY INFO) ── */
     if (shouldShowAggregate(match)) {
@@ -2059,7 +2059,7 @@
           formatted = 'Hoje';
         }
         if (timePart) {
-          formatted += (formatted ? ' as ' : '') + timePart;
+          formatted += (formatted ? ' \u00e0s ' : '') + timePart;
         }
         dtBar.innerHTML = `<span class="mc-dt-text">${SVG.clock} ${sanitize(formatted)}</span>`;
       } catch (_) {

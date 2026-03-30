@@ -2033,6 +2033,7 @@ textarea::placeholder {
   padding: 14px 12px;
   gap: 8px;
   background: rgba(0, 0, 0, 0.15);
+  position: relative;
 }
 
 .mc-score-area.mc-score-live {
@@ -2146,17 +2147,37 @@ textarea::placeholder {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* Hidden team slots for drag-and-drop */
-.mc-hidden-slot {
+/* Transparent drag-and-drop overlay slots */
+.mc-dnd-overlay {
   position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 50% !important;
+  height: 100% !important;
+  min-height: unset !important;
   padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  z-index: 3;
+  cursor: grab;
+  border: none !important;
+  background: transparent !important;
+}
+
+.mc-dnd-overlay.mc-dnd-left {
+  left: 0 !important;
+}
+
+.mc-dnd-overlay.mc-dnd-right {
+  right: 0 !important;
+  left: auto !important;
+}
+
+.mc-dnd-overlay.drag-over {
+  opacity: 0.15 !important;
+  background: var(--accent-blue) !important;
+  border: 2px dashed var(--accent-blue) !important;
+  border-radius: 8px;
 }
 
 /* Scheduled badge in header */
