@@ -1468,6 +1468,32 @@ textarea::placeholder {
 }
 
 /* ---------- 14b. Match Card ---------- */
+.match-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 260px;
+}
+
+.match-dt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.match-dt-footer.readonly {
+  padding: 3px 10px;
+  color: var(--text-tertiary);
+}
+
 .match-card {
   background: rgba(45, 53, 70, 0.5);
   backdrop-filter: blur(8px);
@@ -1945,6 +1971,16 @@ textarea::placeholder {
 
 .live-ctrl-btn.btn-end-live:hover {
   background: rgba(102, 223, 117, 0.22);
+}
+
+.live-ctrl-btn.btn-end-ida {
+  background: rgba(173, 199, 255, 0.12);
+  border-color: rgba(173, 199, 255, 0.3);
+  color: var(--primary);
+}
+
+.live-ctrl-btn.btn-end-ida:hover {
+  background: rgba(173, 199, 255, 0.22);
 }
 
 /* Event log mini timeline */
