@@ -7,15 +7,13 @@
   <title>COPA PSYZON</title>
   <meta name="description" content="COPA PSYZON — Plataforma de Gerenciamento de Torneio Eliminatório">
   <style>
-    /* Critical: prevent FOUC while CSS loads */
+    /* Windows 2000 style - prevent FOUC */
     body {
-      font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Tahoma', 'Verdana', 'MS Sans Serif', sans-serif;
+      background: #008080;
     }
   </style>
   <link rel="stylesheet" href="style.css">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@100;200;300;400;500;600;700&display=swap"
-    rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet">
 </head>
@@ -36,11 +34,19 @@
 
     <!-- Main Entry Canvas -->
     <main class="login-canvas">
-      <!-- Title Outside (New Layout) -->
-      <h1 class="login-title-new">COPA PSYZON</h1>
-      <p class="login-subtitle-new">EXCEDA OS LIMITES</p>
-
       <div class="login-card-new">
+        <!-- Win2K Title Bar -->
+        <h1 class="login-title-new">
+          <img src="img/prefeitura-logo.png" alt="" style="width:16px;height:16px;object-fit:contain;display:inline-block;flex-shrink:0;">
+          Copa Psyzon
+          <span style="margin-left:auto;display:flex;gap:2px;align-items:center;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:14px;background:#d4d0c8;border:2px outset;color:#000;font-size:9px;font-weight:700;cursor:pointer;line-height:1;">_</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:14px;background:#d4d0c8;border:2px outset;color:#000;font-size:9px;font-weight:700;cursor:pointer;">□</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:14px;background:#d4d0c8;border:2px outset;color:#000;font-size:11px;font-weight:700;cursor:pointer;">✕</span>
+          </span>
+        </h1>
+        <p class="login-subtitle-new">EXCEDA OS LIMITES</p>
+
         <!-- Brand Identity -->
         <div class="login-brand-identity">
           <div class="login-logo-container">
