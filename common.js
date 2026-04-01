@@ -8,7 +8,7 @@ const globalSponsorsHTML = `
     <div class="sponsors-grid">
       <div class="sponsor-placeholder"><img src="PATROCINADORES/ROGERIO.svg" alt="Sponsor ROGERIO"></div>
       <div class="sponsor-placeholder"><img src="PATROCINADORES/JANE JOIAS.png" alt="Sponsor JANE JOIAS"></div>
-      <div class="sponsor-placeholder">Logo Parceiro</div>
+      <div class="sponsor-placeholder"><img src="PATROCINADORES/virtu barbearia.png" alt="Sponsor VIRTU BARBEARIA"></div>
       <div class="sponsor-placeholder">Logo Parceiro</div>
     </div>
   </div>

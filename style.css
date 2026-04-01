@@ -329,7 +329,7 @@ textarea::placeholder {
 
 /* ---------- 5. Login Screen (PREMIUM STYLE) ---------- */
 .login-screen-new {
-  position: absolute; /* Usamos absolute para forçar o scroll natural da própria página (body) */
+  position: relative;
   top: 0;
   left: 0;
   right: 0;
@@ -4079,12 +4079,21 @@ textarea::placeholder {
     transform: translateZ(0);
   }
 
-  #main-app, .login-screen-new, .login-screen {
+  #main-app {
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+  }
+
+  .login-screen-new, .login-screen {
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    -webkit-overflow-scrolling: touch;
   }
 
   .main-content {
