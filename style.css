@@ -50,9 +50,17 @@
   --sidebar-width: 340px;
   --header-height: 72px;
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-title: 'TAN-NIMBUS', cursive;
   --font-headline: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font: var(--font-body);
+}
+
+@font-face {
+  font-family: 'TAN-NIMBUS';
+  src: url('fonts/TAN-NIMBUS.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
 }
 
 /* ---------- 2. Reset / Base ---------- */
@@ -332,9 +340,10 @@ textarea::placeholder {
   background-position: center;
   color: var(--login-on-surface);
   font-family: 'Inter', sans-serif;
-  overflow: auto;
+  overflow-y: auto; /* Garantindo scroll se necessário */
   z-index: 9999;
   -webkit-overflow-scrolling: touch;
+  padding: 40px 0; /* Margem de segurança global */
 }
 
 .login-bg-layers {
@@ -383,7 +392,8 @@ textarea::placeholder {
   z-index: 10;
   width: 100%;
   max-width: 480px;
-  padding: 24px;
+  padding: 60px 24px; /* Aumentado top/bottom para margem de segurança */
+  margin: auto; /* Mantém centralizado no flex se o conteúdo for menor que a tela */
 }
 
 .login-card-new {
@@ -407,42 +417,26 @@ textarea::placeholder {
 }
 
 .login-brand-identity {
-  margin-bottom: 40px;
-}
-
-.login-logo-container {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  background: #060e1e;
-  margin: 0 auto 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(139, 144, 160, 0.4);
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
-  overflow: hidden;
-  /* Garante o formato redondo */
-}
-
-.login-logo-img-new {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Preenche o circulo */
-  transform: scale(1.45);
-  /* Efeito de Zoom levemente reduzido */
-  border-radius: 50%;
+  margin-bottom: 24px;
 }
 
 .login-title-new {
-  font-family: var(--font-headline);
-  font-weight: 900;
-  font-size: 44px;
-  letter-spacing: -0.05em;
+  font-family: var(--font-title);
+  font-weight: normal;
+  font-size: 52px; /* Reduzido para não cortar */
+  letter-spacing: -0.01em;
   color: #fff;
   margin-bottom: 4px;
-  line-height: 1;
+  line-height: 1.1;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  text-transform: none; /* Apenas iniciais em maiúsculo agora no HTML */
+}
+
+.login-title {
+  font-family: var(--font-title);
+  font-weight: normal;
+  text-transform: none;
 }
 
 .login-subtitle-new {
@@ -453,7 +447,28 @@ textarea::placeholder {
   text-transform: uppercase;
   color: var(--on-surface-variant);
   opacity: 0.6;
+  margin-bottom: 32px;
+  text-align: center;
 }
+
+.login-logo-container {
+  width: 100%;
+  margin: 0 auto 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.login-logo-img-new {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Removido duplicidade de estilos movidos para fora do card se necessário */
 
 .login-action-stack {
   display: flex;
@@ -461,6 +476,66 @@ textarea::placeholder {
   gap: 4px;
   /* Grudados conforme a imagem */
   margin-bottom: 48px;
+}
+
+/* ---------- 5b. Sponsors Card ---------- */
+.sponsors-card {
+  padding: 32px 24px;
+  margin-top: 32px;
+  text-align: center;
+  width: 100%;
+}
+
+.sponsors-title {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--on-surface-variant);
+  opacity: 0.5;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+
+.sponsors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.sponsor-placeholder {
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.08); /* Mais opaco para o blur aparecer melhor */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sólida sutil ao invés de tracejada */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  text-align: center;
+  padding: 12px;
+}
+
+.sponsor-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.sponsor-placeholder:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(173, 199, 255, 0.3);
+  opacity: 1;
 }
 
 .login-btn {
@@ -657,11 +732,15 @@ textarea::placeholder {
 }
 
 .header-logo {
-  font-family: var(--font-headline);
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.05em;
+  font-family: var(--font-title);
+  font-size: 24px; /* Reduzido conforme solicitado */
+  font-weight: normal;
+  letter-spacing: 0.02em;
   color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-transform: none;
 }
 
 .header-right {
@@ -2296,6 +2375,7 @@ textarea::placeholder {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
     align-items: flex-start;
+    padding: 40px 0;
   }
 
   .btn-mobile-menu {
@@ -3183,39 +3263,34 @@ textarea::placeholder {
   }
 }
 
-/* ---------- 39. Login Logo Circle ---------- */
 .login-logo-circle {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
   margin: 0 auto 16px;
-  border: 3px solid var(--border-color);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-logo-circle img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
 }
 
 .login-logo-circle.login-logo-sm {
-  width: 72px;
-  height: 72px;
-  border-width: 2px;
+  max-width: 160px;
+  height: auto;
 }
 
 /* ---------- 40. Header Logo Image ---------- */
 .header-logo-img {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
+  height: 56px; /* Aumentado conforme solicitado */
+  width: auto;
+  object-fit: contain;
   vertical-align: middle;
   margin-right: 4px;
-  border: 1.5px solid var(--border-color);
 }
 
 /* ---------- 41. Trophy Images ---------- */

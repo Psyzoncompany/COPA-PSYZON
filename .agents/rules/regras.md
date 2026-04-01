@@ -1,6 +1,5 @@
 ---
 trigger: always_on
-glob:
-description:
 ---
 
+vc pode aceitar automatico o terminal, n precisa perguntar so usa eu atorizo
