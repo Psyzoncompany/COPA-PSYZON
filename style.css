@@ -525,10 +525,9 @@ textarea::placeholder {
 }
 
 .sponsor-placeholder img {
-  width: 80%; /* Proporção ideal para maior margem de segurança */
-  height: 80%;
+  width: 96%;
+  height: 96%;
   object-fit: contain;
-  /* border-radius: 50% REMOVIDO: isso estava cortando logos retangulares! */
 }
 
 .sponsor-placeholder:hover {

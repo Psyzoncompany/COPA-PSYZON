@@ -6,9 +6,9 @@ const globalSponsorsHTML = `
   <div class="sponsors-card">
     <h3 class="sponsors-title">PATROCINADORES</h3>
     <div class="sponsors-grid">
-      <div class="sponsor-placeholder"><img src="PATROCINADORES/ROGERIO.svg" alt="Sponsor ROGERIO"></div>
-      <div class="sponsor-placeholder"><img src="PATROCINADORES/JANE JOIAS.png" alt="Sponsor JANE JOIAS"></div>
-      <div class="sponsor-placeholder"><img src="PATROCINADORES/virtu barbearia.png" alt="Sponsor VIRTU BARBEARIA"></div>
+      <a href="https://www.instagram.com/rogerio_relogio03/" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/ROGERIO.svg" alt="Sponsor ROGERIO"></a>
+      <a href="https://www.instagram.com/jane_joiasoficial/" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/JANE JOIAS.png" alt="Sponsor JANE JOIAS"></a>
+      <a href="https://sites.appbarber.com.br/links/maxbarbearia-h2wb" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/virtu barbearia.png" alt="Sponsor VIRTU BARBEARIA"></a>
       <div class="sponsor-placeholder">Logo Parceiro</div>
     </div>
   </div>
