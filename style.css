@@ -329,21 +329,20 @@ textarea::placeholder {
 
 /* ---------- 5. Login Screen (PREMIUM STYLE) ---------- */
 .login-screen-new {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute; /* Usamos absolute para forçar o scroll natural da própria página (body) */
+  top: 0;
+  left: 0;
+  right: 0;
+  min-height: 100vh;
+  display: block;
   background: radial-gradient(circle at center, rgba(6, 14, 30, 0.7) 0%, rgba(6, 14, 30, 0.95) 100%),
     url('img/wp10059640-fifa-4k-wallpapers.jpg');
   background-size: cover;
   background-position: center;
   color: var(--login-on-surface);
   font-family: 'Inter', sans-serif;
-  overflow-y: auto; /* Garantindo scroll se necessário */
+  overflow: visible; /* Deixa o conteúdo expandir livremente */
   z-index: 9999;
-  -webkit-overflow-scrolling: touch;
-  padding: 40px 0; /* Margem de segurança global */
 }
 
 .login-bg-layers {
@@ -392,8 +391,8 @@ textarea::placeholder {
   z-index: 10;
   width: 100%;
   max-width: 480px;
-  padding: 60px 24px; /* Aumentado top/bottom para margem de segurança */
-  margin: auto; /* Mantém centralizado no flex se o conteúdo for menor que a tela */
+  padding: 24px;
+  margin: 60px auto; /* Centraliza horizontalmente e dá espaçamento superior/inferior para rolar naturalmente */
 }
 
 .login-card-new {
@@ -526,10 +525,10 @@ textarea::placeholder {
 }
 
 .sponsor-placeholder img {
-  width: 100%;
-  height: 100%;
+  width: 80%; /* Proporção ideal para maior margem de segurança */
+  height: 80%;
   object-fit: contain;
-  border-radius: 50%;
+  /* border-radius: 50% REMOVIDO: isso estava cortando logos retangulares! */
 }
 
 .sponsor-placeholder:hover {
