@@ -12,6 +12,9 @@ const globalSponsorsHTML = `
       <a href="https://www.instagram.com/trailer_nachapa" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner na chapa.png" alt="Sponsor NA CHAPA"></a>
       <a href="https://www.instagram.com/clinica_revitalize_itarantim" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner revitalize.png" alt="Sponsor REVITALIZE"></a>
       <a href="https://www.instagram.com/ramos_acai_" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner ramos acai.png" alt="Sponsor RAMOS AÇAI"></a>
+      <a href="https://www.instagram.com/bizucahealthacademy" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner bizuca.png" alt="Sponsor BIZUCA HEALTH ACADEMY"></a>
+      <a href="https://www.instagram.com/chef_giselle_oliveira" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner giselle.png" alt="Sponsor GISELLE FEST"></a>
+      <div class="sponsor-placeholder">Seja Patrocinador</div>
     </div>
   </div>
 `;
