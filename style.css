@@ -433,7 +433,7 @@ textarea::placeholder {
   font-family: var(--font-title);
   font-weight: normal;
   font-size: 40px; /* Reduzido globalmente para caber bem */
-  white-space: nowrap; /* Tenta forçar tudo na mesma linha */
+  white-space: pre-wrap; /* Voltei ao normal para o título de acessos não forçar linhas infinitas em textos longos */
   letter-spacing: -0.01em;
   color: #fff;
   margin-bottom: 4px;
@@ -530,6 +530,7 @@ textarea::placeholder {
   .login-title-new {
     font-size: 28px; /* Ainda menor no celular para forçar linha reta perfeita */
     margin-bottom: 2px;
+    white-space: nowrap; /* Força em 1 linha somente no titulo da capa quando apertado */
   }
 
   .login-card-new {
