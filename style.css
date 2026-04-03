@@ -586,7 +586,7 @@ textarea::placeholder {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sólida sutil ao invés de tracejada */
-  border-radius: 50%;
+  border-radius: 16px; /* Ajuste global para abrigar banners (era 50%) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -603,6 +603,7 @@ textarea::placeholder {
   width: 96%;
   height: 96%;
   object-fit: contain;
+  border-radius: 12px;
 }
 
 .sponsor-placeholder:hover {
