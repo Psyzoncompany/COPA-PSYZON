@@ -501,6 +501,7 @@ textarea::placeholder {
   letter-spacing: 0.2em;
   color: var(--on-surface-variant);
   opacity: 0.5;
+  margin-top: 12px; /* Adicionado um pouco de margem superior */
   margin-bottom: 16px; /* Reduzido de 24px */
   text-transform: uppercase;
 }
