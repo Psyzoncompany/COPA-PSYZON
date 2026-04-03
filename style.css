@@ -307,7 +307,7 @@ textarea {
   transition: border-color var(--transition), box-shadow var(--transition);
   appearance: none;
   -webkit-appearance: none;
-  /* Libera a seleÃ§Ã£o para text/inputs */
+  /* Libera a seleção para text/inputs */
   -webkit-user-select: auto;
   user-select: auto;
 }
