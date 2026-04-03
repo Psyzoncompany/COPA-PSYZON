@@ -399,14 +399,13 @@ textarea::placeholder {
   background: #182030;
   border-radius: 48px;
   /* Cantos mais arredondados conforme a imagem */
-  padding: 32px 24px;
+  padding: 48px 32px; /* Aumentado para respeitar melhor a curvatura do card */
   border: none;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   text-align: center;
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
-  overflow: hidden; /* Garante que nada saia dos limites do card */
 }
 
 /* Fix para outras telas de login/seleÃ§Ã£o */
@@ -489,8 +488,8 @@ textarea::placeholder {
 
 /* ---------- 5b. Sponsors Card ---------- */
 .sponsors-card {
-  padding: 32px 24px;
-  margin-top: 32px;
+  padding: 16px 24px; /* Reduzido o padding vertical */
+  margin-top: 8px; /* Subido mais próximo ao card de login */
   text-align: center;
   width: 100%;
 }
@@ -502,16 +501,38 @@ textarea::placeholder {
   letter-spacing: 0.2em;
   color: var(--on-surface-variant);
   opacity: 0.5;
-  margin-bottom: 24px;
+  margin-bottom: 16px; /* Reduzido de 24px */
   text-transform: uppercase;
 }
 
 .sponsors-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 12px; /* Reduzido para caber melhor 3 em mobile */
   justify-content: center;
   align-items: center;
+}
+
+/* Ajuste para 3 logos por fileira no mobile */
+@media (max-width: 480px) {
+  .sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 0 8px;
+  }
+  
+  .sponsor-placeholder {
+    width: auto !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+    padding: 6px !important;
+  }
+
+  .sponsors-card {
+    margin-top: 0;
+    padding-top: 0;
+  }
 }
 
 .sponsor-placeholder {
