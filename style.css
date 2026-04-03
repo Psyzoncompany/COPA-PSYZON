@@ -423,7 +423,8 @@ textarea::placeholder {
 .login-title-new {
   font-family: var(--font-title);
   font-weight: normal;
-  font-size: 52px; /* Reduzido para não cortar */
+  font-size: 40px; /* Reduzido globalmente para caber bem */
+  white-space: nowrap; /* Tenta forçar tudo na mesma linha */
   letter-spacing: -0.01em;
   color: #fff;
   margin-bottom: 4px;
@@ -517,6 +518,11 @@ textarea::placeholder {
 
 /* Ajuste para 3 logos por fileira no mobile */
 @media (max-width: 480px) {
+  .login-title-new {
+    font-size: 28px; /* Ainda menor no celular para forçar linha reta perfeita */
+    margin-bottom: 2px;
+  }
+
   .login-card-new {
     border-radius: 36px;
     padding: 24px 12px; /* Pad lateral ainda menor para garantir os botões na tela */
