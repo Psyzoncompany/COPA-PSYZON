@@ -406,6 +406,7 @@ textarea::placeholder {
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
+  overflow: hidden; /* Garante que os filhos não vazem as margens arredondadas */
 }
 
 /* Fix para outras telas de login/seleÃ§Ã£o */
@@ -516,23 +517,65 @@ textarea::placeholder {
 
 /* Ajuste para 3 logos por fileira no mobile */
 @media (max-width: 480px) {
-  .sponsors-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    padding: 0 8px;
+  .login-card-new {
+    border-radius: 36px;
+    padding: 24px 12px; /* Pad lateral ainda menor para garantir os botões na tela */
+    box-sizing: border-box;
   }
   
+  .login-btn {
+    padding: 10px 4px !important; /* Quase sem padding horizontal para evitar transbordar */
+    font-size: 11px !important;
+    gap: 4px !important;
+  }
+
+  .login-btn-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .login-action-stack {
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px; /* Mais gap para crescer melhor os cards se precisar, ou mantemos 8 */
+    padding: 0;
+    width: 100%;
+  }
+
+  .sponsor-item {
+    width: 100%;
+  }
+
   .sponsor-placeholder {
-    width: auto !important;
+    width: 100% !important;
     height: auto !important;
-    aspect-ratio: 1 / 1;
-    padding: 6px !important;
+    padding: 4px !important;
+    margin: 0;
+    border-radius: 12px; /* Em vez de 50% para caber banners */
+  }
+
+  .sponsor-placeholder img {
+    border-radius: 12px;
   }
 
   .sponsors-card {
     margin-top: 0;
-    padding-top: 0;
+    padding: 12px 4px; /* Mais perto das bordas ainda */
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .sponsors-wrapper {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    width: 100%;
   }
 }
 
