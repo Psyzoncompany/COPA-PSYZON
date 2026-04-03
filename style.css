@@ -392,20 +392,21 @@ textarea::placeholder {
   width: 100%;
   max-width: 480px;
   padding: 24px;
-  margin: 60px auto; /* Centraliza horizontalmente e dá espaçamento superior/inferior para rolar naturalmente */
+  margin: 20px auto; /* Reduzido de 60px para aproximar do topo */
 }
 
 .login-card-new {
   background: #182030;
   border-radius: 48px;
   /* Cantos mais arredondados conforme a imagem */
-  padding: 64px 48px;
+  padding: 32px 24px;
   border: none;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   text-align: center;
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
+  overflow: hidden; /* Garante que nada saia dos limites do card */
 }
 
 /* Fix para outras telas de login/seleÃ§Ã£o */
@@ -446,13 +447,13 @@ textarea::placeholder {
   text-transform: uppercase;
   color: var(--on-surface-variant);
   opacity: 0.6;
-  margin-bottom: 32px;
+  margin-bottom: 20px; /* Reduzido de 32px */
   text-align: center;
 }
 
 .login-logo-container {
   width: 100%;
-  margin: 0 auto 32px;
+  margin: 0 auto 20px; /* Reduzido de 32px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -463,6 +464,7 @@ textarea::placeholder {
   width: 100%;
   max-width: 100%;
   height: auto;
+  max-height: 100px; /* Limita altura do logo no login */
   object-fit: contain;
   display: block;
 }
@@ -470,11 +472,19 @@ textarea::placeholder {
 /* Removido duplicidade de estilos movidos para fora do card se necessário */
 
 .login-action-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  /* Grudados conforme a imagem */
-  margin-bottom: 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* O formulário de login deve ocupar as duas colunas quando visível */
+#login-form {
+  grid-column: span 2;
+}
+
+#btn-visitor {
+  grid-column: span 2;
 }
 
 /* ---------- 5b. Sponsors Card ---------- */
@@ -538,23 +548,23 @@ textarea::placeholder {
 
 .login-btn {
   width: 100%;
-  padding: 18px 24px;
-  border-radius: 4px;
+  padding: 12px 16px; /* Reduzido de 18px 24px */
+  border-radius: 8px; /* Cantos um pouco mais suaves */
   border: none;
   font-family: var(--font-headline);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 13px; /* Reduzido de 15px */
   display: flex !important;
   align-items: center;
-  justify-content: flex-start;
-  gap: 16px;
+  justify-content: center; /* Centralizado para o layout grid */
+  gap: 8px; /* Reduzido de 16px */
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .login-btn-text {
-  flex: 1;
-  text-align: left;
+  flex: none; /* Removido o flex 1 para centralizar */
+  text-align: center;
 }
 
 .login-btn:active {
@@ -577,8 +587,7 @@ textarea::placeholder {
 }
 
 .login-btn-chevron {
-  opacity: 0.6;
-  font-size: 18px;
+  display: none !important; /* Escondido para otimizar espaço lateral */
 }
 
 .login-form-new {
