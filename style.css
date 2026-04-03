@@ -138,7 +138,7 @@ body {
   line-height: 1.5;
   color: var(--text-primary);
   min-height: 100vh;
-  width: 100%;
+  width: 100vw; /* Voltar pro vw com overflow-x auto ou hidden porque width: 100% quebra no mobile as vezes se o body não tiver box-sizing: border-box */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   position: relative;
   overflow-x: hidden;
