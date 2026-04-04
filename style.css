@@ -125,7 +125,6 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
   max-width: 100vw;
   -webkit-user-select: none; /* Bloqueia seleção de tela para parecer App nativo */
   user-select: none;
@@ -141,7 +140,6 @@ body {
   width: 100vw; /* Voltar pro vw com overflow-x auto ou hidden porque width: 100% quebra no mobile as vezes se o body não tiver box-sizing: border-box */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   position: relative;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none; /* Previne o pull-to-refresh e rubber banding do corpo */
@@ -1076,7 +1074,6 @@ textarea::placeholder {
   flex: 1;
   padding: 28px;
   overflow-y: auto;
-  overflow-x: hidden;
   min-width: 0;
   background: transparent;
 }
@@ -2881,6 +2878,10 @@ textarea::placeholder {
   .scroll-hint-wrapper {
     margin-left: 16px;
     margin-right: 16px;
+  }
+
+  .game-selection-card .login-logo-container {
+    display: none;
   }
 
   .login-screen {

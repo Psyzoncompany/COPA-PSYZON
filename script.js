@@ -88,8 +88,8 @@
   /** Persist current state to Firestore */
   function saveState() {
     if (firebaseAvailable && db) {
-      // Remover valores undefined para evitar erros no Firestore
-      const cleanState = JSON.parse(JSON.stringify(state));
+      // Remover valores undefined para evitar erros no Firestore adaptando para null
+      const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
       db.collection('tournaments').doc('main').set(cleanState).catch((err) => {
         console.error('Erro ao salvar no Firestore:', err);
         showToast('Erro ao salvar no banco. Verifique as Regras do Firestore!', 'error');
@@ -2348,10 +2348,11 @@
         }
         startTouchPos = null;
 
+        document.body.style.overflow = ''; // Restore smooth scrolling
+
         if (!activeTouchGhost) return;
 
         slot.classList.remove('dragging');
-        document.body.style.overflow = ''; // Restore smooth scrolling
 
         if (e.type === 'touchend' && e.changedTouches && e.changedTouches.length > 0) {
           const touch = e.changedTouches[0];
@@ -4057,8 +4058,8 @@
       id: generateId(),
       name: tName,
       date: new Date().toISOString(),
-      champion: state.champion ? JSON.parse(JSON.stringify(state.champion)) : null,
-      bracket: JSON.parse(JSON.stringify(state.bracket)),
+      champion: state.champion ? JSON.parse(JSON.stringify(state.champion, (k, v) => v === undefined ? null : v)) : null,
+      bracket: JSON.parse(JSON.stringify(state.bracket, (k, v) => v === undefined ? null : v)),
       teamsCount: state.teamCount || 8
     };
 
@@ -4917,7 +4918,7 @@
     console.log('Iniciando exportação de backup...');
     try {
       // Garantir que temos os dados mais recentes e limpos (sem referências circulares ou DOM)
-      const cleanState = JSON.parse(JSON.stringify(state));
+      const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
       const dataStr = JSON.stringify(cleanState, null, 2);
 
       const blob = new Blob([dataStr], { type: 'application/json' });
