@@ -3157,11 +3157,7 @@ textarea::placeholder {
     font-size: 22px;
   }
 
-  .match-card {
-    width: 220px;
-    min-width: 220px;
-  }
-
+  .match-card,
   .match-card-wrapper {
     width: 220px;
     min-width: 220px;
@@ -3298,11 +3294,7 @@ textarea::placeholder {
     font-size: 56px;
   }
 
-  .match-card {
-    width: 200px;
-    min-width: 200px;
-  }
-
+  .match-card,
   .match-card-wrapper {
     width: 200px;
     min-width: 200px;
