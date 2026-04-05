@@ -413,6 +413,26 @@ textarea::placeholder {
   z-index: 9999;
 }
 
+/* ---------- Sub-Login Screens (Participante / Visitante entry flows) ---------- */
+/* Provides full-screen layout for participant/visitor screens so cards are
+   prioritised at the top and sponsors sit at the bottom of the page. */
+.login-screen {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 24px 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* Push sponsors to the very bottom inside these screens */
+.login-screen > .sponsors-wrapper {
+  margin-top: auto;
+  padding-top: 24px;
+  width: 100%;
+}
+
 .login-bg-layers {
   display: block;
   position: absolute;
