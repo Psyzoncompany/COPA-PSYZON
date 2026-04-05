@@ -1274,6 +1274,11 @@ textarea::placeholder {
   z-index: 0;
   pointer-events: none;
   animation: shimmer 4s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.prize-display:hover::after {
+  animation-play-state: running;
 }
 
 .prize-display:hover {
@@ -1321,6 +1326,7 @@ textarea::placeholder {
   margin-bottom: 0px;
   letter-spacing: -0.02em;
   animation: goldShine 3s ease-in-out infinite;
+  will-change: background-position;
   position: relative;
   z-index: 1;
 }
@@ -2768,6 +2774,7 @@ textarea::placeholder {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: goldShine 3s ease-in-out infinite;
+  will-change: background-position;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
 }
