@@ -50,10 +50,16 @@
   --sidebar-width: 340px;
   --header-height: 72px;
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   --font-title: 'TAN-NIMBUS', cursive;
   --font-headline: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font: var(--font-body);
+
+  /* Glow effects */
+  --glow-blue: 0 0 20px rgba(74, 142, 255, 0.15);
+  --glow-gold: 0 0 20px rgba(175, 138, 46, 0.2);
+  --glow-green: 0 0 20px rgba(102, 223, 117, 0.15);
 }
 
 @font-face {
@@ -92,6 +98,60 @@
 
 .scroll-hint-animation {
   animation: scrollHint 0.8s ease-out;
+}
+
+/* ====== ENHANCED ANIMATION KEYFRAMES ====== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes subtleFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(173, 199, 255, 0.2); box-shadow: var(--glow-blue); }
+  50%      { border-color: rgba(173, 199, 255, 0.5); box-shadow: 0 0 30px rgba(74, 142, 255, 0.25); }
+}
+
+@keyframes softPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.7; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { opacity: 1; transform: scale(1.05); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes goldShine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 /* Scroll Hint UI Element */
@@ -227,7 +287,8 @@ img {
 
 .btn-primary:hover {
   opacity: 0.95;
-  box-shadow: 0 8px 20px rgba(74, 142, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(74, 142, 255, 0.35);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -326,7 +387,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(74, 142, 255, 0.15), 0 0 12px rgba(74, 142, 255, 0.08);
 }
 
 input::placeholder,
@@ -353,8 +414,12 @@ textarea::placeholder {
 }
 
 .login-bg-layers {
-  display: none;
-  /* Simplificado conforme solicitado */
+  display: block;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .login-bg-gradient {
@@ -380,6 +445,7 @@ textarea::placeholder {
   background: rgba(173, 199, 255, 0.1);
   filter: blur(120px);
   border-radius: 50%;
+  animation: subtleFloat 8s ease-in-out infinite;
 }
 
 .login-bg-glow-2 {
@@ -391,6 +457,7 @@ textarea::placeholder {
   background: rgba(102, 223, 117, 0.05);
   filter: blur(100px);
   border-radius: 50%;
+  animation: subtleFloat 10s ease-in-out infinite reverse;
 }
 
 .login-canvas {
@@ -400,20 +467,30 @@ textarea::placeholder {
   max-width: 480px;
   padding: 24px;
   margin: 20px auto; /* Reduzido de 60px para aproximar do topo */
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .login-card-new {
-  background: #182030;
+  background: rgba(24, 32, 48, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-radius: 48px;
   /* Cantos mais arredondados conforme a imagem */
   padding: 48px 32px; /* Aumentado para respeitar melhor a curvatura do card */
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   text-align: center;
   width: 100%;
   max-width: 440px;
   margin: 0 auto;
   overflow: hidden; /* Garante que os filhos não vazem as margens arredondadas */
+  animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.login-card-new:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 48px 120px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.08);
 }
 
 /* Fix para outras telas de login/seleÃ§Ã£o */
@@ -439,6 +516,7 @@ textarea::placeholder {
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   text-align: center;
   text-transform: none; /* Apenas iniciais em maiúsculo agora no HTML */
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
 .login-title {
@@ -457,6 +535,7 @@ textarea::placeholder {
   opacity: 0.6;
   margin-bottom: 20px; /* Reduzido de 32px */
   text-align: center;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
 
 .login-logo-container {
@@ -596,10 +675,10 @@ textarea::placeholder {
 .sponsor-placeholder {
   width: 120px;
   height: 120px;
-  background: rgba(255, 255, 255, 0.08); /* Mais opaco para o blur aparecer melhor */
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sólida sutil ao invés de tracejada */
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px; /* Ajuste global para abrigar banners (era 50%) */
   display: flex;
   align-items: center;
@@ -607,7 +686,7 @@ textarea::placeholder {
   font-size: 11px;
   color: var(--text-tertiary);
   opacity: 0.8;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   text-align: center;
   padding: 12px;
@@ -618,18 +697,25 @@ textarea::placeholder {
   height: 96%;
   object-fit: contain;
   border-radius: 12px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sponsor-placeholder:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
   border-color: rgba(173, 199, 255, 0.3);
   opacity: 1;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.sponsor-placeholder:hover img {
+  transform: scale(1.05);
 }
 
 .login-btn {
   width: 100%;
   padding: 12px 16px; /* Reduzido de 18px 24px */
-  border-radius: 8px; /* Cantos um pouco mais suaves */
+  border-radius: 12px; /* Cantos um pouco mais suaves */
   border: none;
   font-family: var(--font-headline);
   font-weight: 700;
@@ -639,7 +725,22 @@ textarea::placeholder {
   justify-content: center; /* Centralizado para o layout grid */
   gap: 8px; /* Reduzido de 16px */
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.login-btn:hover::after {
+  opacity: 1;
 }
 
 .login-btn-text {
@@ -648,22 +749,41 @@ textarea::placeholder {
 }
 
 .login-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
 
 .login-btn-primary {
-  background: linear-gradient(to right, #72a5ff, #83b1ff);
+  background: linear-gradient(135deg, #72a5ff, #83b1ff);
   color: #002e68;
+  box-shadow: 0 4px 16px rgba(114, 165, 255, 0.25);
+}
+
+.login-btn-primary:hover {
+  box-shadow: 0 8px 24px rgba(114, 165, 255, 0.4);
+  transform: translateY(-2px);
 }
 
 .login-btn-secondary {
-  background: #66df75;
+  background: linear-gradient(135deg, #66df75, #52d066);
   color: #00390f;
+  box-shadow: 0 4px 16px rgba(102, 223, 117, 0.2);
+}
+
+.login-btn-secondary:hover {
+  box-shadow: 0 8px 24px rgba(102, 223, 117, 0.35);
+  transform: translateY(-2px);
 }
 
 .login-btn-tertiary {
   background: rgba(45, 53, 70, 0.4);
   color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.login-btn-tertiary:hover {
+  background: rgba(45, 53, 70, 0.65);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .login-btn-chevron {
@@ -773,6 +893,7 @@ textarea::placeholder {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-weight: 500;
+  animation: fadeIn 1s ease 0.8s both;
 }
 
 .login-visual-polish {
@@ -780,8 +901,10 @@ textarea::placeholder {
   position: fixed;
   inset: 0;
   z-index: 50;
-  opacity: 0.3;
-  background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+  opacity: 0.03;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(173, 199, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(102, 223, 117, 0.2) 0%, transparent 50%);
   mix-blend-mode: overlay;
 }
 
@@ -811,6 +934,7 @@ textarea::placeholder {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--border-color);
+  animation: fadeIn 0.4s ease;
 }
 
 .header-left {
@@ -848,12 +972,14 @@ textarea::placeholder {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
 }
 
 .role-badge.owner,
 .role-badge[data-role='owner'] {
-  background: rgba(0, 122, 255, 0.12);
+  background: rgba(74, 142, 255, 0.12);
   color: var(--accent-blue);
+  box-shadow: 0 0 12px rgba(74, 142, 255, 0.1);
 }
 
 /* ---------- 7. Content Wrapper / Layout ---------- */
@@ -883,6 +1009,13 @@ textarea::placeholder {
   background: rgba(45, 53, 70, 0.3);
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.sidebar-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-heading {
@@ -896,6 +1029,19 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.sidebar-heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+  border-radius: 1px;
 }
 
 .sidebar-actions {
@@ -937,13 +1083,13 @@ textarea::placeholder {
   background: rgba(45, 53, 70, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-sm);
-  transition: background var(--transition), box-shadow var(--transition),
-    opacity var(--transition);
+  transition: background 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
 }
 
 .team-entry:hover {
   background: var(--bg-secondary);
   box-shadow: var(--shadow-sm);
+  transform: translateX(4px);
 }
 
 .team-entry.dragging {
@@ -1098,9 +1244,10 @@ textarea::placeholder {
   position: relative;
   overflow: hidden;
   text-align: center;
-  transition: transform var(--transition);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   isolation: isolate;
   cursor: pointer;
+  animation: fadeInUp 0.6s ease both;
 }
 
 .prize-display::before {
@@ -1115,13 +1262,27 @@ textarea::placeholder {
   pointer-events: none;
 }
 
+/* Shimmer effect on prize card */
+.prize-display::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.06), transparent);
+  z-index: 0;
+  pointer-events: none;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
 .prize-display:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   border-color: rgba(255, 215, 0, 0.4);
   box-shadow: 
     0 30px 60px rgba(0, 0, 0, 0.4), 
     inset 0 1px 1px rgba(255, 255, 255, 0.15),
-    0 0 25px rgba(175, 138, 46, 0.2);
+    0 0 30px rgba(175, 138, 46, 0.25);
 }
 
 .prize-header-small {
@@ -1152,12 +1313,16 @@ textarea::placeholder {
   font-size: 32px;
   font-weight: 900;
   line-height: 1;
-  background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
+  background: linear-gradient(135deg, #FFD700 0%, #f0c040 25%, #B8860B 50%, #f0c040 75%, #FFD700 100%);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0px;
   letter-spacing: -0.02em;
+  animation: goldShine 3s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
 }
 
 .prize-subtitle {
@@ -1227,6 +1392,7 @@ textarea::placeholder {
   color: var(--text-primary);
   margin-bottom: 28px;
   letter-spacing: -0.02em;
+  animation: fadeInUp 0.5s ease 0.1s both;
 }
 
 /* ---------- 13. Empty State ---------- */
@@ -1237,7 +1403,7 @@ textarea::placeholder {
   justify-content: center;
   text-align: center;
   padding: 80px 20px;
-  animation: fadeIn 0.5s ease;
+  animation: fadeInUp 0.6s ease both;
 }
 
 .empty-icon {
@@ -1347,13 +1513,18 @@ textarea::placeholder {
 }
 
 .segmented-control-wrapper {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 4px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease;
+}
+
+.segmented-control-wrapper:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .segmented-control {
@@ -1420,7 +1591,7 @@ textarea::placeholder {
 
 .phase-list-section {
   margin-bottom: 32px;
-  animation: slideUp 0.4s ease forwards;
+  animation: fadeInUp 0.5s ease both;
 }
 
 .phase-list-title {
@@ -1458,13 +1629,15 @@ textarea::placeholder {
   color: #ffffff;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
   transform: translateZ(0); /* GPU Acceleration */
+  animation: fadeInUp 0.5s ease both;
 }
 
 .match-list-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .match-list-header {
@@ -1667,7 +1840,7 @@ textarea::placeholder {
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: var(--transition);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
   width: 260px; /* Reduzido levemente para caber melhor no mobile */
   /* hardware acceleration para performance no mobile */
   transform: translateZ(0);
@@ -1676,8 +1849,8 @@ textarea::placeholder {
 }
 
 .match-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
   border-color: rgba(173, 199, 255, 0.4);
 }
 
@@ -1720,10 +1893,6 @@ textarea::placeholder {
   background: rgba(255, 255, 255, 0.9);
   color: #000;
   border: none;
-}
-
-.match-card:hover {
-  box-shadow: var(--shadow-md);
 }
 
 .match-header {
@@ -1793,16 +1962,17 @@ textarea::placeholder {
 }
 
 .match-team.winner {
-  background: rgba(102, 223, 117, 0.05);
+  background: rgba(102, 223, 117, 0.06);
 }
 
 .match-team.winner .team-name-bracket {
   font-weight: 800;
   color: var(--secondary);
+  text-shadow: 0 0 12px rgba(102, 223, 117, 0.2);
 }
 
 .match-team.winner .team-avatar {
-  box-shadow: 0 0 10px var(--secondary);
+  box-shadow: 0 0 12px rgba(102, 223, 117, 0.3);
   border: 1.5px solid var(--secondary);
 }
 
@@ -2267,7 +2437,7 @@ textarea::placeholder {
 .finalize-confirm-card {
   position: relative;
   background: rgba(24, 32, 48, 0.95);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -2275,7 +2445,7 @@ textarea::placeholder {
   width: 100%;
   max-width: 380px;
   margin: 20px;
-  animation: slideUp 0.3s ease;
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1;
   text-align: center;
 }
@@ -2336,32 +2506,32 @@ textarea::placeholder {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.25s ease;
 }
 
 .modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-card {
   position: relative;
-  background: rgba(24, 32, 48, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(24, 32, 48, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
   padding: 32px;
   width: 100%;
   max-width: 480px;
   max-height: 85vh;
   overflow-y: auto;
   margin: 20px;
-  animation: slideUp 0.3s ease;
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1;
 }
 
@@ -2516,15 +2686,17 @@ textarea::placeholder {
   align-items: center;
   gap: 10px;
   padding: 14px 20px;
-  background: var(--bg-secondary);
+  background: rgba(24, 32, 48, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   border-left: 4px solid var(--border-color);
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
   pointer-events: auto;
-  animation: slideInRight 0.35s ease;
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 280px;
   max-width: 420px;
 }
@@ -2561,9 +2733,9 @@ textarea::placeholder {
   display: none;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(11, 19, 35, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .champion-banner.show,
@@ -2574,7 +2746,7 @@ textarea::placeholder {
 
 .champion-content {
   text-align: center;
-  animation: slideUp 0.5s ease, fadeIn 0.5s ease;
+  animation: bounceIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 40px;
 }
 
@@ -2590,14 +2762,19 @@ textarea::placeholder {
 .champion-title {
   font-size: 36px;
   font-weight: 800;
-  color: var(--accent-gold);
+  background: linear-gradient(135deg, #FFD700 0%, #f0c040 25%, #B8860B 50%, #f0c040 75%, #FFD700 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShine 3s ease-in-out infinite;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
 }
 
 .champion-subtitle {
   font-size: 18px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-weight: 500;
   margin-bottom: 24px;
 }
@@ -3327,19 +3504,35 @@ textarea::placeholder {
   border: 1px solid rgba(255, 255, 255, 0.15); /* Borda premium */
   border-radius: 16px; /* Arredondamento do app */
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: var(--font-title); /* Fonte principal */
   text-align: left;
   width: 100%;
   position: relative;
   -webkit-user-select: none;
   user-select: none;
+  overflow: hidden;
+}
+
+.btn-game-option::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.btn-game-option:hover:not(.disabled)::after {
+  opacity: 1;
 }
 
 .btn-game-option:hover:not(.disabled) {
-  background: rgba(255, 255, 255, 0.08); /* Fica mais claro ao passar */
+  background: rgba(255, 255, 255, 0.1);
   border-color: var(--accent-blue);
-  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(74, 142, 255, 0.25);
+  transform: translateY(-3px);
 }
 
 .btn-game-option:active:not(.disabled) {
@@ -3394,6 +3587,14 @@ textarea::placeholder {
   font-size: 24px;
   font-weight: 700;
   color: var(--text-tertiary);
+  border: 2px solid rgba(173, 199, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(74, 142, 255, 0.2);
 }
 
 .profile-avatar img {
@@ -3437,8 +3638,9 @@ textarea::placeholder {
   gap: 24px;
   margin-bottom: 24px;
   padding: 16px;
-  background: var(--bg-primary);
+  background: rgba(11, 19, 35, 0.6);
   border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .profile-stat {
@@ -3464,12 +3666,19 @@ textarea::placeholder {
 
 /* ---------- 32. Top 3 Card ---------- */
 .top3-card {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border: 1px solid #f6d860;
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95) 0%, rgba(254, 243, 199, 0.95) 100%);
+  border: 1px solid rgba(246, 216, 96, 0.6);
   border-radius: var(--radius-md);
   padding: 20px 24px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(175, 138, 46, 0.1);
+  box-shadow: 0 4px 16px rgba(175, 138, 46, 0.12);
+  animation: fadeInUp 0.5s ease 0.05s both;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+}
+
+.top3-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(175, 138, 46, 0.2);
 }
 
 .top3-title {
@@ -3502,13 +3711,13 @@ textarea::placeholder {
   border-radius: var(--radius-sm);
   min-width: 100px;
   cursor: pointer;
-  transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .top3-item:hover {
   background: rgba(255, 255, 255, 0.95);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(175, 138, 46, 0.15);
+  transform: translateY(-4px);
 }
 
 .top3-position {
@@ -3910,11 +4119,14 @@ textarea::placeholder {
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
-  background: var(--bg-secondary);
+  background: rgba(24, 32, 48, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 6px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   justify-content: center;
+  animation: fadeInUp 0.5s ease 0.15s both;
 }
 
 .tab-btn {
@@ -3928,19 +4140,22 @@ textarea::placeholder {
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .tab-btn:hover {
-  background: rgba(0, 122, 255, 0.05);
+  background: rgba(74, 142, 255, 0.08);
   color: var(--accent-blue);
+  transform: translateY(-1px);
 }
 
 .tab-btn.active {
   background: var(--bg-primary);
   color: var(--accent-blue);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(173, 199, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 /* ---------- 46. Ranking Table (Brasileirao Style) ---------- */
@@ -3984,12 +4199,13 @@ textarea::placeholder {
 
 .ranking-table tbody tr {
   border-bottom: 1px solid var(--border-color);
-  transition: background var(--transition);
+  transition: background 0.3s ease, transform 0.3s ease;
   cursor: pointer;
 }
 
 .ranking-table tbody tr:hover {
-  background: rgba(0, 122, 255, 0.04);
+  background: rgba(74, 142, 255, 0.06);
+  transform: scale(1.01);
 }
 
 .ranking-table tbody tr:last-child {
@@ -4087,12 +4303,14 @@ textarea::placeholder {
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  animation: fadeInUp 0.5s ease both;
 }
 
 .history-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-md);
+  border-color: rgba(173, 199, 255, 0.2);
 }
 
 .history-info {
