@@ -1760,7 +1760,7 @@ textarea::placeholder {
 
 .bracket-container {
   overflow-x: auto;
-  padding: 8px 0 24px;
+  padding: 8px 0 0;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: none;
 }
@@ -1784,7 +1784,7 @@ textarea::placeholder {
   gap: 0;
   align-items: stretch;
   min-width: fit-content;
-  padding: 0 0 20px 12px; /* Removido padding da direita totalmente */
+  padding: 0 0 10px 12px; /* Removido padding da direita totalmente */
 }
 
 .round {
@@ -1801,18 +1801,18 @@ textarea::placeholder {
 }
 
 .round-title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   color: var(--text-tertiary);
   text-align: center;
-  padding: 8px 0 14px;
+  padding: 4px 0 8px;
   white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
+  min-height: 24px;
   box-sizing: border-box;
 }
 
@@ -1825,10 +1825,10 @@ textarea::placeholder {
 .round-matches {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  /* Aumentado para melhor visualizaÃ§Ã£o */
-  justify-content: space-around;
-  flex: 1;
+  gap: 12px;
+  /* Reduzido de 24px para aproximar os elementos verticalmente */
+  justify-content: center;
+  flex: 0 1 auto;
   width: 100%;
   /* Garante que os cards ocupem a largura da coluna */
 }
@@ -1971,10 +1971,10 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 6px 12px;
   transition: background var(--transition);
   position: relative;
-  min-height: 48px;
+  min-height: 40px;
 }
 
 .match-team.dragging {
@@ -4716,4 +4716,143 @@ textarea::placeholder {
   .modal-card {
     max-height: 80vh;
   }
+}
+/* ============================================
+   14. SPONSORS SHOWCASE (Within Bracket Tab)
+   ============================================ */
+.sponsors-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+@media (min-width: 1024px) {
+  .sponsors-showcase {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  }
+}
+
+.sponsor-slidecase-card {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  height: 250px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.sponsor-slidecase-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.sponsor-slidecase-card.no-link {
+  cursor: default;
+}
+.sponsor-slidecase-card.no-link:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .sponsor-slidecase-card {
+    flex-direction: column;
+    height: auto;
+  }
+}
+
+/* Left: Logo Area */
+.sponsor-logo-area {
+  flex: 0 0 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+@media (max-width: 768px) {
+  .sponsor-logo-area {
+    flex: 0 0 140px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+.sponsor-logo-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.1));
+}
+
+/* Right: Slides Area */
+.sponsor-slides-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 200px; /* Important for mobile */
+}
+
+.sponsor-slide-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.sponsor-slide-img.active {
+  opacity: 1;
+  z-index: 2;
+}
+
+/* Slide Controls Overlay */
+.sponsor-slide-controls {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sponsor-btn-control {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s, transform 0.2s;
+  outline: none;
+}
+.sponsor-btn-control:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+.sponsor-btn-control span {
+  font-size: 22px;
 }
