@@ -280,6 +280,7 @@ async function initSponsorsShowcase() {
     var logoImg = document.createElement('img');
     logoImg.src = sponsor.logo;
     logoImg.alt = 'Logo ' + sponsor.name;
+    logoImg.loading = 'lazy';
     logoImg.className = 'sponsor-logo-img';
     logoArea.appendChild(logoImg);
 
@@ -299,6 +300,7 @@ async function initSponsorsShowcase() {
     for (var idx = 0; idx < slidesFiles.length; idx++) {
       var sImg = document.createElement('img');
       sImg.src = slidesFiles[idx];
+      sImg.loading = 'lazy';
       sImg.alt = sponsor.name + ' - imagem ' + (idx + 1);
       sImg.className = 'sponsor-slide-img' + (idx === 0 ? ' active' : '');
       slideArea.appendChild(sImg);
