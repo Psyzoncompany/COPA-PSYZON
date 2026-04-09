@@ -185,7 +185,7 @@ const sponsorsConfig = [
   }
 ];
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   initSponsorsShowcase();
 });
 
@@ -216,12 +216,12 @@ async function initSponsorsShowcase() {
 
   // ─── Resolução de links (fetch todos em paralelo) ───
   var sponsorLinks = [];
-  var linkPromises = sponsorsConfig.map(function(sponsor) {
+  var linkPromises = sponsorsConfig.map(function (sponsor) {
     if (!sponsor.linkFile) return Promise.resolve('');
     return fetch(sponsor.linkFile)
-      .then(function(r) { return r.ok ? r.text() : ''; })
-      .then(function(t) { return extractFirstUrl(t); })
-      .catch(function() { return ''; });
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (t) { return extractFirstUrl(t); })
+      .catch(function () { return ''; });
   });
   sponsorLinks = await Promise.all(linkPromises);
 
@@ -365,7 +365,7 @@ async function initSponsorsShowcase() {
     if (activeCard) {
       activeCard.classList.add('exiting');
       var old = activeCard;
-      setTimeout(function() { if (old.parentNode) old.parentNode.removeChild(old); }, 500);
+      setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 500);
     }
 
     // Constrói novo card
@@ -416,7 +416,7 @@ async function initSponsorsShowcase() {
    */
   function startAutoSlide() {
     if (timer) clearInterval(timer);
-    timer = setInterval(function() {
+    timer = setInterval(function () {
       if (isPlaying) advance();
     }, SLIDE_INTERVAL);
     restartProgress();
@@ -447,21 +447,21 @@ async function initSponsorsShowcase() {
   controls.appendChild(btnNext);
   container.appendChild(controls);
 
-  btnPrev.addEventListener('click', function(e) {
+  btnPrev.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
     showSponsor(currentSponsor - 1, 0);
     startAutoSlide();
   });
 
-  btnNext.addEventListener('click', function(e) {
+  btnNext.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
     showSponsor(currentSponsor + 1, 0);
     startAutoSlide();
   });
 
-  btnPlayPause.addEventListener('click', function(e) {
+  btnPlayPause.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
     isPlaying = !isPlaying;
