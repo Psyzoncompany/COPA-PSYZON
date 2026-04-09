@@ -1,9 +1,8 @@
 /**
- * Sponsors Slideshow Logic
- * Exibe logos e slideshows para clientes na aba de Chaveamento.
- * Cada cliente possui exatamente 3 imagens com rotação automática de 7s,
- * controles manuais (avançar, voltar, pausar/retomar) e link clicável
- * lido automaticamente do arquivo Link.txt da pasta do cliente.
+ * Sponsors Slideshow Logic — Sequential Display
+ * Exibe UM patrocinador por vez na aba de Chaveamento.
+ * Cada imagem = 7s. Após as 3 imagens do cliente → próximo cliente.
+ * O card se adapta ao formato da foto (object-fit: contain, height: auto).
  */
 
 const sponsorsConfig = [
@@ -185,7 +184,7 @@ const sponsorsConfig = [
   }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
   initSponsorsShowcase();
 });
 
@@ -208,199 +207,328 @@ async function initSponsorsShowcase() {
   var container = document.getElementById('bracket-sponsors-showcase');
   if (!container) return;
 
-  // Título da seção
+  var SLIDE_DURATION = 7000; // 7s por imagem
+
+  // ── Título da seção ──
   var sectionTitle = document.createElement('h3');
   sectionTitle.className = 'sponsors-showcase-title';
   sectionTitle.textContent = 'PATROCINADORES';
   container.appendChild(sectionTitle);
 
-  // Grid dos cards
-  var grid = document.createElement('div');
-  grid.className = 'sponsors-showcase-grid';
-  container.appendChild(grid);
+  // ── Palco (exibe 1 card por vez) ──
+  var stage = document.createElement('div');
+  stage.className = 'sponsors-stage';
+  container.appendChild(stage);
 
-  for (var s = 0; s < sponsorsConfig.length; s++) {
-    var sponsor = sponsorsConfig[s];
-    var targetLink = '';
+  // ── Dots de navegação entre patrocinadores ──
+  var sponsorNav = document.createElement('div');
+  sponsorNav.className = 'sponsor-nav-dots';
+  container.appendChild(sponsorNav);
 
-    // Lê o arquivo Link.txt do cliente para obter a URL
-    if (sponsor.linkFile) {
-      try {
-        var response = await fetch(sponsor.linkFile);
-        if (response.ok) {
-          var text = await response.text();
-          targetLink = extractFirstUrl(text);
-        }
-      } catch (e) {
-        // Ignora erro (arquivo não encontrado) → segue sem link
-      }
+  // ── Carrega links em paralelo ──
+  var links = await Promise.all(sponsorsConfig.map(function(s) {
+    if (!s.linkFile) return Promise.resolve('');
+    return fetch(s.linkFile)
+      .then(function(r) { return r.ok ? r.text() : ''; })
+      .then(function(t) { return extractFirstUrl(t); })
+      .catch(function() { return ''; });
+  }));
+
+  // ── Estruturas por card ──
+  var cards = [];
+  var cardImgEls = [];      // [sponsorIdx][imgIdx] → <img>
+  var cardImgDotEls = [];   // [sponsorIdx][dotIdx] → <span>
+  var cardProgressFills = []; // [sponsorIdx] → <div> (barra de progresso)
+  var sponsorDotEls = [];   // [sponsorIdx] → <span> (dot de navegação)
+
+  // ── Constrói todos os cards ──
+  for (var i = 0; i < sponsorsConfig.length; i++) {
+    var s = sponsorsConfig[i];
+    var link = links[i];
+
+    // Card: <a> se tem link, <div> se não
+    var card = document.createElement(link ? 'a' : 'div');
+    card.className = 'sponsor-showcase-card';
+    if (link) {
+      card.href = link;
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
     }
+    // Esconde todos; apenas o ativo será exibido pelo motor
+    card.style.display = 'none';
+    stage.appendChild(card);
+    cards.push(card);
 
-    // Container do card: <a> se tem link, <div> se não
-    var cardEl = targetLink ? document.createElement('a') : document.createElement('div');
-    cardEl.className = 'sponsor-slidecase-card';
-    if (targetLink) {
-      cardEl.href = targetLink;
-      cardEl.target = '_blank';
-      cardEl.rel = 'noopener noreferrer';
-    } else {
-      cardEl.classList.add('no-link');
+    // ── Área de slides (imagens) ──
+    var slidesArea = document.createElement('div');
+    slidesArea.className = 'sponsor-slides-area';
+    card.appendChild(slidesArea);
+
+    var files = s.images || [];
+    var imgs = [];
+    for (var j = 0; j < files.length; j++) {
+      var img = document.createElement('img');
+      img.src = files[j];
+      img.alt = s.name + ' - imagem ' + (j + 1);
+      img.className = 'sponsor-slide-img';
+      img.loading = 'lazy';
+      slidesArea.appendChild(img);
+      imgs.push(img);
     }
+    cardImgEls.push(imgs);
 
-    // ─── Logo Lateral (fixa, centralizada verticalmente) ───
-    var logoArea = document.createElement('div');
-    logoArea.className = 'sponsor-logo-area';
-
-    var logoImg = document.createElement('img');
-    logoImg.src = sponsor.logo;
-    logoImg.alt = 'Logo ' + sponsor.name;
-    logoImg.loading = 'lazy';
-    logoImg.className = 'sponsor-logo-img';
-    logoArea.appendChild(logoImg);
-
-    var logoName = document.createElement('span');
-    logoName.className = 'sponsor-logo-name';
-    logoName.textContent = sponsor.name;
-    logoArea.appendChild(logoName);
-
-    cardEl.appendChild(logoArea);
-
-    // ─── Área do Slideshow (ocupa todo espaço direito) ───
-    var slideArea = document.createElement('div');
-    slideArea.className = 'sponsor-slides-area';
-
-    var slidesFiles = sponsor.images || [];
-    var slideElements = [];
-
-    for (var idx = 0; idx < slidesFiles.length; idx++) {
-      var sImg = document.createElement('img');
-      sImg.src = slidesFiles[idx];
-      sImg.loading = 'lazy';
-      sImg.alt = sponsor.name + ' - imagem ' + (idx + 1);
-      sImg.className = 'sponsor-slide-img' + (idx === 0 ? ' active' : '');
-      slideArea.appendChild(sImg);
-      slideElements.push(sImg);
-    }
-
-    // Indicadores de slide (dots)
-    var dotsWrap = document.createElement('div');
-    dotsWrap.className = 'sponsor-slide-dots';
-    var dotElements = [];
-    for (var d = 0; d < slidesFiles.length; d++) {
+    // Dots de imagem
+    var imageDots = document.createElement('div');
+    imageDots.className = 'sponsor-image-dots';
+    var imgDotArr = [];
+    for (var d = 0; d < files.length; d++) {
       var dot = document.createElement('span');
-      dot.className = 'sponsor-dot' + (d === 0 ? ' active' : '');
-      dotsWrap.appendChild(dot);
-      dotElements.push(dot);
+      dot.className = 'sponsor-dot';
+      imageDots.appendChild(dot);
+      imgDotArr.push(dot);
     }
-    slideArea.appendChild(dotsWrap);
+    slidesArea.appendChild(imageDots);
+    cardImgDotEls.push(imgDotArr);
 
-    // Barra de progresso automático
+    // Barra de progresso
     var progressBar = document.createElement('div');
     progressBar.className = 'sponsor-slide-progress';
     var progressFill = document.createElement('div');
     progressFill.className = 'sponsor-slide-progress-fill';
     progressBar.appendChild(progressFill);
-    slideArea.appendChild(progressBar);
+    slidesArea.appendChild(progressBar);
+    cardProgressFills.push(progressFill);
 
-    // ─── Controles Manuais ───
+    // ── Rodapé: logo + nome + controles ──
+    var footer = document.createElement('div');
+    footer.className = 'sponsor-card-footer';
+
+    var logoWrap = document.createElement('div');
+    logoWrap.className = 'sponsor-card-logo-wrap';
+
+    var logoImg = document.createElement('img');
+    logoImg.src = s.logo;
+    logoImg.alt = 'Logo ' + s.name;
+    logoImg.className = 'sponsor-card-logo';
+    logoImg.loading = 'lazy';
+
+    var nameEl = document.createElement('span');
+    nameEl.className = 'sponsor-card-name';
+    nameEl.textContent = s.name;
+
+    logoWrap.appendChild(logoImg);
+    logoWrap.appendChild(nameEl);
+    footer.appendChild(logoWrap);
+
+    // Controles manuais
     var controls = document.createElement('div');
-    controls.className = 'sponsor-slide-controls';
-    // Impede propagação do clique para o <a> pai
+    controls.className = 'sponsor-card-controls';
     controls.addEventListener('click', function(e) {
       e.stopPropagation();
       e.preventDefault();
     });
 
     var btnPrev = document.createElement('button');
-    btnPrev.className = 'sponsor-btn-control';
-    btnPrev.setAttribute('aria-label', 'Voltar');
+    btnPrev.className = 'sponsor-btn-ctrl';
+    btnPrev.setAttribute('aria-label', 'Imagem anterior');
     btnPrev.innerHTML = '<span class="material-symbols-outlined">chevron_left</span>';
 
-    var btnPlayPause = document.createElement('button');
-    btnPlayPause.className = 'sponsor-btn-control';
-    btnPlayPause.setAttribute('aria-label', 'Pausar / Retomar');
-    btnPlayPause.title = 'Pausar / Retomar';
-    btnPlayPause.innerHTML = '<span class="material-symbols-outlined">pause</span>';
+    var btnPause = document.createElement('button');
+    btnPause.className = 'sponsor-btn-ctrl sponsor-btn-pause';
+    btnPause.setAttribute('aria-label', 'Pausar / Retomar');
+    btnPause.innerHTML = '<span class="material-symbols-outlined">pause</span>';
 
     var btnNext = document.createElement('button');
-    btnNext.className = 'sponsor-btn-control';
-    btnNext.setAttribute('aria-label', 'Avançar');
+    btnNext.className = 'sponsor-btn-ctrl';
+    btnNext.setAttribute('aria-label', 'Próxima imagem');
     btnNext.innerHTML = '<span class="material-symbols-outlined">chevron_right</span>';
 
     controls.appendChild(btnPrev);
-    controls.appendChild(btnPlayPause);
+    controls.appendChild(btnPause);
     controls.appendChild(btnNext);
-    slideArea.appendChild(controls);
+    footer.appendChild(controls);
 
-    cardEl.appendChild(slideArea);
-    grid.appendChild(cardEl);
+    card.appendChild(footer);
 
-    // ─── Lógica do Slideshow individual por card ───
-    (function(slideEls, dotEls, pFill, playPauseBtn) {
-      var currentIndex = 0;
-      var isPlaying = true;
-      var timer = null;
-      var SLIDE_INTERVAL = 7000;
+    // Dot de navegação de patrocinador
+    var navDot = document.createElement('span');
+    navDot.className = 'sponsor-nav-dot';
+    navDot.title = s.name;
+    sponsorNav.appendChild(navDot);
+    sponsorDotEls.push(navDot);
+  }
 
-      function renderSlide(index) {
-        if (slideEls.length === 0) return;
-        slideEls[currentIndex].classList.remove('active');
-        if (dotEls[currentIndex]) dotEls[currentIndex].classList.remove('active');
-        currentIndex = index;
-        if (currentIndex >= slideEls.length) currentIndex = 0;
-        if (currentIndex < 0) currentIndex = slideEls.length - 1;
-        slideEls[currentIndex].classList.add('active');
-        if (dotEls[currentIndex]) dotEls[currentIndex].classList.add('active');
-        restartProgress();
+  // ══════════════════════════════════════════
+  //  MOTOR DO SLIDESHOW SEQUENCIAL
+  // ══════════════════════════════════════════
+  var currentSponsor = 0;
+  var currentImage = 0;
+  var isPlaying = true;
+  var timer = null;
+  var locked = false; // Impede transições simultâneas
+
+  function setImageActive(sIdx, iIdx) {
+    var imgs = cardImgEls[sIdx];
+    var dots = cardImgDotEls[sIdx];
+    for (var i = 0; i < imgs.length; i++) {
+      imgs[i].classList.toggle('active', i === iIdx);
+      if (dots[i]) dots[i].classList.toggle('active', i === iIdx);
+    }
+  }
+
+  function setNavDot(sIdx) {
+    for (var i = 0; i < sponsorDotEls.length; i++) {
+      sponsorDotEls[i].classList.toggle('active', i === sIdx);
+    }
+  }
+
+  function startProgress(fill) {
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    void fill.offsetWidth; // force reflow so transition reset is applied before next transition starts
+    fill.style.transition = 'width ' + SLIDE_DURATION + 'ms linear';
+    fill.style.width = '100%';
+  }
+
+  function stopProgress(fill) {
+    fill.style.width = getComputedStyle(fill).width;
+    fill.style.transition = 'none';
+  }
+
+  function resetProgress(fill) {
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+  }
+
+  function showCurrentImage() {
+    setImageActive(currentSponsor, currentImage);
+    if (isPlaying) startProgress(cardProgressFills[currentSponsor]);
+  }
+
+  function scheduleNext() {
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      if (isPlaying && !locked) advance();
+    }, SLIDE_DURATION);
+  }
+
+  function advance() {
+    var totalImages = (sponsorsConfig[currentSponsor].images || []).length;
+    if (currentImage + 1 < totalImages) {
+      // Próxima imagem do mesmo patrocinador
+      currentImage++;
+      showCurrentImage();
+      scheduleNext();
+    } else {
+      // Próximo patrocinador
+      var next = (currentSponsor + 1) % sponsorsConfig.length;
+      switchSponsor(next);
+    }
+  }
+
+  function switchSponsor(newIdx) {
+    if (locked) return;
+    locked = true;
+    clearTimeout(timer);
+
+    var oldCard = cards[currentSponsor];
+    var oldFill = cardProgressFills[currentSponsor];
+    stopProgress(oldFill);
+
+    // Anima saída do card atual
+    oldCard.classList.add('sponsor-card-exit');
+
+    setTimeout(function() {
+      // Oculta card antigo e reseta seu estado interno
+      oldCard.classList.remove('sponsor-card-exit');
+      oldCard.style.display = 'none';
+      setImageActive(currentSponsor, 0);
+      resetProgress(cardProgressFills[currentSponsor]);
+
+      // Atualiza estado global
+      currentSponsor = newIdx;
+      currentImage = 0;
+      setNavDot(newIdx);
+
+      // Atualiza botão de pause dos controles
+      var btns = cards[newIdx].querySelectorAll('.sponsor-btn-pause');
+      if (btns.length > 0) {
+        btns[0].innerHTML = isPlaying
+          ? '<span class="material-symbols-outlined">pause</span>'
+          : '<span class="material-symbols-outlined">play_arrow</span>';
       }
 
-      function rotateNext() { renderSlide(currentIndex + 1); }
-      function rotatePrev() { renderSlide(currentIndex - 1); }
+      // Mostra novo card com animação de entrada
+      var newCard = cards[newIdx];
+      newCard.style.display = 'flex';
+      void newCard.offsetWidth; // force reflow so display change is processed before the enter animation starts
+      newCard.classList.add('sponsor-card-enter');
 
-      function restartProgress() {
-        pFill.style.transition = 'none';
-        pFill.style.width = '0%';
-        // Force reflow
-        void pFill.offsetWidth;
+      setTimeout(function() {
+        newCard.classList.remove('sponsor-card-enter');
+        locked = false;
+        setImageActive(currentSponsor, 0);
         if (isPlaying) {
-          pFill.style.transition = 'width ' + SLIDE_INTERVAL + 'ms linear';
-          pFill.style.width = '100%';
+          startProgress(cardProgressFills[currentSponsor]);
+          scheduleNext();
         }
-      }
+      }, 50);
+    }, 500);
+  }
 
-      function startAutoSlide() {
-        if (timer) clearInterval(timer);
-        timer = setInterval(function() {
-          if (isPlaying) rotateNext();
-        }, SLIDE_INTERVAL);
-        restartProgress();
-      }
+  // ── Conecta controles de cada card ──
+  for (var ci = 0; ci < cards.length; ci++) {
+    (function(idx) {
+      var card = cards[idx];
+      var allCtrl = card.querySelectorAll('.sponsor-btn-ctrl');
+      var bPrev  = allCtrl[0];
+      var bPause = allCtrl[1];
+      var bNext  = allCtrl[2];
 
-      // Inicia rotação automática
-      startAutoSlide();
-
-      btnPrev.addEventListener('click', function() {
-        rotatePrev();
-        startAutoSlide();
+      bPrev.addEventListener('click', function() {
+        if (locked || idx !== currentSponsor) return;
+        clearTimeout(timer);
+        var prev = currentImage - 1;
+        if (prev < 0) prev = (sponsorsConfig[currentSponsor].images || []).length - 1;
+        currentImage = prev;
+        showCurrentImage();
+        if (isPlaying) scheduleNext();
       });
 
-      btnNext.addEventListener('click', function() {
-        rotateNext();
-        startAutoSlide();
+      bNext.addEventListener('click', function() {
+        if (locked || idx !== currentSponsor) return;
+        clearTimeout(timer);
+        advance();
       });
 
-      playPauseBtn.addEventListener('click', function() {
+      bPause.addEventListener('click', function() {
+        if (idx !== currentSponsor) return;
         isPlaying = !isPlaying;
-        playPauseBtn.innerHTML = isPlaying
+        bPause.innerHTML = isPlaying
           ? '<span class="material-symbols-outlined">pause</span>'
           : '<span class="material-symbols-outlined">play_arrow</span>';
         if (isPlaying) {
-          startAutoSlide();
+          startProgress(cardProgressFills[currentSponsor]);
+          scheduleNext();
         } else {
-          pFill.style.width = getComputedStyle(pFill).width;
-          pFill.style.transition = 'none';
+          stopProgress(cardProgressFills[currentSponsor]);
+          clearTimeout(timer);
         }
       });
-    })(slideElements, dotElements, progressFill, btnPlayPause);
+
+      sponsorDotEls[idx].addEventListener('click', function() {
+        if (idx === currentSponsor || locked) return;
+        switchSponsor(idx);
+      });
+    })(ci);
+  }
+
+  // ── Inicia com o primeiro patrocinador ──
+  cards[0].style.display = 'flex';
+  setNavDot(0);
+  setImageActive(0, 0);
+  if (isPlaying) {
+    startProgress(cardProgressFills[0]);
+    scheduleNext();
   }
 }
