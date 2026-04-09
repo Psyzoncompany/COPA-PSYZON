@@ -125,6 +125,7 @@
             populateClientSelect();
             renderCodesList();
           }
+          hideSkeleton();
         }
 
         if (firstLoad) {
@@ -392,6 +393,18 @@
      6. AUTH MANAGEMENT
      ========================================================== */
 
+  /** Hide skeleton loading placeholders with a smooth fade-out */
+  function hideSkeleton() {
+    var skeleton = $('#skeleton-loading');
+    if (skeleton && skeleton.style.display !== 'none') {
+      skeleton.classList.add('skeleton-hide');
+      setTimeout(function() {
+        skeleton.style.display = 'none';
+        skeleton.classList.remove('skeleton-hide');
+      }, 300);
+    }
+  }
+
   /** Show login screen, hide main app */
   function showLoginScreen() {
     const loginScreen = $('#login-screen');
@@ -466,6 +479,9 @@
       populateClientSelect();
       renderCodesList();
     }
+
+    // Hide skeleton loader after content has rendered
+    hideSkeleton();
   }
 
   /** Translate Firebase auth errors to Portuguese messages */
