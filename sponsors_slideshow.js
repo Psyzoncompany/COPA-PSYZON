@@ -397,8 +397,8 @@ async function initSponsorsShowcase() {
         if (isPlaying) {
           startAutoSlide();
         } else {
+          pFill.style.width = getComputedStyle(pFill).width;
           pFill.style.transition = 'none';
-          pFill.style.width = pFill.style.width; // Freeze progress
         }
       });
     })(slideElements, dotElements, progressFill, btnPlayPause);
