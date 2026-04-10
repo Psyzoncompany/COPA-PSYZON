@@ -182,6 +182,17 @@ const sponsorsConfig = [
       'PATROCINADORES/banner virtu.png'
     ],
     linkFile: 'SLIDES/Barbearia Virtu+/link.txt'
+  },
+  {
+    id: 'imperio',
+    name: 'Império',
+    logo: 'PATROCINADORES/imperio.png',
+    images: [
+      'PATROCINADORES/banner IMPERIO.png',
+      'PATROCINADORES/banner IMPERIO.png',
+      'PATROCINADORES/banner IMPERIO.png'
+    ],
+    linkFile: null
   }
 ];
 
