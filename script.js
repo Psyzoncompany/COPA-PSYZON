@@ -85,8 +85,18 @@
     };
   }
 
-  /** Persist current state to Firestore */
+  /** Persist current state to Firestore AND offline-first persistence layer */
   function saveState() {
+    // --- Offline-first persistence (localStorage + Firebase estado/principal) ---
+    if (typeof window.Persistence !== 'undefined') {
+      try {
+        window.Persistence.persistState(state);
+      } catch (e) {
+        console.error('[saveState] Erro na persistência offline-first:', e);
+      }
+    }
+
+    // --- Original Firestore persistence (tournaments/main) ---
     if (firebaseAvailable && db) {
       // Remover valores undefined para evitar erros no Firestore adaptando para null
       const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
@@ -97,7 +107,7 @@
     }
   }
 
-  /** Subscribe to real-time state from Firestore */
+  /** Subscribe to real-time state from Firestore, with offline-first recovery fallback */
   function subscribeToState(callback) {
     if (firebaseAvailable && db) {
       let firstLoad = true;
@@ -133,12 +143,63 @@
         }
       }, (error) => {
         console.error('Erro no onSnapshot', error);
-        showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
-        if (typeof callback === 'function') callback();
+        // Try offline-first recovery before showing error
+        _recoverFromPersistence(function () {
+          showToast('Modo offline — dados recuperados localmente.', 'info');
+          if (typeof callback === 'function') callback();
+        }, function () {
+          showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
+          if (typeof callback === 'function') callback();
+        });
       });
     } else {
-      if (typeof callback === 'function') callback();
+      // No Firebase available — try offline-first recovery
+      _recoverFromPersistence(function () {
+        showToast('Modo offline — dados recuperados localmente.', 'info');
+        if (typeof callback === 'function') callback();
+      }, function () {
+        if (typeof callback === 'function') callback();
+      });
     }
+  }
+
+  /**
+   * Internal helper: attempt to recover state from offline-first persistence.
+   * @param {function} onSuccess - called if state was recovered
+   * @param {function} onFail - called if no state could be recovered
+   */
+  function _recoverFromPersistence(onSuccess, onFail) {
+    if (typeof window.Persistence === 'undefined') {
+      if (onFail) onFail();
+      return;
+    }
+    window.Persistence.recoverState().then(function (recoveredData) {
+      if (recoveredData && typeof recoveredData === 'object') {
+        state = Object.assign(defaultState(), recoveredData);
+        ensureBracketExists();
+
+        // Re-render UI
+        const mainApp = document.querySelector('#main-app');
+        if (mainApp && mainApp.style.display !== 'none') {
+          populateFormFromState();
+          renderTeamList();
+          renderPrize();
+          renderTournamentTitle();
+          renderBracket();
+          renderTop3();
+          if (isAdmin) {
+            populateClientSelect();
+            renderCodesList();
+          }
+        }
+
+        if (onSuccess) onSuccess();
+      } else {
+        if (onFail) onFail();
+      }
+    }).catch(function () {
+      if (onFail) onFail();
+    });
   }
 
   /**
@@ -4913,11 +4974,18 @@
      17. BACKUP SYSTEM
      ========================================================== */
 
-  /** Export state to a JSON file */
+  /** Export state to a JSON file (uses Persistence layer if available) */
   function handleExportBackup() {
     console.log('Iniciando exportação de backup...');
     try {
-      // Garantir que temos os dados mais recentes e limpos (sem referências circulares ou DOM)
+      // Use persistence layer for a complete appState export if available
+      if (typeof window.Persistence !== 'undefined') {
+        window.Persistence.exportarBackup();
+        showToast('Backup exportado com sucesso!', 'success');
+        return;
+      }
+
+      // Fallback: export raw state
       const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
       const dataStr = JSON.stringify(cleanState, null, 2);
 
@@ -4931,7 +4999,6 @@
       document.body.appendChild(a);
       a.click();
 
-      // Pequeno delay antes de remover para garantir que o download inicie
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
@@ -4964,23 +5031,39 @@
     const reader = new FileReader();
     reader.onload = function (event) {
       try {
-        const importedState = JSON.parse(event.target.result);
+        const rawJson = event.target.result;
+        const importedState = JSON.parse(rawJson);
 
-        // Basic validation
+        // Try importing through persistence layer first
+        if (typeof window.Persistence !== 'undefined') {
+          const result = window.Persistence.importarBackup(rawJson);
+          if (result.success) {
+            // Apply recovered data to app state
+            const recovered = window.Persistence.getData();
+            if (recovered && typeof recovered === 'object') {
+              state = Object.assign(defaultState(), recovered);
+            } else {
+              state = Object.assign(defaultState(), importedState.data || importedState);
+            }
+            saveState();
+            showToast('Backup importado com sucesso! Recarregando...', 'success');
+            e.target.value = '';
+            setTimeout(() => window.location.reload(), 1500);
+            return;
+          } else {
+            throw new Error(result.error || 'Erro na importação.');
+          }
+        }
+
+        // Fallback: basic validation and direct import
         if (typeof importedState !== 'object' || !Array.isArray(importedState.teams)) {
           throw new Error('Formato de arquivo inválido.');
         }
 
-        // Merge imported state into current state
         state = Object.assign(defaultState(), importedState);
-
         saveState();
         showToast('Backup importado com sucesso! Recarregando...', 'success');
-
-        // Clear input
         e.target.value = '';
-
-        // Reload to ensure all UI components sync with new state
         setTimeout(() => window.location.reload(), 1500);
       } catch (err) {
         console.error('Erro ao importar backup:', err);

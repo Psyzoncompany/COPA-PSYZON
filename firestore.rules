@@ -8,6 +8,12 @@ service cloud.firestore {
       allow write: if true; // Allows unauthenticated participants to register and update status
     }
 
+    // Estado collection (offline-first persistence)
+    match /estado/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Codes collection: authenticated admin can read/write, others can read
     match /codes/{codeId} {
       allow read: if true;
