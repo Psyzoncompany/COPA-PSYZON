@@ -23,6 +23,83 @@
 <body>
 
   <!-- ============================================
+       0. LOADING SCREEN
+       ============================================ -->
+  <div id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-logo-wrapper">
+        <img src="img/prefeitura-logo.png" alt="COPA PSYZON" class="loading-logo-img">
+      </div>
+      <h1 class="loading-title">COPA PSYZON</h1>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="loading-bar-fill"></div>
+      </div>
+      <span class="loading-percent" id="loading-percent">0%</span>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var fill = document.getElementById('loading-bar-fill');
+      var pct  = document.getElementById('loading-percent');
+      var progress = 0;
+      var targetProgress = 0;
+      var done = false;
+
+      /* Simulate smooth progress while resources load */
+      function setProgress(val) {
+        targetProgress = Math.min(val, 100);
+      }
+
+      function tick() {
+        if (done) return;
+        if (progress < targetProgress) {
+          progress += Math.max(0.5, (targetProgress - progress) * 0.08);
+          if (progress > targetProgress) progress = targetProgress;
+        }
+        var rounded = Math.round(progress);
+        fill.style.width = rounded + '%';
+        pct.textContent = rounded + '%';
+        if (progress < 100) {
+          requestAnimationFrame(tick);
+        } else {
+          done = true;
+          fill.style.width = '100%';
+          pct.textContent = '100%';
+          setTimeout(function() {
+            document.getElementById('loading-screen').classList.add('loaded');
+          }, 350);
+        }
+      }
+
+      /* Start slow progress immediately */
+      setProgress(30);
+      requestAnimationFrame(tick);
+
+      /* Bump progress as scripts parse */
+      document.addEventListener('DOMContentLoaded', function() {
+        setProgress(70);
+      });
+
+      /* Complete on full resource load */
+      window.addEventListener('load', function() {
+        setProgress(100);
+        /* Safety fallback if tick already stopped */
+        if (done) {
+          document.getElementById('loading-screen').classList.add('loaded');
+        }
+      });
+
+      /* Failsafe: never block the user for more than 8 seconds */
+      setTimeout(function() {
+        if (!done) {
+          setProgress(100);
+        }
+      }, 8000);
+    })();
+  </script>
+
+  <!-- ============================================
        1. LOGIN SCREEN (NEW PREMIUM DESIGN)
        ============================================ -->
   <section id="login-screen" class="login-screen-new">
