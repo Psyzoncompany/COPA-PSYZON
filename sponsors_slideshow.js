@@ -10,11 +10,11 @@ const sponsorsConfig = [
   {
     id: 'acai-ramos',
     name: 'Açaí Ramos',
-    logo: 'PATROCINADORES/banner ramos acai.png',
+    logo: 'SLIDES/Açaí Ramos +/logo.jpeg',
     images: [
-      'SLIDES/Açaí Ramos +/Screenshot 2026-04-08 at 11-06-11 (7) Instagram.png',
-      'SLIDES/Açaí Ramos +/Screenshot 2026-04-08 at 11-07-00 (7) Instagram.png',
-      'SLIDES/Açaí Ramos +/Screenshot 2026-04-08 at 11-07-34 (7) Instagram.png'
+      'SLIDES/Açaí Ramos +/slide 1.png',
+      'SLIDES/Açaí Ramos +/slide 2.png',
+      'SLIDES/Açaí Ramos +/slide 3.png'
     ],
     linkFile: 'SLIDES/Açaí Ramos +/Link.txt'
   },
@@ -32,22 +32,22 @@ const sponsorsConfig = [
   {
     id: 'bruno-leite',
     name: 'Bruno Leite Assessoria Contábil',
-    logo: 'SLIDES/Bruno Leite Assessoria Contábil/WhatsApp Image 2026-04-07 at 19.13.53.jpeg',
+    logo: 'SLIDES/Bruno Leite Assessoria Contábil/logo.jpeg',
     images: [
-      'SLIDES/Bruno Leite Assessoria Contábil/WhatsApp Image 2026-04-07 at 19.13.53.jpeg',
-      'SLIDES/Bruno Leite Assessoria Contábil/WhatsApp Image 2026-04-07 at 19.14.07.jpeg',
-      'SLIDES/Bruno Leite Assessoria Contábil/WhatsApp Image 2026-04-07 at 19.13.53.jpeg'
+      'SLIDES/Bruno Leite Assessoria Contábil/slide 1.jpeg',
+      'SLIDES/Bruno Leite Assessoria Contábil/slide 2.jpeg',
+      'SLIDES/Bruno Leite Assessoria Contábil/slide 3.jpeg'
     ],
     linkFile: 'SLIDES/Bruno Leite Assessoria Contábil/Link.txt'
   },
   {
     id: 'central-bebidas',
     name: 'Central de Bebidas e Ancore Seguradora',
-    logo: 'SLIDES/Central de Bebidas e Ancore Seguradora/WhatsApp Image 2026-04-08 at 09.00.09.jpeg',
+    logo: 'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png',
     images: [
-      'SLIDES/Central de Bebidas e Ancore Seguradora/WhatsApp Image 2026-04-08 at 09.00.09.jpeg',
-      'SLIDES/Central de Bebidas e Ancore Seguradora/WhatsApp Image 2026-04-08 at 09.00.09 1.jpeg',
-      'SLIDES/Central de Bebidas e Ancore Seguradora/WhatsApp Image 2026-04-08 at 09.00.09.jpeg'
+      'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png',
+      'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png',
+      'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png'
     ],
     linkFile: null
   },
@@ -65,33 +65,33 @@ const sponsorsConfig = [
   {
     id: 'daby-gourmet',
     name: 'Daby Gourmet',
-    logo: 'SLIDES/Daby Gourmet/WhatsApp Image 2026-04-08 at 14.44.18.jpeg',
+    logo: 'SLIDES/Daby Gourmet/slide 1.jpeg',
     images: [
-      'SLIDES/Daby Gourmet/WhatsApp Image 2026-04-08 at 14.44.18.jpeg',
-      'SLIDES/Daby Gourmet/WhatsApp Image 2026-04-08 at 14.44.18.jpeg',
-      'SLIDES/Daby Gourmet/WhatsApp Image 2026-04-08 at 14.44.18.jpeg'
+      'SLIDES/Daby Gourmet/slide 1.jpeg',
+      'SLIDES/Daby Gourmet/slide 1.jpeg',
+      'SLIDES/Daby Gourmet/slide 1.jpeg'
     ],
     linkFile: null
   },
   {
     id: 'eburger',
     name: 'E-Burger',
-    logo: 'SLIDES/E-Burger+/WhatsApp Image 2026-04-08 at 08.54.37.jpeg',
+    logo: 'SLIDES/E-Burger+/slide 1.jpeg',
     images: [
-      'SLIDES/E-Burger+/WhatsApp Image 2026-04-08 at 08.54.37.jpeg',
-      'SLIDES/E-Burger+/WhatsApp Image 2026-04-08 at 08.54.37 (1).jpeg',
-      'SLIDES/E-Burger+/WhatsApp Image 2026-04-08 at 08.54.37.jpeg'
+      'SLIDES/E-Burger+/slide 1.jpeg',
+      'SLIDES/E-Burger+/slide 2.jpeg',
+      'SLIDES/E-Burger+/slide 1.jpeg'
     ],
     linkFile: 'SLIDES/E-Burger+/Link.txt'
   },
   {
     id: 'fagundes',
     name: 'Fagundes Distribuidora',
-    logo: 'SLIDES/Fagundes Distribuidora/WhatsApp Image 2026-04-07 at 22.01.55.jpeg',
+    logo: 'SLIDES/Fagundes Distribuidora/logo.jpeg',
     images: [
-      'SLIDES/Fagundes Distribuidora/WhatsApp Image 2026-04-07 at 22.01.55.jpeg',
-      'SLIDES/Fagundes Distribuidora/WhatsApp Image 2026-04-07 at 22.01.54.jpeg',
-      'SLIDES/Fagundes Distribuidora/WhatsApp Image 2026-04-07 at 22.01.55.jpeg'
+      'SLIDES/Fagundes Distribuidora/slide 1.jpeg',
+      'SLIDES/Fagundes Distribuidora/logo.jpeg',
+      'SLIDES/Fagundes Distribuidora/slide 1.jpeg'
     ],
     linkFile: 'SLIDES/Fagundes Distribuidora/Link.txt'
   },
@@ -100,20 +100,20 @@ const sponsorsConfig = [
     name: 'Giselle Fest',
     logo: 'PATROCINADORES/banner giselle.png',
     images: [
-      'SLIDES/Giselle Fest +/Screenshot 2026-04-08 at 10-41-32 (7) Instagram.png',
-      'SLIDES/Giselle Fest +/Screenshot 2026-04-08 at 11-17-22 (7) Instagram.png',
-      'SLIDES/Giselle Fest +/Screenshot 2026-04-08 at 11-21-26 (7) Instagram.png'
+      'SLIDES/Giselle Fest +/slide 1.png',
+      'SLIDES/Giselle Fest +/slide 2.png',
+      'SLIDES/Giselle Fest +/slide 3.png'
     ],
     linkFile: 'SLIDES/Giselle Fest +/Link.txt'
   },
   {
     id: 'gycake',
     name: 'GyCake',
-    logo: 'SLIDES/GyCake +/Screenshot 2026-04-08 at 10-03-15 (7) Instagram.png',
+    logo: 'SLIDES/GyCake +/logo.jpeg',
     images: [
-      'SLIDES/GyCake +/Screenshot 2026-04-08 at 10-02-54 (7) Instagram.png',
-      'SLIDES/GyCake +/Screenshot 2026-04-08 at 10-03-15 (7) Instagram.png',
-      'SLIDES/GyCake +/Screenshot 2026-04-08 at 10-03-21 (7) Instagram.png'
+      'SLIDES/GyCake +/slide 1.png',
+      'SLIDES/GyCake +/slide 2.png',
+      'SLIDES/GyCake +/slide 3.png'
     ],
     linkFile: 'SLIDES/GyCake +/Link.txt'
   },
@@ -122,70 +122,70 @@ const sponsorsConfig = [
     name: 'Jane Jóias',
     logo: 'PATROCINADORES/banner jane joias.png',
     images: [
-      'SLIDES/Jane Jóias +/Screenshot 2026-04-08 at 11-27-55 Stories • Instagram.png',
-      'SLIDES/Jane Jóias +/Screenshot 2026-04-08 at 11-29-34 Stories • Instagram.png',
-      'SLIDES/Jane Jóias +/Screenshot 2026-04-08 at 11-31-03 Stories • Instagram.png'
+      'SLIDES/Jane Jóias +/slide 1.png',
+      'SLIDES/Jane Jóias +/slide 2.png',
+      'SLIDES/Jane Jóias +/slide 3.png'
     ],
     linkFile: 'SLIDES/Jane Jóias +/Link.txt'
   },
   {
     id: 'lavajato-tg',
     name: 'Lava Jato TG',
-    logo: 'SLIDES/Lava Jato TG +/WhatsApp Image 2026-04-08 at 07.59.15.jpeg',
+    logo: 'SLIDES/Lava Jato TG +/logo lava jato.jpeg',
     images: [
-      'SLIDES/Lava Jato TG +/WhatsApp Image 2026-04-08 at 07.59.15.jpeg',
-      'SLIDES/Lava Jato TG +/WhatsApp Image 2026-04-08 at 08.00.10.jpeg',
-      'SLIDES/Lava Jato TG +/WhatsApp Image 2026-04-08 at 08.00.15.jpeg'
+      'SLIDES/Lava Jato TG +/slide 1.jpeg',
+      'SLIDES/Lava Jato TG +/slide 2.jpeg',
+      'SLIDES/Lava Jato TG +/slide 3.jpeg'
     ],
     linkFile: 'SLIDES/Lava Jato TG +/Link.txt'
   },
   {
     id: 'ledulcis',
     name: 'Ledulcis Brigadeiria',
-    logo: 'SLIDES/Ledulcis +/Screenshot 2026-04-08 at 10-58-34 (7) Instagram.png',
+    logo: 'SLIDES/Ledulcis +/logo.jpeg',
     images: [
-      'SLIDES/Ledulcis +/Screenshot 2026-04-08 at 10-58-34 (7) Instagram.png',
-      'SLIDES/Ledulcis +/Screenshot 2026-04-08 at 10-58-51 (7) Instagram.png',
-      'SLIDES/Ledulcis +/Screenshot 2026-04-08 at 10-59-02 (7) Instagram.png'
+      'SLIDES/Ledulcis +/slide 1.png',
+      'SLIDES/Ledulcis +/slide 2.png',
+      'SLIDES/Ledulcis +/slide 3.png'
     ],
     linkFile: 'SLIDES/Ledulcis +/Link.txt'
   },
   {
     id: 'nachapa',
     name: 'Na Chapa',
-    logo: 'PATROCINADORES/banner na chapa.png',
+    logo: 'SLIDES/Na Chapa/logo.jpeg',
     images: [
-      'SLIDES/Na Chapa/Screenshot 2026-04-08 at 09-23-37 Instagram.png',
-      'SLIDES/Na Chapa/Screenshot 2026-04-08 at 09-25-07 (6) Instagram.png',
-      'SLIDES/Na Chapa/Screenshot 2026-04-08 at 11-22-43 (7) Instagram.png'
+      'SLIDES/Na Chapa/slide 1.png',
+      'SLIDES/Na Chapa/slide 2.png',
+      'SLIDES/Na Chapa/slide 3.png'
     ],
     linkFile: 'SLIDES/Na Chapa/Link.txt'
   },
   {
     id: 'rogeriorelogio',
     name: 'Rogério Relógio',
-    logo: 'PATROCINADORES/banner rogerio relogio.png',
+    logo: 'SLIDES/Rogério Relógio/logo.jpeg',
     images: [
-      'SLIDES/Rogério Relógio/WhatsApp Image 2026-04-03 at 17.05.34.jpeg',
+      'SLIDES/Rogério Relógio/logo.jpeg',
       'PATROCINADORES/banner rogerio relogio.png',
-      'SLIDES/Rogério Relógio/WhatsApp Image 2026-04-03 at 17.05.34.jpeg'
+      'SLIDES/Rogério Relógio/logo.jpeg'
     ],
     linkFile: null
   },
   {
     id: 'virtu',
     name: 'Barbearia Virtu',
-    logo: 'PATROCINADORES/banner virtu.png',
+    logo: 'SLIDES/Barbearia Virtu+/logo.png',
     images: [
-      'SLIDES/Barbearia Virtu+/IMG_6324.JPG.jpeg',
-      'SLIDES/Barbearia Virtu+/Logotipo Secúndaria - Negativo.png',
-      'PATROCINADORES/banner virtu.png'
+      'SLIDES/Barbearia Virtu+/slide 1.jpeg',
+      'SLIDES/Barbearia Virtu+/slide 3.jpeg',
+      'SLIDES/Barbearia Virtu+/logo.png'
     ],
-    linkFile: null
+    linkFile: 'SLIDES/Barbearia Virtu+/link.txt'
   }
 ];
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   initSponsorsShowcase();
 });
 
@@ -216,12 +216,12 @@ async function initSponsorsShowcase() {
 
   // ─── Resolução de links (fetch todos em paralelo) ───
   var sponsorLinks = [];
-  var linkPromises = sponsorsConfig.map(function(sponsor) {
+  var linkPromises = sponsorsConfig.map(function (sponsor) {
     if (!sponsor.linkFile) return Promise.resolve('');
     return fetch(sponsor.linkFile)
-      .then(function(r) { return r.ok ? r.text() : ''; })
-      .then(function(t) { return extractFirstUrl(t); })
-      .catch(function() { return ''; });
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (t) { return extractFirstUrl(t); })
+      .catch(function () { return ''; });
   });
   sponsorLinks = await Promise.all(linkPromises);
 
@@ -365,7 +365,7 @@ async function initSponsorsShowcase() {
     if (activeCard) {
       activeCard.classList.add('exiting');
       var old = activeCard;
-      setTimeout(function() { if (old.parentNode) old.parentNode.removeChild(old); }, 500);
+      setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 500);
     }
 
     // Constrói novo card
@@ -416,7 +416,7 @@ async function initSponsorsShowcase() {
    */
   function startAutoSlide() {
     if (timer) clearInterval(timer);
-    timer = setInterval(function() {
+    timer = setInterval(function () {
       if (isPlaying) advance();
     }, SLIDE_INTERVAL);
     restartProgress();
@@ -447,21 +447,21 @@ async function initSponsorsShowcase() {
   controls.appendChild(btnNext);
   container.appendChild(controls);
 
-  btnPrev.addEventListener('click', function(e) {
+  btnPrev.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
     showSponsor(currentSponsor - 1, 0);
     startAutoSlide();
   });
 
-  btnNext.addEventListener('click', function(e) {
+  btnNext.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
     showSponsor(currentSponsor + 1, 0);
     startAutoSlide();
   });
 
-  btnPlayPause.addEventListener('click', function(e) {
+  btnPlayPause.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
     isPlaying = !isPlaying;
