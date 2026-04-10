@@ -336,7 +336,7 @@
    * @returns {object} appState envelope
    */
   function wrapState(rawState, version) {
-    var v = typeof version === 'number' ? version : (_appState.version + 1);
+    var v = typeof version === 'number' ? version : _appState.version;
     return {
       version: v,
       updatedAt: new Date().toISOString(),
@@ -374,10 +374,16 @@
 
   /** Debounced save for Firebase (localStorage saves immediately) */
   var _debouncedFirebaseSave = debounce(function (appState) {
+    // Only sync if this appState is still current (avoid stale writes)
+    if (appState.version !== _appState.version) return;
     saveToFirebase(appState, function () {
-      setStatus(STATUS.SYNCED);
+      if (appState.version === _appState.version) {
+        setStatus(STATUS.SYNCED);
+      }
     }, function () {
-      setStatus(STATUS.OFFLINE);
+      if (appState.version === _appState.version) {
+        setStatus(STATUS.OFFLINE);
+      }
     });
   }, DEBOUNCE_MS);
 
@@ -535,9 +541,9 @@
       // Accept both wrapped appState and raw state
       var appState;
       if (isValidAppState(parsed)) {
-        // Already wrapped — bump version
+        // Already wrapped — use sequential version from current state
         appState = {
-          version: Math.max(parsed.version, _appState.version) + 1,
+          version: _appState.version + 1,
           updatedAt: new Date().toISOString(),
           data: parsed.data
         };
