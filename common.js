@@ -14,7 +14,15 @@ const globalSponsorsHTML = `
       <a href="https://www.instagram.com/ramos_acai_" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner ramos acai.png" alt="Sponsor RAMOS AÇAI"></a>
       <a href="https://www.instagram.com/bizucahealthacademy" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner bizuca.png" alt="Sponsor BIZUCA HEALTH ACADEMY"></a>
       <a href="https://www.instagram.com/chef_giselle_oliveira" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/banner giselle.png" alt="Sponsor GISELLE FEST"></a>
-      <div class="sponsor-placeholder">Seja Patrocinador</div>
+      <a href="https://www.instagram.com/ledulcis.brigadeiria/" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/L%C3%AA%20Dulcis.png" alt="Sponsor LEDULCIS"></a>
+      <a href="https://www.instagram.com/brunoleite.contador/" target="_blank" class="sponsor-placeholder"><img src="SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/logo.jpeg" alt="Sponsor BRUNO LEITE"></a>
+      <div class="sponsor-placeholder"><img src="PATROCINADORES/central%20atacatista.png" alt="Sponsor CENTRAL DE BEBIDAS"></div>
+      <div class="sponsor-placeholder"><img src="PATROCINADORES/daby%20gourmet.png" alt="Sponsor DABY GOURMET"></div>
+      <a href="https://www.instagram.com/e.burguer_" target="_blank" class="sponsor-placeholder"><img src="SLIDES/E-Burger+/slide%201.jpeg" alt="Sponsor E-BURGER"></a>
+      <a href="https://www.instagram.com/fagundes_distribuidora/" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/fagundes.png" alt="Sponsor FAGUNDES DISTRIBUIDORA"></a>
+      <a href="https://www.instagram.com/gycake/" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/gy%20cake.png" alt="Sponsor GYCAKE"></a>
+      <a href="https://www.instagram.com/tg_lava_jato/" target="_blank" class="sponsor-placeholder"><img src="PATROCINADORES/lava%20jato%20tg.png" alt="Sponsor LAVA JATO TG"></a>
+      <div class="sponsor-placeholder"><img src="PATROCINADORES/banner%20IMPERIO.png" alt="Sponsor IMPERIO"></div>
     </div>
   </div>
 `;
