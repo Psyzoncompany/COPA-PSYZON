@@ -85,21 +85,11 @@
     };
   }
 
-  /** Persist current state to Firestore AND offline-first persistence layer */
+  /** Persist current state to Firestore */
   function saveState() {
-    // --- Offline-first persistence (localStorage + Firebase estado/principal) ---
-    if (typeof window.Persistence !== 'undefined') {
-      try {
-        window.Persistence.persistState(state);
-      } catch (e) {
-        console.error('[saveState] Erro na persistência offline-first:', e);
-      }
-    }
-
-    // --- Original Firestore persistence (tournaments/main) ---
     if (firebaseAvailable && db) {
-      // Remover valores undefined para evitar erros no Firestore adaptando para null
-      const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
+      // Remover valores undefined para evitar erros no Firestore
+      const cleanState = JSON.parse(JSON.stringify(state));
       db.collection('tournaments').doc('main').set(cleanState).catch((err) => {
         console.error('Erro ao salvar no Firestore:', err);
         showToast('Erro ao salvar no banco. Verifique as Regras do Firestore!', 'error');
@@ -107,7 +97,7 @@
     }
   }
 
-  /** Subscribe to real-time state from Firestore, with offline-first recovery fallback */
+  /** Subscribe to real-time state from Firestore */
   function subscribeToState(callback) {
     if (firebaseAvailable && db) {
       let firstLoad = true;
@@ -143,63 +133,12 @@
         }
       }, (error) => {
         console.error('Erro no onSnapshot', error);
-        // Try offline-first recovery before showing error
-        _recoverFromPersistence(function () {
-          showToast('Modo offline — dados recuperados localmente.', 'info');
-          if (typeof callback === 'function') callback();
-        }, function () {
-          showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
-          if (typeof callback === 'function') callback();
-        });
+        showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
+        if (typeof callback === 'function') callback();
       });
     } else {
-      // No Firebase available — try offline-first recovery
-      _recoverFromPersistence(function () {
-        showToast('Modo offline — dados recuperados localmente.', 'info');
-        if (typeof callback === 'function') callback();
-      }, function () {
-        if (typeof callback === 'function') callback();
-      });
+      if (typeof callback === 'function') callback();
     }
-  }
-
-  /**
-   * Internal helper: attempt to recover state from offline-first persistence.
-   * @param {function} onSuccess - called if state was recovered
-   * @param {function} onFail - called if no state could be recovered
-   */
-  function _recoverFromPersistence(onSuccess, onFail) {
-    if (typeof window.Persistence === 'undefined') {
-      if (onFail) onFail();
-      return;
-    }
-    window.Persistence.recoverState().then(function (recoveredData) {
-      if (recoveredData && typeof recoveredData === 'object') {
-        state = Object.assign(defaultState(), recoveredData);
-        ensureBracketExists();
-
-        // Re-render UI
-        const mainApp = document.querySelector('#main-app');
-        if (mainApp && mainApp.style.display !== 'none') {
-          populateFormFromState();
-          renderTeamList();
-          renderPrize();
-          renderTournamentTitle();
-          renderBracket();
-          renderTop3();
-          if (isAdmin) {
-            populateClientSelect();
-            renderCodesList();
-          }
-        }
-
-        if (onSuccess) onSuccess();
-      } else {
-        if (onFail) onFail();
-      }
-    }).catch(function () {
-      if (onFail) onFail();
-    });
   }
 
   /**
@@ -4979,7 +4918,7 @@
     console.log('Iniciando exportação de backup...');
     try {
       // Garantir que temos os dados mais recentes e limpos (sem referências circulares ou DOM)
-      const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
+      const cleanState = JSON.parse(JSON.stringify(state));
       const dataStr = JSON.stringify(cleanState, null, 2);
 
       const blob = new Blob([dataStr], { type: 'application/json' });
@@ -5024,7 +4963,12 @@
     const reader = new FileReader();
     reader.onload = function (event) {
       try {
-        const importedState = JSON.parse(event.target.result);
+        let importedState = JSON.parse(event.target.result);
+
+        // Accept persistence-wrapped format { version, updatedAt, data }
+        if (importedState && typeof importedState === 'object' && importedState.data && typeof importedState.data === 'object' && typeof importedState.version === 'number') {
+          importedState = importedState.data;
+        }
 
         // Basic validation
         if (typeof importedState !== 'object' || !Array.isArray(importedState.teams)) {
