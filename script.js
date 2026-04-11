@@ -4974,18 +4974,11 @@
      17. BACKUP SYSTEM
      ========================================================== */
 
-  /** Export state to a JSON file (uses Persistence layer if available) */
+  /** Export state to a JSON file */
   function handleExportBackup() {
     console.log('Iniciando exportação de backup...');
     try {
-      // Use persistence layer for a complete appState export if available
-      if (typeof window.Persistence !== 'undefined') {
-        window.Persistence.exportarBackup();
-        showToast('Backup exportado com sucesso!', 'success');
-        return;
-      }
-
-      // Fallback: export raw state
+      // Garantir que temos os dados mais recentes e limpos (sem referências circulares ou DOM)
       const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
       const dataStr = JSON.stringify(cleanState, null, 2);
 
@@ -5031,39 +5024,23 @@
     const reader = new FileReader();
     reader.onload = function (event) {
       try {
-        const rawJson = event.target.result;
-        const importedState = JSON.parse(rawJson);
+        const importedState = JSON.parse(event.target.result);
 
-        // Try importing through persistence layer first
-        if (typeof window.Persistence !== 'undefined') {
-          const result = window.Persistence.importarBackup(rawJson);
-          if (result.success) {
-            // Apply recovered data to app state
-            const recovered = window.Persistence.getData();
-            if (recovered && typeof recovered === 'object') {
-              state = Object.assign(defaultState(), recovered);
-            } else {
-              state = Object.assign(defaultState(), importedState.data || importedState);
-            }
-            saveState();
-            showToast('Backup importado com sucesso! Recarregando...', 'success');
-            e.target.value = '';
-            setTimeout(() => window.location.reload(), 1500);
-            return;
-          } else {
-            throw new Error(result.error || 'Erro na importação.');
-          }
-        }
-
-        // Fallback: basic validation and direct import
+        // Basic validation
         if (typeof importedState !== 'object' || !Array.isArray(importedState.teams)) {
           throw new Error('Formato de arquivo inválido.');
         }
 
+        // Merge imported state into current state
         state = Object.assign(defaultState(), importedState);
+
         saveState();
         showToast('Backup importado com sucesso! Recarregando...', 'success');
+
+        // Clear input
         e.target.value = '';
+
+        // Reload to ensure all UI components sync with new state
         setTimeout(() => window.location.reload(), 1500);
       } catch (err) {
         console.error('Erro ao importar backup:', err);
