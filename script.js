@@ -85,8 +85,18 @@
     };
   }
 
-  /** Persist current state to Firestore */
+  /** Persist current state to Firestore AND offline-first persistence layer */
   function saveState() {
+    // --- Offline-first persistence (localStorage + Firebase estado/principal) ---
+    if (typeof window.Persistence !== 'undefined') {
+      try {
+        window.Persistence.persistState(state);
+      } catch (e) {
+        console.error('[saveState] Erro na persistência offline-first:', e);
+      }
+    }
+
+    // --- Original Firestore persistence (tournaments/main) ---
     if (firebaseAvailable && db) {
       // Remover valores undefined para evitar erros no Firestore adaptando para null
       const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
@@ -97,7 +107,7 @@
     }
   }
 
-  /** Subscribe to real-time state from Firestore */
+  /** Subscribe to real-time state from Firestore, with offline-first recovery fallback */
   function subscribeToState(callback) {
     if (firebaseAvailable && db) {
       let firstLoad = true;
@@ -133,12 +143,63 @@
         }
       }, (error) => {
         console.error('Erro no onSnapshot', error);
-        showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
-        if (typeof callback === 'function') callback();
+        // Try offline-first recovery before showing error
+        _recoverFromPersistence(function () {
+          showToast('Modo offline — dados recuperados localmente.', 'info');
+          if (typeof callback === 'function') callback();
+        }, function () {
+          showToast('Você não tem permissão de leitura no BD. Aplique as novas Regras do Firestore.', 'error');
+          if (typeof callback === 'function') callback();
+        });
       });
     } else {
-      if (typeof callback === 'function') callback();
+      // No Firebase available — try offline-first recovery
+      _recoverFromPersistence(function () {
+        showToast('Modo offline — dados recuperados localmente.', 'info');
+        if (typeof callback === 'function') callback();
+      }, function () {
+        if (typeof callback === 'function') callback();
+      });
     }
+  }
+
+  /**
+   * Internal helper: attempt to recover state from offline-first persistence.
+   * @param {function} onSuccess - called if state was recovered
+   * @param {function} onFail - called if no state could be recovered
+   */
+  function _recoverFromPersistence(onSuccess, onFail) {
+    if (typeof window.Persistence === 'undefined') {
+      if (onFail) onFail();
+      return;
+    }
+    window.Persistence.recoverState().then(function (recoveredData) {
+      if (recoveredData && typeof recoveredData === 'object') {
+        state = Object.assign(defaultState(), recoveredData);
+        ensureBracketExists();
+
+        // Re-render UI
+        const mainApp = document.querySelector('#main-app');
+        if (mainApp && mainApp.style.display !== 'none') {
+          populateFormFromState();
+          renderTeamList();
+          renderPrize();
+          renderTournamentTitle();
+          renderBracket();
+          renderTop3();
+          if (isAdmin) {
+            populateClientSelect();
+            renderCodesList();
+          }
+        }
+
+        if (onSuccess) onSuccess();
+      } else {
+        if (onFail) onFail();
+      }
+    }).catch(function () {
+      if (onFail) onFail();
+    });
   }
 
   /**
@@ -4931,7 +4992,6 @@
       document.body.appendChild(a);
       a.click();
 
-      // Pequeno delay antes de remover para garantir que o download inicie
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);

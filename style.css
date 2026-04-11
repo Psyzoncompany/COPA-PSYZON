@@ -5199,3 +5199,67 @@ textarea::placeholder {
 .sponsor-btn-control span {
   font-size: 24px;
 }
+
+/* ---------- PERSISTENCE STATUS INDICATOR ---------- */
+.persistence-status {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  background: var(--glass-bg, rgba(30, 30, 30, 0.85));
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  color: var(--text-secondary, #aaa);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.persistence-status--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.persistence-status-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.persistence-status--saving {
+  color: var(--accent-yellow, #ffcc00);
+}
+
+.persistence-status--saved_local {
+  color: var(--accent-green, #34c759);
+}
+
+.persistence-status--synced {
+  color: var(--primary, #007aff);
+}
+
+.persistence-status--offline {
+  color: var(--accent-orange, #ff9500);
+}
+
+.persistence-status--recovered {
+  color: var(--accent-yellow, #ffcc00);
+}
+
+@media (max-width: 768px) {
+  .persistence-status {
+    bottom: 10px;
+    right: 10px;
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}
