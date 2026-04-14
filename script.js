@@ -87,7 +87,7 @@
 
   /** Persist current state to Firestore AND offline-first persistence layer */
   function saveState() {
-    // --- Offline-first persistence (localStorage + Firebase estado/principal) ---
+    // --- Offline-first persistence (localStorage modular + Firebase estado/principal) ---
     if (typeof window.Persistence !== 'undefined') {
       try {
         window.Persistence.persistState(state);
@@ -96,11 +96,11 @@
       }
     }
 
-    // --- Original Firestore persistence (tournaments/main) ---
+    // --- Original Firestore persistence (tournaments/main) with MERGE ---
     if (firebaseAvailable && db) {
-      // Remover valores undefined para evitar erros no Firestore adaptando para null
       const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
-      db.collection('tournaments').doc('main').set(cleanState).catch((err) => {
+      // merge:true → never wipes existing fields if incoming data is partial/empty
+      db.collection('tournaments').doc('main').set(cleanState, { merge: true }).catch((err) => {
         console.error('Erro ao salvar no Firestore:', err);
         showToast('Erro ao salvar no banco. Verifique as Regras do Firestore!', 'error');
       });
@@ -113,7 +113,20 @@
       let firstLoad = true;
       db.collection('tournaments').doc('main').onSnapshot((doc) => {
         if (doc.exists) {
-          state = Object.assign(defaultState(), doc.data());
+          const incoming = doc.data();
+          // OVERWRITE PROTECTION: merge incoming with current state
+          // If incoming fields are empty but current has data, keep current
+          if (incoming && typeof incoming === 'object') {
+            const P = window.Persistence;
+            if (P && typeof P.mergeStates === 'function' && typeof P.isFieldEmpty === 'function') {
+              const merged = P.mergeStates(incoming, state);
+              state = Object.assign(defaultState(), merged);
+            } else {
+              state = Object.assign(defaultState(), incoming);
+            }
+          } else {
+            state = Object.assign(defaultState(), incoming);
+          }
         } else {
           state = defaultState();
           saveState(); // Initialize document with default state

@@ -5389,6 +5389,10 @@ textarea::placeholder {
   color: var(--accent-yellow, #ffcc00);
 }
 
+.persistence-status--error {
+  color: #ff3b30;
+}
+
 @media (max-width: 768px) {
   .persistence-status {
     bottom: 10px;
