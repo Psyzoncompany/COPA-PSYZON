@@ -10,187 +10,187 @@ const sponsorsConfig = [
   {
     id: 'acai-ramos',
     name: 'Açaí Ramos',
-    logo: 'SLIDES/Açaí Ramos +/logo.jpeg',
+    logo: 'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/logo.jpeg',
     images: [
-      'SLIDES/Açaí Ramos +/slide 1.png',
-      'SLIDES/Açaí Ramos +/slide 2.png',
-      'SLIDES/Açaí Ramos +/slide 3.png'
+      'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/slide%201.png',
+      'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/slide%202.png',
+      'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/slide%203.png'
     ],
-    linkFile: 'SLIDES/Açaí Ramos +/Link.txt'
+    linkFile: 'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/Link.txt'
   },
   {
     id: 'bizuca',
     name: 'Bizuca Health & Academy',
-    logo: 'PATROCINADORES/banner bizuca.png',
+    logo: 'PATROCINADORES/banner%20bizuca.png',
     images: [
-      'PATROCINADORES/banner bizuca.png',
-      'PATROCINADORES/banner bizuca.png',
-      'PATROCINADORES/banner bizuca.png'
+      'PATROCINADORES/banner%20bizuca.png',
+      'PATROCINADORES/banner%20bizuca.png',
+      'PATROCINADORES/banner%20bizuca.png'
     ],
-    linkFile: 'SLIDES/Bizuca Health & Academy/Link.txt'
+    linkFile: 'SLIDES/Bizuca%20Health%20%26%20Academy/Link.txt'
   },
   {
     id: 'bruno-leite',
     name: 'Bruno Leite Assessoria Contábil',
-    logo: 'SLIDES/Bruno Leite Assessoria Contábil/logo.jpeg',
+    logo: 'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/logo.jpeg',
     images: [
-      'SLIDES/Bruno Leite Assessoria Contábil/slide 1.jpeg',
-      'SLIDES/Bruno Leite Assessoria Contábil/slide 2.jpeg',
-      'SLIDES/Bruno Leite Assessoria Contábil/slide 3.jpeg'
+      'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/slide%201.jpeg',
+      'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/slide%202.jpeg',
+      'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/slide%203.jpeg'
     ],
-    linkFile: 'SLIDES/Bruno Leite Assessoria Contábil/Link.txt'
+    linkFile: 'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/Link.txt'
   },
   {
     id: 'central-bebidas',
     name: 'Central de Bebidas e Ancore Seguradora',
-    logo: 'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png',
+    logo: 'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png',
     images: [
-      'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png',
-      'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png',
-      'SLIDES/Central de Bebidas e Ancore Seguradora/logo central das bebidas.png'
+      'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png',
+      'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png',
+      'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png'
     ],
     linkFile: null
   },
   {
     id: 'revitalize',
     name: 'Clínica Revitalize',
-    logo: 'PATROCINADORES/banner revitalize.png',
+    logo: 'PATROCINADORES/banner%20revitalize.png',
     images: [
-      'PATROCINADORES/banner revitalize.png',
-      'PATROCINADORES/banner revitalize.png',
-      'PATROCINADORES/banner revitalize.png'
+      'PATROCINADORES/banner%20revitalize.png',
+      'PATROCINADORES/banner%20revitalize.png',
+      'PATROCINADORES/banner%20revitalize.png'
     ],
-    linkFile: 'SLIDES/Clinica Revitalize+/Link.txt'
+    linkFile: 'SLIDES/Clinica%20Revitalize+/Link.txt'
   },
   {
     id: 'daby-gourmet',
     name: 'Daby Gourmet',
-    logo: 'SLIDES/Daby Gourmet/slide 1.jpeg',
+    logo: 'SLIDES/Daby%20Gourmet/slide%201.jpeg',
     images: [
-      'SLIDES/Daby Gourmet/slide 1.jpeg',
-      'SLIDES/Daby Gourmet/slide 1.jpeg',
-      'SLIDES/Daby Gourmet/slide 1.jpeg'
+      'SLIDES/Daby%20Gourmet/slide%201.jpeg',
+      'SLIDES/Daby%20Gourmet/slide%201.jpeg',
+      'SLIDES/Daby%20Gourmet/slide%201.jpeg'
     ],
     linkFile: null
   },
   {
     id: 'eburger',
     name: 'E-Burger',
-    logo: 'SLIDES/E-Burger+/slide 1.jpeg',
+    logo: 'SLIDES/E-Burger+/slide%201.jpeg',
     images: [
-      'SLIDES/E-Burger+/slide 1.jpeg',
-      'SLIDES/E-Burger+/slide 2.jpeg',
-      'SLIDES/E-Burger+/slide 1.jpeg'
+      'SLIDES/E-Burger+/slide%201.jpeg',
+      'SLIDES/E-Burger+/slide%202.jpeg',
+      'SLIDES/E-Burger+/slide%201.jpeg'
     ],
     linkFile: 'SLIDES/E-Burger+/Link.txt'
   },
   {
     id: 'fagundes',
     name: 'Fagundes Distribuidora',
-    logo: 'SLIDES/Fagundes Distribuidora/logo.jpeg',
+    logo: 'SLIDES/Fagundes%20Distribuidora/logo.jpeg',
     images: [
-      'SLIDES/Fagundes Distribuidora/slide 1.jpeg',
-      'SLIDES/Fagundes Distribuidora/slide 1.jpeg',
-      'SLIDES/Fagundes Distribuidora/slide 1.jpeg'
+      'SLIDES/Fagundes%20Distribuidora/slide%201.jpeg',
+      'SLIDES/Fagundes%20Distribuidora/slide%201.jpeg',
+      'SLIDES/Fagundes%20Distribuidora/slide%201.jpeg'
     ],
-    linkFile: 'SLIDES/Fagundes Distribuidora/Link.txt'
+    linkFile: 'SLIDES/Fagundes%20Distribuidora/Link.txt'
   },
   {
     id: 'giselle',
     name: 'Giselle Fest',
-    logo: 'PATROCINADORES/banner giselle.png',
+    logo: 'PATROCINADORES/banner%20giselle.png',
     images: [
-      'SLIDES/Giselle Fest +/slide 1.png',
-      'SLIDES/Giselle Fest +/slide 2.png',
-      'SLIDES/Giselle Fest +/slide 3.png'
+      'SLIDES/Giselle%20Fest%20+/slide%201.png',
+      'SLIDES/Giselle%20Fest%20+/slide%202.png',
+      'SLIDES/Giselle%20Fest%20+/slide%203.png'
     ],
-    linkFile: 'SLIDES/Giselle Fest +/Link.txt'
+    linkFile: 'SLIDES/Giselle%20Fest%20+/Link.txt'
   },
   {
     id: 'gycake',
     name: 'GyCake',
-    logo: 'SLIDES/GyCake +/logo.jpeg',
+    logo: 'SLIDES/GyCake%20+/logo.jpeg',
     images: [
-      'SLIDES/GyCake +/slide 1.png',
-      'SLIDES/GyCake +/slide 2.png',
-      'SLIDES/GyCake +/slide 3.png'
+      'SLIDES/GyCake%20+/slide%201.png',
+      'SLIDES/GyCake%20+/slide%202.png',
+      'SLIDES/GyCake%20+/slide%203.png'
     ],
-    linkFile: 'SLIDES/GyCake +/Link.txt'
+    linkFile: 'SLIDES/GyCake%20+/Link.txt'
   },
   {
     id: 'janejoias',
     name: 'Jane Jóias',
-    logo: 'PATROCINADORES/banner jane joias.png',
+    logo: 'PATROCINADORES/banner%20jane%20joias.png',
     images: [
-      'SLIDES/Jane Jóias +/slide 1.png',
-      'SLIDES/Jane Jóias +/slide 2.png',
-      'SLIDES/Jane Jóias +/slide 3.png'
+      'SLIDES/Jane%20J%C3%B3ias%20+/slide%201.png',
+      'SLIDES/Jane%20J%C3%B3ias%20+/slide%202.png',
+      'SLIDES/Jane%20J%C3%B3ias%20+/slide%203.png'
     ],
-    linkFile: 'SLIDES/Jane Jóias +/Link.txt'
+    linkFile: 'SLIDES/Jane%20J%C3%B3ias%20+/Link.txt'
   },
   {
     id: 'lavajato-tg',
     name: 'Lava Jato TG',
-    logo: 'SLIDES/Lava Jato TG +/logo lava jato.jpeg',
+    logo: 'SLIDES/Lava%20Jato%20TG%20+/logo%20lava%20jato.jpeg',
     images: [
-      'SLIDES/Lava Jato TG +/slide 1.jpeg',
-      'SLIDES/Lava Jato TG +/slide 2.jpeg',
-      'SLIDES/Lava Jato TG +/slide 3.jpeg'
+      'SLIDES/Lava%20Jato%20TG%20+/slide%201.jpeg',
+      'SLIDES/Lava%20Jato%20TG%20+/slide%202.jpeg',
+      'SLIDES/Lava%20Jato%20TG%20+/slide%203.jpeg'
     ],
-    linkFile: 'SLIDES/Lava Jato TG +/Link.txt'
+    linkFile: 'SLIDES/Lava%20Jato%20TG%20+/Link.txt'
   },
   {
     id: 'ledulcis',
     name: 'Ledulcis Brigadeiria',
-    logo: 'SLIDES/Ledulcis +/logo.jpeg',
+    logo: 'SLIDES/Ledulcis%20+/logo.jpeg',
     images: [
-      'SLIDES/Ledulcis +/slide 1.png',
-      'SLIDES/Ledulcis +/slide 2.png',
-      'SLIDES/Ledulcis +/slide 3.png'
+      'SLIDES/Ledulcis%20+/slide%201.png',
+      'SLIDES/Ledulcis%20+/slide%202.png',
+      'SLIDES/Ledulcis%20+/slide%203.png'
     ],
-    linkFile: 'SLIDES/Ledulcis +/Link.txt'
+    linkFile: 'SLIDES/Ledulcis%20+/Link.txt'
   },
   {
     id: 'nachapa',
     name: 'Na Chapa',
-    logo: 'SLIDES/Na Chapa/logo.jpeg',
+    logo: 'SLIDES/Na%20Chapa/logo.jpeg',
     images: [
-      'SLIDES/Na Chapa/slide 1.png',
-      'SLIDES/Na Chapa/slide 2.png',
-      'SLIDES/Na Chapa/slide 3.png'
+      'SLIDES/Na%20Chapa/slide%201.png',
+      'SLIDES/Na%20Chapa/slide%202.png',
+      'SLIDES/Na%20Chapa/slide%203.png'
     ],
-    linkFile: 'SLIDES/Na Chapa/Link.txt'
+    linkFile: 'SLIDES/Na%20Chapa/Link.txt'
   },
   {
     id: 'rogeriorelogio',
     name: 'Rogério Relógio',
-    logo: 'SLIDES/Rogério Relógio/logo.jpeg',
+    logo: 'SLIDES/Rog%C3%A9rio%20Rel%C3%B3gio/logo.jpeg',
     images: [
-      'SLIDES/Rogério Relógio/logo.jpeg',
-      'PATROCINADORES/banner rogerio relogio.png',
-      'SLIDES/Rogério Relógio/logo.jpeg'
+      'SLIDES/Rog%C3%A9rio%20Rel%C3%B3gio/logo.jpeg',
+      'PATROCINADORES/banner%20rogerio%20relogio.png',
+      'SLIDES/Rog%C3%A9rio%20Rel%C3%B3gio/logo.jpeg'
     ],
     linkFile: null
   },
   {
     id: 'virtu',
     name: 'Barbearia Virtu',
-    logo: 'SLIDES/Barbearia Virtu+/logo.png',
+    logo: 'SLIDES/Barbearia%20Virtu+/logo.png',
     images: [
-      'SLIDES/Barbearia Virtu+/slide 1.jpeg',
-      'SLIDES/Barbearia Virtu+/slide 3.jpeg',
-      'PATROCINADORES/banner virtu.png'
+      'SLIDES/Barbearia%20Virtu+/slide%201.jpeg',
+      'SLIDES/Barbearia%20Virtu+/slide%203.jpeg',
+      'PATROCINADORES/banner%20virtu.png'
     ],
-    linkFile: 'SLIDES/Barbearia Virtu+/link.txt'
+    linkFile: 'SLIDES/Barbearia%20Virtu+/link.txt'
   },
   {
     id: 'imperio',
     name: 'Império',
     logo: 'PATROCINADORES/imperio.png',
     images: [
-      'PATROCINADORES/banner IMPERIO.png',
-      'PATROCINADORES/banner IMPERIO.png',
-      'PATROCINADORES/banner IMPERIO.png'
+      'PATROCINADORES/banner%20IMPERIO.png',
+      'PATROCINADORES/banner%20IMPERIO.png',
+      'PATROCINADORES/banner%20IMPERIO.png'
     ],
     linkFile: null
   }
