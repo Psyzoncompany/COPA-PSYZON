@@ -5064,6 +5064,29 @@ textarea::placeholder {
   cursor: default;
 }
 
+/* Logo-only mode (sponsors without slide images) */
+.sponsor-slidecase-card.logo-only-card {
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+.sponsor-logo-area.logo-only {
+  flex-direction: column;
+  padding: 32px 20px;
+  gap: 16px;
+  flex: 1;
+  justify-content: center;
+  border-bottom: none;
+}
+
+.sponsor-logo-img.logo-only-img {
+  max-width: 180px;
+  max-height: 180px;
+  border-radius: 12px;
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.12));
+}
+
 /* Top: Logo Area (faixa horizontal) */
 .sponsor-logo-area {
   display: flex;

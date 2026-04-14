@@ -10,45 +10,73 @@ const sponsorsConfig = [
   {
     id: 'acai-ramos',
     name: 'Açaí Ramos',
-    logo: 'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/logo.jpeg',
+    logo: 'PATROCINADORES/banner%20ramos%20acai.png',
     images: [
-      'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/slide%201.png',
-      'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/slide%202.png',
-      'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/slide%203.png'
+      'SLIDES/acai-ramos/foto1.jpg',
+      'SLIDES/acai-ramos/foto2.png',
+      'SLIDES/acai-ramos/foto3.png'
     ],
-    linkFile: 'SLIDES/A%C3%A7a%C3%AD%20Ramos%20+/Link.txt'
+    linkFile: 'SLIDES/acai-ramos/Link.txt'
+  },
+  {
+    id: 'virtu',
+    name: 'Barbearia Virtu',
+    logo: 'PATROCINADORES/banner%20virtu.png',
+    images: [
+      'SLIDES/Barbearia-virtu/IMG_6106.jpg',
+      'SLIDES/Barbearia-virtu/IMG_6324.JPG.jpeg'
+    ],
+    linkFile: 'SLIDES/Barbearia-virtu/Link.txt'
+  },
+  {
+    id: 'biel-motos',
+    name: 'Biel Motos',
+    logo: 'SLIDES/Biel-Motos/FOTO%20DE%20PERFIL.png',
+    images: [
+      'SLIDES/Biel-Motos/IMG_20260413_145322.jpg.jpeg',
+      'SLIDES/Biel-Motos/IMG_20260413_145346.jpg.jpeg',
+      'SLIDES/Biel-Motos/IMG_20260413_151307.jpg.jpeg'
+    ],
+    linkFile: null
   },
   {
     id: 'bizuca',
     name: 'Bizuca Health & Academy',
     logo: 'PATROCINADORES/banner%20bizuca.png',
     images: [
-      'PATROCINADORES/banner%20bizuca.png',
-      'PATROCINADORES/banner%20bizuca.png',
-      'PATROCINADORES/banner%20bizuca.png'
+      'SLIDES/Bizuca%20Health%20%26%20Academy/slide1.jpg',
+      'SLIDES/Bizuca%20Health%20%26%20Academy/slide2.jpg',
+      'SLIDES/Bizuca%20Health%20%26%20Academy/slide3.jpg.jpeg'
     ],
     linkFile: 'SLIDES/Bizuca%20Health%20%26%20Academy/Link.txt'
   },
   {
     id: 'bruno-leite',
     name: 'Bruno Leite Assessoria Contábil',
-    logo: 'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/logo.jpeg',
+    logo: 'SLIDES/Bruno-Leite/slide%201.jpeg',
     images: [
-      'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/slide%201.jpeg',
-      'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/slide%202.jpeg',
-      'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/slide%203.jpeg'
+      'SLIDES/Bruno-Leite/slide%201.jpeg',
+      'SLIDES/Bruno-Leite/slide%202.jpeg',
+      'SLIDES/Bruno-Leite/slide%203.jpeg'
     ],
-    linkFile: 'SLIDES/Bruno%20Leite%20Assessoria%20Cont%C3%A1bil/Link.txt'
+    linkFile: 'SLIDES/Bruno-Leite/Link.txt'
+  },
+  {
+    id: 'carol-home',
+    name: 'Carol Home',
+    logo: 'SLIDES/Carol-Home/IMG_20260413_153223.jpg.jpeg',
+    images: [
+      'SLIDES/Carol-Home/IMG_20260413_153223.jpg.jpeg',
+      'SLIDES/Carol-Home/IMG_20260413_153236.jpg.jpeg',
+      'SLIDES/Carol-Home/IMG_20260413_153456.jpg.jpeg'
+    ],
+    linkFile: null
   },
   {
     id: 'central-bebidas',
-    name: 'Central de Bebidas e Ancore Seguradora',
-    logo: 'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png',
-    images: [
-      'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png',
-      'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png',
-      'SLIDES/Central%20de%20Bebidas%20e%20Ancore%20Seguradora/logo%20central%20das%20bebidas.png'
-    ],
+    name: 'Central de Bebidas',
+    logo: 'PATROCINADORES/central%20atacatista.png',
+    images: [],
     linkFile: null
   },
   {
@@ -56,141 +84,128 @@ const sponsorsConfig = [
     name: 'Clínica Revitalize',
     logo: 'PATROCINADORES/banner%20revitalize.png',
     images: [
-      'PATROCINADORES/banner%20revitalize.png',
-      'PATROCINADORES/banner%20revitalize.png',
-      'PATROCINADORES/banner%20revitalize.png'
+      'SLIDES/Clinica-Revitalize/clinica1.jpg',
+      'SLIDES/Clinica-Revitalize/FOTO2.png',
+      'SLIDES/Clinica-Revitalize/FOTO3.png'
     ],
-    linkFile: 'SLIDES/Clinica%20Revitalize+/Link.txt'
+    linkFile: 'SLIDES/Clinica-Revitalize/Link.txt'
   },
   {
     id: 'daby-gourmet',
     name: 'Daby Gourmet',
-    logo: 'SLIDES/Daby%20Gourmet/slide%201.jpeg',
-    images: [
-      'SLIDES/Daby%20Gourmet/slide%201.jpeg',
-      'SLIDES/Daby%20Gourmet/slide%201.jpeg',
-      'SLIDES/Daby%20Gourmet/slide%201.jpeg'
-    ],
+    logo: 'PATROCINADORES/daby%20gourmet.png',
+    images: [],
     linkFile: null
   },
   {
     id: 'eburger',
     name: 'E-Burger',
-    logo: 'SLIDES/E-Burger+/slide%201.jpeg',
+    logo: 'SLIDES/E-Burger/foto1.jpeg',
     images: [
-      'SLIDES/E-Burger+/slide%201.jpeg',
-      'SLIDES/E-Burger+/slide%202.jpeg',
-      'SLIDES/E-Burger+/slide%201.jpeg'
+      'SLIDES/E-Burger/foto1.jpeg',
+      'SLIDES/E-Burger/foto2.jpeg'
     ],
-    linkFile: 'SLIDES/E-Burger+/Link.txt'
+    linkFile: 'SLIDES/E-Burger/Link.txt'
   },
   {
     id: 'fagundes',
     name: 'Fagundes Distribuidora',
-    logo: 'SLIDES/Fagundes%20Distribuidora/logo.jpeg',
+    logo: 'PATROCINADORES/fagundes.png',
     images: [
-      'SLIDES/Fagundes%20Distribuidora/slide%201.jpeg',
-      'SLIDES/Fagundes%20Distribuidora/slide%201.jpeg',
-      'SLIDES/Fagundes%20Distribuidora/slide%201.jpeg'
+      'SLIDES/FagundesDistribuidora/foto1.jpg',
+      'SLIDES/FagundesDistribuidora/foto2.jpeg',
+      'SLIDES/FagundesDistribuidora/foto3.jpeg'
     ],
-    linkFile: 'SLIDES/Fagundes%20Distribuidora/Link.txt'
+    linkFile: 'SLIDES/FagundesDistribuidora/Link.txt'
   },
   {
     id: 'giselle',
     name: 'Giselle Fest',
     logo: 'PATROCINADORES/banner%20giselle.png',
     images: [
-      'SLIDES/Giselle%20Fest%20+/slide%201.png',
-      'SLIDES/Giselle%20Fest%20+/slide%202.png',
-      'SLIDES/Giselle%20Fest%20+/slide%203.png'
+      'SLIDES/Giselle-Fest/foto1.png',
+      'SLIDES/Giselle-Fest/foto2.png',
+      'SLIDES/Giselle-Fest/foto3.png'
     ],
-    linkFile: 'SLIDES/Giselle%20Fest%20+/Link.txt'
+    linkFile: 'SLIDES/Giselle-Fest/Link.txt'
   },
   {
-    id: 'gycake',
-    name: 'GyCake',
-    logo: 'SLIDES/GyCake%20+/logo.jpeg',
+    id: 'gusmao-modas',
+    name: 'Gusmão Modas',
+    logo: 'PATROCINADORES/gy%20cake.png',
+    images: [],
+    linkFile: null
+  },
+  {
+    id: 'imperio',
+    name: 'Império MRS',
+    logo: 'PATROCINADORES/imperio.png',
     images: [
-      'SLIDES/GyCake%20+/slide%201.png',
-      'SLIDES/GyCake%20+/slide%202.png',
-      'SLIDES/GyCake%20+/slide%203.png'
+      'PATROCINADORES/banner%20IMPERIO.png'
     ],
-    linkFile: 'SLIDES/GyCake%20+/Link.txt'
+    linkFile: null
   },
   {
     id: 'janejoias',
     name: 'Jane Jóias',
     logo: 'PATROCINADORES/banner%20jane%20joias.png',
     images: [
-      'SLIDES/Jane%20J%C3%B3ias%20+/slide%201.png',
-      'SLIDES/Jane%20J%C3%B3ias%20+/slide%202.png',
-      'SLIDES/Jane%20J%C3%B3ias%20+/slide%203.png'
+      'SLIDES/JaneJoias/foto1.png',
+      'SLIDES/JaneJoias/foto2.png',
+      'SLIDES/JaneJoias/foto3.png'
     ],
-    linkFile: 'SLIDES/Jane%20J%C3%B3ias%20+/Link.txt'
+    linkFile: 'SLIDES/JaneJoias/Link.txt'
   },
   {
     id: 'lavajato-tg',
     name: 'Lava Jato TG',
-    logo: 'SLIDES/Lava%20Jato%20TG%20+/logo%20lava%20jato.jpeg',
+    logo: 'PATROCINADORES/lava%20jato%20tg.png',
     images: [
-      'SLIDES/Lava%20Jato%20TG%20+/slide%201.jpeg',
-      'SLIDES/Lava%20Jato%20TG%20+/slide%202.jpeg',
-      'SLIDES/Lava%20Jato%20TG%20+/slide%203.jpeg'
+      'SLIDES/LavaJato/foto1.jpeg',
+      'SLIDES/LavaJato/foto2.jpeg',
+      'SLIDES/LavaJato/foto3.jpeg'
     ],
-    linkFile: 'SLIDES/Lava%20Jato%20TG%20+/Link.txt'
+    linkFile: 'SLIDES/LavaJato/Link.txt'
   },
   {
     id: 'ledulcis',
-    name: 'Ledulcis Brigadeiria',
-    logo: 'SLIDES/Ledulcis%20+/logo.jpeg',
+    name: 'Lê Dulcis Brigadeiria',
+    logo: 'PATROCINADORES/L%C3%AA%20Dulcis.png',
     images: [
-      'SLIDES/Ledulcis%20+/slide%201.png',
-      'SLIDES/Ledulcis%20+/slide%202.png',
-      'SLIDES/Ledulcis%20+/slide%203.png'
+      'SLIDES/Ledulcis/foto1.jpeg',
+      'SLIDES/Ledulcis/foto2.png',
+      'SLIDES/Ledulcis/foto3.png'
     ],
-    linkFile: 'SLIDES/Ledulcis%20+/Link.txt'
+    linkFile: 'SLIDES/Ledulcis/Link.txt'
   },
   {
     id: 'nachapa',
     name: 'Na Chapa',
-    logo: 'SLIDES/Na%20Chapa/logo.jpeg',
+    logo: 'PATROCINADORES/banner%20na%20chapa.png',
     images: [
-      'SLIDES/Na%20Chapa/slide%201.png',
-      'SLIDES/Na%20Chapa/slide%202.png',
-      'SLIDES/Na%20Chapa/slide%203.png'
+      'SLIDES/NaChapa/foto1.png',
+      'SLIDES/NaChapa/foto2.png',
+      'SLIDES/NaChapa/foto3.png'
     ],
-    linkFile: 'SLIDES/Na%20Chapa/Link.txt'
+    linkFile: 'SLIDES/NaChapa/Link.txt'
+  },
+  {
+    id: 'presencial-tecnologia',
+    name: 'Presencial Tecnologia',
+    logo: 'SLIDES/Presencial-Tecnologia/foto1.png',
+    images: [
+      'SLIDES/Presencial-Tecnologia/foto1.png',
+      'SLIDES/Presencial-Tecnologia/foto2.png',
+      'SLIDES/Presencial-Tecnologia/foto3.png'
+    ],
+    linkFile: 'SLIDES/Presencial-Tecnologia/Link.txt'
   },
   {
     id: 'rogeriorelogio',
     name: 'Rogério Relógio',
-    logo: 'SLIDES/Rog%C3%A9rio%20Rel%C3%B3gio/logo.jpeg',
+    logo: 'PATROCINADORES/banner%20rogerio%20relogio.png',
     images: [
-      'SLIDES/Rog%C3%A9rio%20Rel%C3%B3gio/logo.jpeg',
-      'PATROCINADORES/banner%20rogerio%20relogio.png',
-      'SLIDES/Rog%C3%A9rio%20Rel%C3%B3gio/logo.jpeg'
-    ],
-    linkFile: null
-  },
-  {
-    id: 'virtu',
-    name: 'Barbearia Virtu',
-    logo: 'SLIDES/Barbearia%20Virtu+/logo.png',
-    images: [
-      'SLIDES/Barbearia%20Virtu+/slide%201.jpeg',
-      'SLIDES/Barbearia%20Virtu+/slide%203.jpeg',
-      'PATROCINADORES/banner%20virtu.png'
-    ],
-    linkFile: 'SLIDES/Barbearia%20Virtu+/link.txt'
-  },
-  {
-    id: 'imperio',
-    name: 'Império',
-    logo: 'PATROCINADORES/imperio.png',
-    images: [
-      'PATROCINADORES/banner%20IMPERIO.png',
-      'PATROCINADORES/banner%20IMPERIO.png',
-      'PATROCINADORES/banner%20IMPERIO.png'
+      'SLIDES/Rogerio-Relogio/WhatsApp%20Image%202026-04-03%20at%2017.05.34.jpeg'
     ],
     linkFile: null
   }
@@ -254,7 +269,8 @@ async function initSponsorsShowcase() {
   container.appendChild(sponsorNav);
 
   // ─── Estado global do slideshow ───
-  var SLIDE_INTERVAL = 7000;
+  var SLIDE_INTERVAL_FULL = 7000;
+  var SLIDE_INTERVAL_LOGO = 5000;
   var currentSponsor = 0;
   var currentSlide = 0;
   var timer = null;
@@ -273,9 +289,12 @@ async function initSponsorsShowcase() {
   function buildSponsorCard(index) {
     var sponsor = sponsorsConfig[index];
     var targetLink = sponsorLinks[index] || '';
+    var slidesFiles = sponsor.images || [];
+    var isLogoOnly = slidesFiles.length === 0;
 
     var cardEl = targetLink ? document.createElement('a') : document.createElement('div');
     cardEl.className = 'sponsor-slidecase-card';
+    if (isLogoOnly) cardEl.classList.add('logo-only-card');
     if (targetLink) {
       cardEl.href = targetLink;
       cardEl.target = '_blank';
@@ -286,13 +305,13 @@ async function initSponsorsShowcase() {
 
     // ─── Logo / Nome do patrocinador (topo) ───
     var logoArea = document.createElement('div');
-    logoArea.className = 'sponsor-logo-area';
+    logoArea.className = 'sponsor-logo-area' + (isLogoOnly ? ' logo-only' : '');
 
     var logoImg = document.createElement('img');
     logoImg.src = sponsor.logo;
     logoImg.alt = 'Logo ' + sponsor.name;
     logoImg.loading = 'lazy';
-    logoImg.className = 'sponsor-logo-img';
+    logoImg.className = 'sponsor-logo-img' + (isLogoOnly ? ' logo-only-img' : '');
     logoArea.appendChild(logoImg);
 
     var logoName = document.createElement('span');
@@ -302,43 +321,48 @@ async function initSponsorsShowcase() {
 
     cardEl.appendChild(logoArea);
 
-    // ─── Área do Slideshow (imagem adapta ao formato) ───
-    var slideArea = document.createElement('div');
-    slideArea.className = 'sponsor-slides-area';
-
-    var slidesFiles = sponsor.images || [];
     var slideEls = [];
-    for (var idx = 0; idx < slidesFiles.length; idx++) {
-      var sImg = document.createElement('img');
-      sImg.src = slidesFiles[idx];
-      sImg.loading = 'lazy';
-      sImg.alt = sponsor.name + ' - imagem ' + (idx + 1);
-      sImg.className = 'sponsor-slide-img' + (idx === 0 ? ' active' : '');
-      slideArea.appendChild(sImg);
-      slideEls.push(sImg);
-    }
-
-    // Dots indicadores de slide
-    var dotsWrap = document.createElement('div');
-    dotsWrap.className = 'sponsor-slide-dots';
     var dotEls = [];
-    for (var d = 0; d < slidesFiles.length; d++) {
-      var dot = document.createElement('span');
-      dot.className = 'sponsor-dot' + (d === 0 ? ' active' : '');
-      dotsWrap.appendChild(dot);
-      dotEls.push(dot);
+    var progressFill = null;
+
+    if (!isLogoOnly) {
+      // ─── Área do Slideshow (imagem adapta ao formato) ───
+      var slideArea = document.createElement('div');
+      slideArea.className = 'sponsor-slides-area';
+
+      for (var idx = 0; idx < slidesFiles.length; idx++) {
+        var sImg = document.createElement('img');
+        sImg.src = slidesFiles[idx];
+        sImg.loading = 'lazy';
+        sImg.alt = sponsor.name + ' - imagem ' + (idx + 1);
+        sImg.className = 'sponsor-slide-img' + (idx === 0 ? ' active' : '');
+        slideArea.appendChild(sImg);
+        slideEls.push(sImg);
+      }
+
+      // Dots indicadores de slide (só se mais de 1 imagem)
+      if (slidesFiles.length > 1) {
+        var dotsWrap = document.createElement('div');
+        dotsWrap.className = 'sponsor-slide-dots';
+        for (var d = 0; d < slidesFiles.length; d++) {
+          var dot = document.createElement('span');
+          dot.className = 'sponsor-dot' + (d === 0 ? ' active' : '');
+          dotsWrap.appendChild(dot);
+          dotEls.push(dot);
+        }
+        slideArea.appendChild(dotsWrap);
+      }
+
+      // Barra de progresso
+      var progressBar = document.createElement('div');
+      progressBar.className = 'sponsor-slide-progress';
+      progressFill = document.createElement('div');
+      progressFill.className = 'sponsor-slide-progress-fill';
+      progressBar.appendChild(progressFill);
+      slideArea.appendChild(progressBar);
+
+      cardEl.appendChild(slideArea);
     }
-    slideArea.appendChild(dotsWrap);
-
-    // Barra de progresso
-    var progressBar = document.createElement('div');
-    progressBar.className = 'sponsor-slide-progress';
-    var progressFill = document.createElement('div');
-    progressFill.className = 'sponsor-slide-progress-fill';
-    progressBar.appendChild(progressFill);
-    slideArea.appendChild(progressBar);
-
-    cardEl.appendChild(slideArea);
 
     return { card: cardEl, slideEls: slideEls, dotEls: dotEls, progressFill: progressFill };
   }
@@ -346,13 +370,20 @@ async function initSponsorsShowcase() {
   /**
    * Reinicia a barra de progresso para o slide atual.
    */
+  function getCurrentInterval() {
+    var sponsor = sponsorsConfig[currentSponsor];
+    var imgs = sponsor && sponsor.images ? sponsor.images : [];
+    return imgs.length === 0 ? SLIDE_INTERVAL_LOGO : SLIDE_INTERVAL_FULL;
+  }
+
   function restartProgress() {
     if (!activeProgressFill) return;
+    var interval = getCurrentInterval();
     activeProgressFill.style.transition = 'none';
     activeProgressFill.style.width = '0%';
     void activeProgressFill.offsetWidth;
     if (isPlaying) {
-      activeProgressFill.style.transition = 'width ' + SLIDE_INTERVAL + 'ms linear';
+      activeProgressFill.style.transition = 'width ' + interval + 'ms linear';
       activeProgressFill.style.width = '100%';
     }
   }
@@ -426,10 +457,13 @@ async function initSponsorsShowcase() {
    * Inicia/reinicia o timer automático.
    */
   function startAutoSlide() {
-    if (timer) clearInterval(timer);
-    timer = setInterval(function () {
+    if (timer) clearTimeout(timer);
+    var interval = getCurrentInterval();
+    timer = setTimeout(function autoTick() {
       if (isPlaying) advance();
-    }, SLIDE_INTERVAL);
+      var nextInterval = getCurrentInterval();
+      timer = setTimeout(autoTick, nextInterval);
+    }, interval);
     restartProgress();
   }
 
