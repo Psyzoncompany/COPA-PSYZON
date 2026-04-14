@@ -261,21 +261,34 @@ async function initSponsorsShowcase() {
   stage.className = 'sponsors-showcase-stage';
   container.appendChild(stage);
 
-  // Indicadores de patrocinador (mini-dots no rodapé)
+  // Indicadores de patrocinador (logos no rodapé)
   var sponsorNav = document.createElement('div');
   sponsorNav.className = 'sponsors-nav';
   var sponsorDots = [];
   for (var n = 0; n < sponsorsConfig.length; n++) {
-    var sDot = document.createElement('span');
-    sDot.className = 'sponsor-nav-dot' + (n === 0 ? ' active' : '');
-    sponsorNav.appendChild(sDot);
-    sponsorDots.push(sDot);
+    var sThumb = document.createElement('img');
+    sThumb.src = sponsorsConfig[n].logo;
+    sThumb.alt = sponsorsConfig[n].name;
+    sThumb.className = 'sponsor-nav-logo' + (n === 0 ? ' active' : '');
+    sThumb.loading = 'lazy';
+    sThumb.dataset.index = n;
+    sThumb.addEventListener('click', (function(idx) {
+      return function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showSponsor(idx, 0);
+        startAutoSlide();
+      };
+    })(n));
+    sponsorNav.appendChild(sThumb);
+    sponsorDots.push(sThumb);
   }
   container.appendChild(sponsorNav);
 
   // ─── Estado global do slideshow ───
   var SLIDE_INTERVAL_FULL = 7000;
   var SLIDE_INTERVAL_LOGO = 5000;
+  var VIDEO_MAX_DURATION = 21; // segundos
   var currentSponsor = 0;
   var currentSlide = 0;
   var timer = null;
@@ -429,6 +442,39 @@ async function initSponsorsShowcase() {
     return false;
   }
 
+  var videoTimeupdateHandler = null;
+  var videoMaxTimer = null;
+
+  /**
+   * Configura limite de 21s no vídeo ativo.
+   */
+  function setupVideoLimit(el) {
+    clearVideoLimit();
+    var handler = function() {
+      if (el.currentTime >= VIDEO_MAX_DURATION) {
+        el.pause();
+        el.removeEventListener('timeupdate', handler);
+      }
+    };
+    el.addEventListener('timeupdate', handler);
+    videoTimeupdateHandler = { el: el, fn: handler };
+    // Fallback timer
+    videoMaxTimer = setTimeout(function() {
+      if (!el.paused) el.pause();
+    }, (VIDEO_MAX_DURATION + 0.5) * 1000);
+  }
+
+  function clearVideoLimit() {
+    if (videoTimeupdateHandler && videoTimeupdateHandler.el) {
+      videoTimeupdateHandler.el.removeEventListener('timeupdate', videoTimeupdateHandler.fn);
+      videoTimeupdateHandler = null;
+    }
+    if (videoMaxTimer) {
+      clearTimeout(videoMaxTimer);
+      videoMaxTimer = null;
+    }
+  }
+
   function restartProgress() {
     if (!activeProgressFill) return;
     var interval = getCurrentInterval();
@@ -531,18 +577,26 @@ async function initSponsorsShowcase() {
 
     var activeEl = activeSlideEls[currentSlide];
 
-    // Se o slide atual for vídeo, espera o vídeo terminar
+    // Se o slide atual for vídeo, limita a 21s e avança ao terminar
     if (isVideoEl(activeEl)) {
       // Esconde barra de progresso durante vídeo
       if (activeProgressFill) {
         activeProgressFill.style.transition = 'none';
         activeProgressFill.style.width = '0%';
       }
+      setupVideoLimit(activeEl);
       var endFn = function() {
+        clearVideoLimit();
         if (isPlaying) advance();
         startAutoSlide();
       };
+      // Avança quando o vídeo terminar OU quando atingir 21s
       activeEl.addEventListener('ended', endFn, { once: true });
+      // Timer de segurança para 21s
+      timer = setTimeout(function() {
+        activeEl.removeEventListener('ended', endFn);
+        endFn();
+      }, (VIDEO_MAX_DURATION + 0.5) * 1000);
       videoEndHandler = { el: activeEl, fn: endFn };
       return;
     }
