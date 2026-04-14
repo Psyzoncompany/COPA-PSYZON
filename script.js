@@ -4974,18 +4974,10 @@
      17. BACKUP SYSTEM
      ========================================================== */
 
-  /** Export state to a JSON file (uses Persistence layer if available) */
+  /** Export state to a JSON file (full raw state) */
   function handleExportBackup() {
     console.log('Iniciando exportação de backup...');
     try {
-      // Use persistence layer for a complete appState export if available
-      if (typeof window.Persistence !== 'undefined') {
-        window.Persistence.exportarBackup();
-        showToast('Backup exportado com sucesso!', 'success');
-        return;
-      }
-
-      // Fallback: export raw state
       const cleanState = JSON.parse(JSON.stringify(state, (k, v) => v === undefined ? null : v));
       const dataStr = JSON.stringify(cleanState, null, 2);
 
