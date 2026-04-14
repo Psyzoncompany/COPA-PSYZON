@@ -508,13 +508,13 @@
         console.warn('[Persistence] Nada para exportar.');
         return;
       }
-      var dataStr = JSON.stringify(cleanForStorage(_appState), null, 2);
+      var dataStr = JSON.stringify(cleanForStorage(_appState.data), null, 2);
       var blob = new Blob([dataStr], { type: 'application/json' });
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       var date = new Date().toISOString().split('T')[0];
       a.href = url;
-      a.download = 'appState_backup_' + date + '.json';
+      a.download = 'backup_copa_psyzon_' + date + '.json';
       document.body.appendChild(a);
       a.click();
       setTimeout(function () {
