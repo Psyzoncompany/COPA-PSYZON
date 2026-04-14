@@ -5145,6 +5145,11 @@ textarea::placeholder {
   z-index: 2;
 }
 
+/* Video slides */
+.sponsor-slide-video {
+  background: #000;
+}
+
 /* Slide Dot Indicators */
 .sponsor-slide-dots {
   position: absolute;

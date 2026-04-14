@@ -24,14 +24,15 @@ const sponsorsConfig = [
     logo: 'PATROCINADORES/banner%20virtu.png',
     images: [
       'SLIDES/Barbearia-virtu/IMG_6106.jpg',
-      'SLIDES/Barbearia-virtu/IMG_6324.JPG.jpeg'
+      'SLIDES/Barbearia-virtu/IMG_6324.JPG.jpeg',
+      {type: 'video', src: 'SLIDES/Barbearia-virtu/video.mp4.mp4'}
     ],
     linkFile: 'SLIDES/Barbearia-virtu/Link.txt'
   },
   {
     id: 'biel-motos',
     name: 'Biel Motos',
-    logo: 'SLIDES/Biel-Motos/FOTO%20DE%20PERFIL.png',
+    logo: 'PATROCINADORES/BIEL%20MOTOS.png',
     images: [
       'SLIDES/Biel-Motos/IMG_20260413_145322.jpg.jpeg',
       'SLIDES/Biel-Motos/IMG_20260413_145346.jpg.jpeg',
@@ -44,16 +45,16 @@ const sponsorsConfig = [
     name: 'Bizuca Health & Academy',
     logo: 'PATROCINADORES/banner%20bizuca.png',
     images: [
-      'SLIDES/Bizuca%20Health%20%26%20Academy/slide1.jpg',
-      'SLIDES/Bizuca%20Health%20%26%20Academy/slide2.jpg',
-      'SLIDES/Bizuca%20Health%20%26%20Academy/slide3.jpg.jpeg'
+      'SLIDES/Bizuca-Health-%26-Academy/slide1.jpg',
+      'SLIDES/Bizuca-Health-%26-Academy/slide2.jpg',
+      'SLIDES/Bizuca-Health-%26-Academy/slide3.jpg.jpeg'
     ],
-    linkFile: 'SLIDES/Bizuca%20Health%20%26%20Academy/Link.txt'
+    linkFile: 'SLIDES/Bizuca-Health-%26-Academy/Link.txt'
   },
   {
     id: 'bruno-leite',
     name: 'Bruno Leite Assessoria Contábil',
-    logo: 'SLIDES/Bruno-Leite/slide%201.jpeg',
+    logo: 'PATROCINADORES/BRUNO%20LEITE.png',
     images: [
       'SLIDES/Bruno-Leite/slide%201.jpeg',
       'SLIDES/Bruno-Leite/slide%202.jpeg',
@@ -64,7 +65,7 @@ const sponsorsConfig = [
   {
     id: 'carol-home',
     name: 'Carol Home',
-    logo: 'SLIDES/Carol-Home/IMG_20260413_153223.jpg.jpeg',
+    logo: 'PATROCINADORES/CAROL%20ROCHA.png',
     images: [
       'SLIDES/Carol-Home/IMG_20260413_153223.jpg.jpeg',
       'SLIDES/Carol-Home/IMG_20260413_153236.jpg.jpeg',
@@ -75,7 +76,7 @@ const sponsorsConfig = [
   {
     id: 'central-bebidas',
     name: 'Central de Bebidas',
-    logo: 'PATROCINADORES/central%20atacatista.png',
+    logo: 'PATROCINADORES/CENTRAL%20ATACADISTA.png',
     images: [],
     linkFile: null
   },
@@ -100,10 +101,11 @@ const sponsorsConfig = [
   {
     id: 'eburger',
     name: 'E-Burger',
-    logo: 'SLIDES/E-Burger/foto1.jpeg',
+    logo: 'PATROCINADORES/E-BURGUER.png',
     images: [
       'SLIDES/E-Burger/foto1.jpeg',
-      'SLIDES/E-Burger/foto2.jpeg'
+      'SLIDES/E-Burger/foto2.jpeg',
+      {type: 'video', src: 'SLIDES/E-Burger/video1.mp4'}
     ],
     linkFile: 'SLIDES/E-Burger/Link.txt'
   },
@@ -132,8 +134,10 @@ const sponsorsConfig = [
   {
     id: 'gusmao-modas',
     name: 'Gusmão Modas',
-    logo: 'PATROCINADORES/gy%20cake.png',
-    images: [],
+    logo: 'PATROCINADORES/GUSM%C3%83O%20MODAS.png',
+    images: [
+      {type: 'video', src: 'SLIDES/Gusmao-Modas/video1.mp4'}
+    ],
     linkFile: null
   },
   {
@@ -141,7 +145,7 @@ const sponsorsConfig = [
     name: 'Império MRS',
     logo: 'PATROCINADORES/imperio.png',
     images: [
-      'PATROCINADORES/banner%20IMPERIO.png'
+      {type: 'video', src: 'SLIDES/ImperiosMRS/foto2.mp4'}
     ],
     linkFile: null
   },
@@ -192,7 +196,7 @@ const sponsorsConfig = [
   {
     id: 'presencial-tecnologia',
     name: 'Presencial Tecnologia',
-    logo: 'SLIDES/Presencial-Tecnologia/foto1.png',
+    logo: 'PATROCINADORES/PRECENSIAL.png',
     images: [
       'SLIDES/Presencial-Tecnologia/foto1.png',
       'SLIDES/Presencial-Tecnologia/foto2.png',
@@ -205,7 +209,8 @@ const sponsorsConfig = [
     name: 'Rogério Relógio',
     logo: 'PATROCINADORES/banner%20rogerio%20relogio.png',
     images: [
-      'SLIDES/Rogerio-Relogio/WhatsApp%20Image%202026-04-03%20at%2017.05.34.jpeg'
+      'SLIDES/Rogerio-Relogio/WhatsApp%20Image%202026-04-03%20at%2017.05.34.jpeg',
+      {type: 'video', src: 'SLIDES/Rogerio-Relogio/video1.mp4'}
     ],
     linkFile: null
   }
@@ -331,13 +336,28 @@ async function initSponsorsShowcase() {
       slideArea.className = 'sponsor-slides-area';
 
       for (var idx = 0; idx < slidesFiles.length; idx++) {
-        var sImg = document.createElement('img');
-        sImg.src = slidesFiles[idx];
-        sImg.loading = 'lazy';
-        sImg.alt = sponsor.name + ' - imagem ' + (idx + 1);
-        sImg.className = 'sponsor-slide-img' + (idx === 0 ? ' active' : '');
-        slideArea.appendChild(sImg);
-        slideEls.push(sImg);
+        var mediaItem = slidesFiles[idx];
+        var isVideo = typeof mediaItem === 'object' && mediaItem.type === 'video';
+        var mediaSrc = isVideo ? mediaItem.src : mediaItem;
+        var el;
+
+        if (isVideo) {
+          el = document.createElement('video');
+          el.src = mediaSrc;
+          el.muted = true;
+          el.loop = false;
+          el.playsInline = true;
+          el.preload = 'metadata';
+          el.className = 'sponsor-slide-img sponsor-slide-video' + (idx === 0 ? ' active' : '');
+        } else {
+          el = document.createElement('img');
+          el.src = mediaSrc;
+          el.loading = 'lazy';
+          el.alt = sponsor.name + ' - imagem ' + (idx + 1);
+          el.className = 'sponsor-slide-img' + (idx === 0 ? ' active' : '');
+        }
+        slideArea.appendChild(el);
+        slideEls.push(el);
       }
 
       // Dots indicadores de slide (só se mais de 1 imagem)
@@ -376,6 +396,39 @@ async function initSponsorsShowcase() {
     return imgs.length === 0 ? SLIDE_INTERVAL_LOGO : SLIDE_INTERVAL_FULL;
   }
 
+  /**
+   * Verifica se um elemento de slide é um vídeo.
+   */
+  function isVideoEl(el) {
+    return el && el.tagName === 'VIDEO';
+  }
+
+  /**
+   * Para todos os vídeos ativos no card.
+   */
+  function stopAllVideos(els) {
+    for (var v = 0; v < els.length; v++) {
+      if (isVideoEl(els[v])) {
+        els[v].pause();
+        els[v].currentTime = 0;
+      }
+    }
+  }
+
+  /**
+   * Inicia reprodução do vídeo ativo se for vídeo.
+   * Retorna true se é vídeo (precisa esperar 'ended').
+   */
+  function playActiveVideo() {
+    var el = activeSlideEls[currentSlide];
+    if (isVideoEl(el)) {
+      el.currentTime = 0;
+      el.play().catch(function() {});
+      return true;
+    }
+    return false;
+  }
+
   function restartProgress() {
     if (!activeProgressFill) return;
     var interval = getCurrentInterval();
@@ -405,6 +458,7 @@ async function initSponsorsShowcase() {
 
     // Anima saída do card atual
     if (activeCard) {
+      stopAllVideos(activeSlideEls);
       activeCard.classList.add('exiting');
       var old = activeCard;
       setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 500);
@@ -420,9 +474,9 @@ async function initSponsorsShowcase() {
     // Ativa o slide correto
     if (currentSlide > 0 && currentSlide < activeSlideEls.length) {
       activeSlideEls[0].classList.remove('active');
-      activeDotEls[0].classList.remove('active');
+      if (activeDotEls[0]) activeDotEls[0].classList.remove('active');
       activeSlideEls[currentSlide].classList.add('active');
-      activeDotEls[currentSlide].classList.add('active');
+      if (activeDotEls[currentSlide]) activeDotEls[currentSlide].classList.add('active');
     }
 
     activeCard.classList.add('entering');
@@ -431,6 +485,8 @@ async function initSponsorsShowcase() {
     activeCard.classList.remove('entering');
     activeCard.classList.add('visible');
 
+    // Se o slide ativo for vídeo, inicia reprodução
+    playActiveVideo();
     restartProgress();
   }
 
@@ -443,26 +499,59 @@ async function initSponsorsShowcase() {
       // Próximo patrocinador
       showSponsor(currentSponsor + 1, 0);
     } else {
+      // Para vídeo atual se for vídeo
+      if (isVideoEl(activeSlideEls[currentSlide])) {
+        activeSlideEls[currentSlide].pause();
+      }
       // Próximo slide do mesmo patrocinador
       activeSlideEls[currentSlide].classList.remove('active');
       if (activeDotEls[currentSlide]) activeDotEls[currentSlide].classList.remove('active');
       currentSlide = nextSlide;
       activeSlideEls[currentSlide].classList.add('active');
       if (activeDotEls[currentSlide]) activeDotEls[currentSlide].classList.add('active');
+      // Inicia reprodução se for vídeo
+      playActiveVideo();
       restartProgress();
     }
   }
 
   /**
    * Inicia/reinicia o timer automático.
+   * Para vídeos, espera o evento 'ended' antes de avançar.
    */
+  var videoEndHandler = null;
+
   function startAutoSlide() {
     if (timer) clearTimeout(timer);
+    // Limpa handler de vídeo anterior
+    if (videoEndHandler && videoEndHandler.el) {
+      videoEndHandler.el.removeEventListener('ended', videoEndHandler.fn);
+      videoEndHandler = null;
+    }
+
+    var activeEl = activeSlideEls[currentSlide];
+
+    // Se o slide atual for vídeo, espera o vídeo terminar
+    if (isVideoEl(activeEl)) {
+      // Esconde barra de progresso durante vídeo
+      if (activeProgressFill) {
+        activeProgressFill.style.transition = 'none';
+        activeProgressFill.style.width = '0%';
+      }
+      var endFn = function() {
+        if (isPlaying) advance();
+        startAutoSlide();
+      };
+      activeEl.addEventListener('ended', endFn, { once: true });
+      videoEndHandler = { el: activeEl, fn: endFn };
+      return;
+    }
+
+    // Para imagens, usa o timer normal
     var interval = getCurrentInterval();
     timer = setTimeout(function autoTick() {
       if (isPlaying) advance();
-      var nextInterval = getCurrentInterval();
-      timer = setTimeout(autoTick, nextInterval);
+      startAutoSlide();
     }, interval);
     restartProgress();
   }
