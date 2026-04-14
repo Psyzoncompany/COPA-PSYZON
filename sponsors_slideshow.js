@@ -629,9 +629,16 @@ async function initSponsorsShowcase() {
   btnNext.setAttribute('aria-label', 'Próximo patrocinador');
   btnNext.innerHTML = '<span class="material-symbols-outlined">chevron_right</span>';
 
+  var btnFullscreen = document.createElement('button');
+  btnFullscreen.className = 'sponsor-btn-control sponsor-btn-fullscreen';
+  btnFullscreen.setAttribute('aria-label', 'Tela Cheia');
+  btnFullscreen.title = 'Tela Cheia';
+  btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
+
   controls.appendChild(btnPrev);
   controls.appendChild(btnPlayPause);
   controls.appendChild(btnNext);
+  controls.appendChild(btnFullscreen);
   container.appendChild(controls);
 
   btnPrev.addEventListener('click', function (e) {
@@ -662,6 +669,89 @@ async function initSponsorsShowcase() {
         activeProgressFill.style.width = getComputedStyle(activeProgressFill).width;
         activeProgressFill.style.transition = 'none';
       }
+    }
+  });
+
+  // ─── Fullscreen (Tela Cheia para telão) ───
+  var isFullscreen = false;
+
+  function enterFullscreen() {
+    isFullscreen = true;
+    container.classList.add('sponsors-fullscreen');
+    document.body.classList.add('sponsors-fullscreen-active');
+    btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen_exit</span>';
+    btnFullscreen.title = 'Sair da Tela Cheia';
+
+    // Tenta usar a API nativa de fullscreen do navegador
+    var elem = container;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(function() {});
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    }
+  }
+
+  function exitFullscreen() {
+    isFullscreen = false;
+    container.classList.remove('sponsors-fullscreen');
+    document.body.classList.remove('sponsors-fullscreen-active');
+    btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
+    btnFullscreen.title = 'Tela Cheia';
+
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(function() {});
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+  }
+
+  function toggleFullscreen() {
+    if (isFullscreen) {
+      exitFullscreen();
+    } else {
+      enterFullscreen();
+    }
+  }
+
+  btnFullscreen.addEventListener('click', function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    toggleFullscreen();
+  });
+
+  // Sai do fullscreen se o navegador sair (ESC nativo)
+  document.addEventListener('fullscreenchange', function () {
+    if (!document.fullscreenElement && isFullscreen) {
+      isFullscreen = false;
+      container.classList.remove('sponsors-fullscreen');
+      document.body.classList.remove('sponsors-fullscreen-active');
+      btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
+      btnFullscreen.title = 'Tela Cheia';
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', function () {
+    if (!document.webkitFullscreenElement && isFullscreen) {
+      isFullscreen = false;
+      container.classList.remove('sponsors-fullscreen');
+      document.body.classList.remove('sponsors-fullscreen-active');
+      btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
+      btnFullscreen.title = 'Tela Cheia';
+    }
+  });
+
+  // ESC como atalho adicional
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && isFullscreen) {
+      exitFullscreen();
+    }
+    // F11 para toggle
+    if (e.key === 'F11') {
+      e.preventDefault();
+      toggleFullscreen();
     }
   });
 
