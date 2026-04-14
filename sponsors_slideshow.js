@@ -209,7 +209,6 @@ const sponsorsConfig = [
     name: 'Rogério Relógio',
     logo: 'PATROCINADORES/banner%20rogerio%20relogio.png',
     images: [
-      'SLIDES/Rogerio-Relogio/WhatsApp%20Image%202026-04-03%20at%2017.05.34.jpeg',
       {type: 'video', src: 'SLIDES/Rogerio-Relogio/video1.mp4'}
     ],
     linkFile: null

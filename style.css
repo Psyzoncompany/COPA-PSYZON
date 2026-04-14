@@ -5207,8 +5207,8 @@ textarea::placeholder {
 }
 
 .sponsor-nav-logo {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.12);
@@ -5326,8 +5326,8 @@ textarea::placeholder {
   }
 
   .sponsor-nav-logo {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
 
   .sponsor-global-controls {
