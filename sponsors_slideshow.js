@@ -260,6 +260,13 @@ async function initSponsorsShowcase() {
   stage.className = 'sponsors-showcase-stage';
   container.appendChild(stage);
 
+  // ─── Loading Overlay (logo Psyzon pulsando) ───
+  var loadingOverlay = document.createElement('div');
+  loadingOverlay.className = 'sponsor-loading-overlay';
+  loadingOverlay.innerHTML = '<img src="img/psyzon-logo.png" alt="Carregando" class="sponsor-loading-logo">' +
+    '<span class="sponsor-loading-text">Carregando...</span>';
+  stage.appendChild(loadingOverlay);
+
   // Indicadores de patrocinador (logos no rodapé)
   var sponsorNav = document.createElement('div');
   sponsorNav.className = 'sponsors-nav';
@@ -285,9 +292,9 @@ async function initSponsorsShowcase() {
   container.appendChild(sponsorNav);
 
   // ─── Estado global do slideshow ───
-  var SLIDE_INTERVAL_FULL = 7000;
+  var SLIDE_INTERVAL_FULL = 5000;
   var SLIDE_INTERVAL_LOGO = 5000;
-  var VIDEO_MAX_DURATION = 21; // segundos
+  var VIDEO_MAX_DURATION = 15; // segundos
   var currentSponsor = 0;
   var currentSlide = 0;
   var timer = null;
@@ -397,6 +404,48 @@ async function initSponsorsShowcase() {
     }
 
     return { card: cardEl, slideEls: slideEls, dotEls: dotEls, progressFill: progressFill };
+  }
+
+  /**
+   * Mostra/esconde overlay de loading.
+   */
+  function showLoading() {
+    loadingOverlay.classList.add('visible');
+  }
+  function hideLoading() {
+    loadingOverlay.classList.remove('visible');
+  }
+
+  /**
+   * Espera o elemento de mídia carregar, depois executa callback.
+   * Para imagens: espera onload. Para vídeos: espera canplay.
+   */
+  function waitForMediaLoad(el, callback) {
+    if (!el) { callback(); return; }
+
+    if (isVideoEl(el)) {
+      if (el.readyState >= 3) { callback(); return; }
+      var onReady = function() {
+        el.removeEventListener('canplay', onReady);
+        callback();
+      };
+      el.addEventListener('canplay', onReady);
+      // Fallback 8s
+      setTimeout(function() { el.removeEventListener('canplay', onReady); callback(); }, 8000);
+    } else if (el.tagName === 'IMG') {
+      if (el.complete && el.naturalWidth > 0) { callback(); return; }
+      var onLoad = function() {
+        el.removeEventListener('load', onLoad);
+        el.removeEventListener('error', onLoad);
+        callback();
+      };
+      el.addEventListener('load', onLoad);
+      el.addEventListener('error', onLoad);
+      // Fallback 8s
+      setTimeout(function() { el.removeEventListener('load', onLoad); el.removeEventListener('error', onLoad); callback(); }, 8000);
+    } else {
+      callback();
+    }
   }
 
   /**
@@ -536,9 +585,22 @@ async function initSponsorsShowcase() {
     activeCard.classList.remove('entering');
     activeCard.classList.add('visible');
 
-    // Se o slide ativo for vídeo, inicia reprodução
-    playActiveVideo();
-    restartProgress();
+    // Mostra loading até mídia carregar
+    var firstEl = activeSlideEls[currentSlide];
+    if (firstEl) {
+      showLoading();
+      waitForMediaLoad(firstEl, function() {
+        hideLoading();
+        playActiveVideo();
+        restartProgress();
+        startAutoSlide();
+      });
+    } else {
+      // Logo-only: sem mídia, inicia direto
+      hideLoading();
+      restartProgress();
+      startAutoSlide();
+    }
   }
 
   /**
@@ -560,9 +622,15 @@ async function initSponsorsShowcase() {
       currentSlide = nextSlide;
       activeSlideEls[currentSlide].classList.add('active');
       if (activeDotEls[currentSlide]) activeDotEls[currentSlide].classList.add('active');
-      // Inicia reprodução se for vídeo
-      playActiveVideo();
-      restartProgress();
+      // Inicia reprodução se for vídeo, espera carregar
+      var nextEl = activeSlideEls[currentSlide];
+      showLoading();
+      waitForMediaLoad(nextEl, function() {
+        hideLoading();
+        playActiveVideo();
+        restartProgress();
+        startAutoSlide();
+      });
     }
   }
 
@@ -763,5 +831,4 @@ async function initSponsorsShowcase() {
 
   // ─── Inicializa exibindo o primeiro patrocinador ───
   showSponsor(0, 0);
-  startAutoSlide();
 }
