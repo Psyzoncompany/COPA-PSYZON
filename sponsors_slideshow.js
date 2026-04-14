@@ -42,7 +42,7 @@ const sponsorsConfig = [
   },
   {
     id: 'bizuca',
-    name: 'Bizuca Health & Academy',
+    name: 'Bizuca Health Academy',
     logo: 'PATROCINADORES/banner%20bizuca.png',
     images: [
       'SLIDES/Bizuca-Health-%26-Academy/slide1.jpg',
@@ -496,9 +496,15 @@ async function initSponsorsShowcase() {
     currentSponsor = sIdx;
     currentSlide = slIdx || 0;
 
-    // Atualiza dots de navegação do patrocinador
+    // Atualiza logos de navegação do patrocinador
     for (var i = 0; i < sponsorDots.length; i++) {
       sponsorDots[i].classList.toggle('active', i === currentSponsor);
+      // Marca logos próximos (prev, current, next) para mobile fullscreen
+      var diff = Math.abs(i - currentSponsor);
+      // Trata wrap-around
+      var wrapDiff = sponsorsConfig.length - diff;
+      var isNearby = diff <= 1 || wrapDiff <= 1;
+      sponsorDots[i].classList.toggle('nearby', isNearby);
     }
 
     // Anima saída do card atual

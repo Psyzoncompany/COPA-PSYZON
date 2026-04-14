@@ -5375,11 +5375,11 @@ body.sponsors-fullscreen-active {
 /* Nav logos no fullscreen */
 .sponsors-fullscreen .sponsors-nav {
   position: fixed;
-  bottom: 60px;
+  bottom: 56px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100001;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
   padding: 8px 16px;
   border-radius: 32px;
   backdrop-filter: blur(12px);
@@ -5388,25 +5388,44 @@ body.sponsors-fullscreen-active {
   max-width: 90vw;
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .sponsors-fullscreen:hover .sponsors-nav {
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* Controls no fullscreen */
 .sponsors-fullscreen .sponsor-global-controls {
   position: fixed;
-  bottom: 12px;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100002;
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .sponsors-fullscreen:hover .sponsor-global-controls {
   opacity: 1;
+  pointer-events: auto;
+}
+
+/* Ajusta slide para não ser coberto pela nav */
+.sponsors-fullscreen .sponsor-slide-img {
+  max-height: 80vh;
+}
+
+.sponsors-fullscreen .sponsor-slide-video {
+  max-height: 80vh;
+}
+
+/* Hide footer sponsors when fullscreen is active */
+body.sponsors-fullscreen-active .sponsors-wrapper,
+body.sponsors-fullscreen-active .sponsors-card {
+  display: none !important;
 }
 
 /* Fullscreen API support */
@@ -5416,6 +5435,37 @@ body.sponsors-fullscreen-active {
 
 .sponsors-showcase:-webkit-full-screen {
   background: #000;
+}
+
+/* Mobile fullscreen: mostrar só 3 logos próximos */
+@media (max-width: 768px) {
+  .sponsors-fullscreen .sponsors-nav {
+    bottom: 50px;
+    padding: 6px 12px;
+    gap: 6px;
+  }
+
+  .sponsors-fullscreen .sponsor-nav-logo {
+    display: none;
+  }
+
+  .sponsors-fullscreen .sponsor-nav-logo.nearby {
+    display: block;
+    width: 36px;
+    height: 36px;
+  }
+
+  .sponsors-fullscreen .sponsor-global-controls {
+    bottom: 8px;
+  }
+
+  .sponsors-fullscreen .sponsor-slide-img {
+    max-height: 75vh;
+  }
+
+  .sponsors-fullscreen .sponsor-slide-video {
+    max-height: 75vh;
+  }
 }
 
 /* ---------- SPONSORS SHOWCASE MOBILE ---------- */
