@@ -3355,9 +3355,9 @@
       return;
     }
 
-    // Revert old stats if editing
+    // Clear old statsApplied flag (recalc will rebuild from scratch)
     if (match.statsApplied) {
-      revertMatchStats(match);
+      match.statsApplied = null;
     }
 
     const winnerNum = s1 > s2 ? 1 : 2;
@@ -3370,7 +3370,9 @@
     const totalRounds = bracket.rounds.length;
     const isFinal = rIdx === totalRounds - 1;
     const isSemi = rIdx === totalRounds - 2;
-    applyMatchStats(match, isSemi, isFinal);
+
+    // Recalculate ALL player stats from scratch
+    recalcAllPlayerStats();
 
     // Advance winner to next round
     const winnerTeam = winnerNum === 1 ? match.team1 : match.team2;
@@ -3678,9 +3680,9 @@
       match.dateTime = null;
     }
 
-    // --- REVERT OLD STATS IF EDITING ---
+    // --- Clear old statsApplied (recalc rebuilds from scratch) ---
     if (match.statsApplied) {
-      revertMatchStats(match);
+      match.statsApplied = null;
     }
 
     // --- UPDATE MATCH ---
@@ -3710,10 +3712,10 @@
 
     const totalRounds = bracket.rounds.length;
 
-    // --- APPLY NEW STATS ---
+    // --- RECALCULATE ALL STATS FROM SCRATCH ---
     const isFinal = rIdx === totalRounds - 1;
     const isSemi = rIdx === totalRounds - 2;
-    applyMatchStats(match, isSemi, isFinal);
+    recalcAllPlayerStats();
 
     // Advance winner to next round
     const winnerTeam = winnerNum === 1 ? match.team1 : match.team2;
@@ -3816,6 +3818,9 @@
 
     // Cascade: clear the winner's advancement in subsequent rounds
     cascadeClearAdvancement(bracket, rIdx, mIdx);
+
+    // Recalculate ALL player stats from scratch to avoid stale data
+    recalcAllPlayerStats();
 
     // Recalculate repescagem from scratch (losers from reset match are gone)
     applyRepescagem();
@@ -3949,6 +3954,103 @@
       if (isSemi) state.playerStats[t2Id].semifinals += 1;
       if (isFinal) state.playerStats[t2Id].finals += 1;
       if (isFinal && match.winner === 2) state.playerStats[t2Id].trophies += 1;
+    }
+  }
+
+  /** Recalculate ALL player stats from scratch by iterating every match */
+  function recalcAllPlayerStats() {
+    // Reset all stats to zero
+    state.playerStats = {};
+    state.teams.forEach(function(t) {
+      state.playerStats[t.id] = { trophies: 0, finals: 0, semifinals: 0, goals: 0, goalsTaken: 0, goalDiff: 0 };
+    });
+
+    // Iterate current bracket
+    const bracket = getCurrentBracket();
+    if (!bracket || !bracket.rounds) return;
+
+    const totalRounds = bracket.rounds.length;
+
+    bracket.rounds.forEach(function(round, rIdx) {
+      const isFinal = rIdx === totalRounds - 1;
+      const isSemi = rIdx === totalRounds - 2;
+
+      round.matches.forEach(function(match) {
+        if (!match.winner) return;
+        if (isByeTeam(match.team1) || isByeTeam(match.team2)) return;
+
+        const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
+        const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
+        const t1Id = getTeamIdGlobal(match.team1);
+        const t2Id = getTeamIdGlobal(match.team2);
+
+        if (t1Id) {
+          ensureStats(t1Id);
+          state.playerStats[t1Id].goals += s1;
+          state.playerStats[t1Id].goalsTaken += s2;
+          state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+          if (isSemi) state.playerStats[t1Id].semifinals += 1;
+          if (isFinal) state.playerStats[t1Id].finals += 1;
+          if (isFinal && match.winner === 1) state.playerStats[t1Id].trophies += 1;
+        }
+
+        if (t2Id) {
+          ensureStats(t2Id);
+          state.playerStats[t2Id].goals += s2;
+          state.playerStats[t2Id].goalsTaken += s1;
+          state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+          if (isSemi) state.playerStats[t2Id].semifinals += 1;
+          if (isFinal) state.playerStats[t2Id].finals += 1;
+          if (isFinal && match.winner === 2) state.playerStats[t2Id].trophies += 1;
+        }
+
+        // Update statsApplied to match current state
+        match.statsApplied = {
+          t1Score: s1,
+          t2Score: s2,
+          isSemi: isSemi,
+          isFinal: isFinal,
+          winner: match.winner
+        };
+      });
+    });
+
+    // Also iterate history brackets
+    if (state.tournamentsHistory) {
+      state.tournamentsHistory.forEach(function(hist) {
+        if (!hist.bracket || !hist.bracket.rounds) return;
+        const hTotalR = hist.bracket.rounds.length;
+        hist.bracket.rounds.forEach(function(round, rIdx) {
+          const hIsFinal = rIdx === hTotalR - 1;
+          const hIsSemi = rIdx === hTotalR - 2;
+          round.matches.forEach(function(match) {
+            if (!match.winner) return;
+            if (isByeTeam(match.team1) || isByeTeam(match.team2)) return;
+            const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
+            const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
+            const t1Id = getTeamIdGlobal(match.team1);
+            const t2Id = getTeamIdGlobal(match.team2);
+            if (t1Id) {
+              ensureStats(t1Id);
+              state.playerStats[t1Id].goals += s1;
+              state.playerStats[t1Id].goalsTaken += s2;
+              state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+              if (hIsSemi) state.playerStats[t1Id].semifinals += 1;
+              if (hIsFinal) state.playerStats[t1Id].finals += 1;
+              if (hIsFinal && match.winner === 1) state.playerStats[t1Id].trophies += 1;
+            }
+            if (t2Id) {
+              ensureStats(t2Id);
+              state.playerStats[t2Id].goals += s2;
+              state.playerStats[t2Id].goalsTaken += s1;
+              state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+              if (hIsSemi) state.playerStats[t2Id].semifinals += 1;
+              if (hIsFinal) state.playerStats[t2Id].finals += 1;
+              if (hIsFinal && match.winner === 2) state.playerStats[t2Id].trophies += 1;
+            }
+          });
+        });
+      });
     }
   }
 
