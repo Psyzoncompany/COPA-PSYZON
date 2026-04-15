@@ -5697,3 +5697,74 @@ body.sponsors-fullscreen-active .sponsors-card {
     padding: 5px 10px;
   }
 }
+
+/* ==========================================================
+   CUSTOM TEAM COUNT INPUT & BYE SYSTEM
+   ========================================================== */
+
+/* Team count input wrapper */
+.team-count-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-count-input-wrapper input[type='number'] {
+  width: 100%;
+  -moz-appearance: textfield;
+}
+
+.team-count-input-wrapper input[type='number']::-webkit-inner-spin-button,
+.team-count-input-wrapper input[type='number']::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 32px;
+}
+
+/* Info label below the team count input */
+.team-count-info {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  line-height: 1.3;
+  padding: 4px 2px 0;
+  min-height: 16px;
+}
+
+/* ---------- BYE Match Card ---------- */
+.match-card.match-bye {
+  opacity: 0.45;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(45, 53, 70, 0.25);
+  pointer-events: none;
+}
+
+.match-card.match-bye:hover {
+  transform: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.match-card.match-bye .match-header {
+  background: transparent;
+}
+
+.match-card.match-bye .match-id {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* BYE team slot */
+.match-team.bye-slot {
+  opacity: 0.5;
+  padding: 6px 12px;
+}
+
+.team-name-bracket.bye-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  font-style: italic;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

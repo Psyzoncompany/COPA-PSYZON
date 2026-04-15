@@ -222,42 +222,9 @@
     if (state.bracket && state.bracket.rounds && state.bracket.rounds.length > 0) return;
 
     const count = state.teamCount || 8;
-    const roundNames = getRoundNames(count);
-    if (roundNames.length === 0) return;
-
-    let matchesInRound = count / 2;
-    const rounds = [];
     const existingTeams = [...(state.teams || [])];
 
-    roundNames.forEach((name, rIdx) => {
-      const matches = [];
-      for (let m = 0; m < matchesInRound; m++) {
-        const match = {
-          id: `r${rIdx}m${m}`,
-          team1: null,
-          team2: null,
-          winner: null,
-          penalties: null,
-          dateTime: null,
-          status: 'not_started',
-          liveEvents: [],
-          liveStartedAt: null,
-          liveElapsed: 0
-        };
-        // Fill first round with existing teams in order
-        if (rIdx === 0) {
-          const idx1 = m * 2;
-          const idx2 = m * 2 + 1;
-          if (idx1 < existingTeams.length) match.team1 = makeTeamSlotData(existingTeams[idx1]);
-          if (idx2 < existingTeams.length) match.team2 = makeTeamSlotData(existingTeams[idx2]);
-        }
-        matches.push(match);
-      }
-      rounds.push({ name, matches });
-      matchesInRound = Math.floor(matchesInRound / 2);
-    });
-
-    state.bracket = { rounds };
+    state.bracket = buildBracketStructure(existingTeams, count);
     state.champion = null;
     saveState();
   }
@@ -702,14 +669,16 @@
     const nameInput = $('#tournament-name');
     if (nameInput) nameInput.value = state.tournamentName || '';
 
-    const countSelect = $('#team-count');
-    if (countSelect) countSelect.value = String(state.teamCount || 8);
+    const countInput = $('#team-count');
+    if (countInput) countInput.value = String(state.teamCount || 8);
 
     const prizeInput = $('#prize-description');
     if (prizeInput) prizeInput.value = state.prize || '';
 
     const twoLeggedCheck = $('#two-legged-tournament');
     if (twoLeggedCheck) twoLeggedCheck.checked = !!state.twoLegged;
+
+    updateTeamCountInfo();
   }
 
   /** Save tournament name when it changes */
@@ -960,72 +929,125 @@
   }
 
   /**
-   * Determine round names based on total number of teams.
+   * Return the next power of 2 >= n.
+   * @param {number} n
+   * @returns {number}
+   */
+  function nextPowerOf2(n) {
+    if (n <= 1) return 2;
+    let p = 1;
+    while (p < n) p *= 2;
+    return p;
+  }
+
+  /**
+   * Check if a team slot is a BYE.
+   * @param {object|null} team
+   * @returns {boolean}
+   */
+  function isByeTeam(team) {
+    return team && team.isBye === true;
+  }
+
+  /**
+   * Determine round names based on total number of bracket slots (power of 2).
+   * Accepts any participant count — will calculate from the next power of 2.
    * @param {number} teamCount
    * @returns {string[]}
    */
   function getRoundNames(teamCount) {
-    switch (teamCount) {
-      case 32:
-        return ['Primeira Fase', 'Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Final'];
-      case 16:
-        return ['Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Final'];
-      case 8:
-        return ['Quartas de Final', 'Semifinal', 'Final'];
-      case 4:
-        return ['Semifinal', 'Final'];
-      default:
-        return ['Final'];
+    const totalSlots = nextPowerOf2(teamCount);
+    const numRounds = Math.round(Math.log2(totalSlots));
+    if (numRounds <= 0) return ['Final'];
+
+    const names = [];
+    for (let i = 0; i < numRounds; i++) {
+      const matchesInRound = totalSlots / Math.pow(2, i + 1);
+      if (matchesInRound === 1) names.push('Final');
+      else if (matchesInRound === 2) names.push('Semifinal');
+      else if (matchesInRound === 4) names.push('Quartas de Final');
+      else if (matchesInRound === 8) names.push('Oitavas de Final');
+      else if (matchesInRound === 16) names.push('Dezesseis Avos');
+      else names.push(`Fase ${i + 1} (${matchesInRound * 2} participantes)`);
     }
+    return names;
   }
 
-  /** Generate bracket from registered teams */
-  function handleGenerate() {
-    // Sync team count from select
-    const countSelect = $('#team-count');
-    const requiredCount = parseInt(countSelect ? countSelect.value : state.teamCount, 10);
-    state.teamCount = requiredCount;
+  /**
+   * Create an empty match object.
+   */
+  function createEmptyMatch(rIdx, m) {
+    return {
+      id: `r${rIdx}m${m}`,
+      team1: null,
+      team2: null,
+      winner: null,
+      penalties: null,
+      dateTime: null,
+      status: 'not_started',
+      liveEvents: [],
+      liveStartedAt: null,
+      liveElapsed: 0
+    };
+  }
 
-    // Sync tournament name
-    syncTournamentName();
+  /**
+   * Create a BYE team slot.
+   */
+  function makeBye() {
+    return { id: 'bye', teamName: 'BYE', playerName: 'BYE', score: null, isBye: true };
+  }
 
-    const roundNames = getRoundNames(requiredCount);
-    if (roundNames.length === 0) {
-      showToast('Quantidade de times inválida. Escolha 4, 8, 16 ou 32.', 'error');
-      return;
+  /**
+   * Build the bracket rounds with BYE support for any participant count.
+   * @param {Array} shuffledTeams - pre-shuffled team list
+   * @param {number} requestedCount - total participants (can be non-power-of-2)
+   * @returns {{ rounds: Array }}
+   */
+  function buildBracketStructure(shuffledTeams, requestedCount) {
+    const totalSlots = nextPowerOf2(requestedCount);
+    const numByes = totalSlots - requestedCount;
+    const numFirstRoundMatches = totalSlots / 2;
+    const roundNames = getRoundNames(requestedCount);
+
+    // Distribute byes evenly between top/bottom halves
+    const byeMatchIndices = new Set();
+    let top = numFirstRoundMatches - 1;
+    let bottom = 0;
+    for (let i = 0; i < numByes; i++) {
+      if (i % 2 === 0) {
+        byeMatchIndices.add(top--);
+      } else {
+        byeMatchIndices.add(bottom++);
+      }
     }
 
-    // Shuffle already registered teams
-    const shuffled = shuffleArray([...state.teams]);
-
-    let matchesInRound = requiredCount / 2;
+    let matchesInRound = numFirstRoundMatches;
     const rounds = [];
+    let teamIdx = 0;
 
     roundNames.forEach((name, rIdx) => {
       const matches = [];
       for (let m = 0; m < matchesInRound; m++) {
-        const match = {
-          id: `r${rIdx}m${m}`,
-          team1: null,
-          team2: null,
-          winner: null,
-          penalties: null,
-          dateTime: null,
-          status: 'not_started',
-          liveEvents: [],
-          liveStartedAt: null,
-          liveElapsed: 0
-        };
+        const match = createEmptyMatch(rIdx, m);
 
-        // First round: fill with already registered teams (remaining slots stay null/TBD)
         if (rIdx === 0) {
-          const idx1 = m * 2;
-          const idx2 = m * 2 + 1;
-          if (idx1 < shuffled.length) {
-            match.team1 = makeTeamSlotData(shuffled[idx1]);
-          }
-          if (idx2 < shuffled.length) {
-            match.team2 = makeTeamSlotData(shuffled[idx2]);
+          if (byeMatchIndices.has(m)) {
+            // BYE match: 1 real team auto-advances
+            if (teamIdx < shuffledTeams.length) {
+              match.team1 = makeTeamSlotData(shuffledTeams[teamIdx++]);
+            }
+            match.team2 = makeBye();
+            match.winner = 1;
+            match.status = 'finished';
+          } else {
+            // Real match
+            if (teamIdx < shuffledTeams.length) {
+              match.team1 = makeTeamSlotData(shuffledTeams[teamIdx++]);
+            }
+            if (teamIdx < shuffledTeams.length) {
+              match.team2 = makeTeamSlotData(shuffledTeams[teamIdx++]);
+            }
           }
         }
 
@@ -1035,14 +1057,85 @@
       matchesInRound = Math.floor(matchesInRound / 2);
     });
 
-    state.bracket = { rounds };
+    // Auto-advance BYE winners to next round
+    if (rounds.length > 1) {
+      const firstRound = rounds[0];
+      const secondRound = rounds[1];
+      firstRound.matches.forEach((match, mIdx) => {
+        if (match.winner && isByeTeam(match.team2)) {
+          const nextMatchIdx = Math.floor(mIdx / 2);
+          const nextMatch = secondRound.matches[nextMatchIdx];
+          if (nextMatch) {
+            const slot = mIdx % 2 === 0 ? 'team1' : 'team2';
+            nextMatch[slot] = makeTeamSlotData(match.team1);
+          }
+        }
+      });
+    }
+
+    return { rounds };
+  }
+
+  /**
+   * Update the bracket info display next to the team count input.
+   */
+  function updateTeamCountInfo() {
+    const infoEl = $('#team-count-info');
+    if (!infoEl) return;
+    const countInput = $('#team-count');
+    const count = parseInt(countInput ? countInput.value : state.teamCount, 10);
+    if (isNaN(count) || count < 2) {
+      infoEl.textContent = 'Mínimo: 2 participantes';
+      infoEl.style.color = 'var(--error)';
+      return;
+    }
+    const totalSlots = nextPowerOf2(count);
+    const numByes = totalSlots - count;
+    const numRounds = Math.round(Math.log2(totalSlots));
+    let info = `${numRounds} fase${numRounds > 1 ? 's' : ''}`;
+    if (numByes > 0) {
+      info += ` • ${numByes} bye${numByes > 1 ? 's' : ''} (classificação automática)`;
+    }
+    infoEl.textContent = info;
+    infoEl.style.color = 'var(--on-surface-variant)';
+  }
+
+  /** Generate bracket from registered teams */
+  function handleGenerate() {
+    // Sync team count from input
+    const countInput = $('#team-count');
+    const requiredCount = parseInt(countInput ? countInput.value : state.teamCount, 10);
+
+    if (isNaN(requiredCount) || requiredCount < 2) {
+      showToast('Quantidade inválida. Mínimo de 2 participantes.', 'error');
+      return;
+    }
+    if (requiredCount > 128) {
+      showToast('Quantidade máxima: 128 participantes.', 'error');
+      return;
+    }
+
+    state.teamCount = requiredCount;
+
+    // Sync tournament name
+    syncTournamentName();
+
+    // Shuffle already registered teams
+    const shuffled = shuffleArray([...state.teams]);
+
+    state.bracket = buildBracketStructure(shuffled, requiredCount);
     state.champion = null;
     saveState();
 
     renderBracket();
+    updateTeamCountInfo();
 
+    const totalSlots = nextPowerOf2(requiredCount);
+    const numByes = totalSlots - requiredCount;
     const remaining = requiredCount - shuffled.length;
-    if (remaining > 0) {
+    if (numByes > 0 && remaining <= 0) {
+      showToast(`Chaveamento gerado! ${numByes} bye(s) aplicado(s) automaticamente.`, 'success');
+    } else if (remaining > 0) {
       showToast(`Chaveamento gerado! Aguardando ${remaining} participante(s).`, 'success');
     } else {
       showToast('Chaveamento gerado com todos os times!', 'success');
@@ -1060,6 +1153,8 @@
     const firstRound = state.bracket.rounds[0];
     for (let m = 0; m < firstRound.matches.length; m++) {
       const match = firstRound.matches[m];
+      // Skip BYE matches (already auto-advanced)
+      if (isByeTeam(match.team1) || isByeTeam(match.team2)) continue;
       if (!match.team1) {
         match.team1 = makeTeamSlotData(team);
         return true;
@@ -1467,6 +1562,14 @@
         let imgHtml = '<span class="av-placeholder" style="font-size:16px;">?</span>';
         let nameHtml = 'A definir';
 
+        if (teamData && isByeTeam(teamData)) {
+          t.classList.add('bye-slot');
+          imgHtml = '';
+          nameHtml = '<span style="font-size:11px; font-weight:600; color:var(--text-tertiary); font-style:italic; letter-spacing:0.1em;">BYE</span>';
+          t.innerHTML = `<div class="match-list-name">${nameHtml}</div>`;
+          return t;
+        }
+
         if (teamData) {
           const initialsText = initials(teamData.playerName || teamData.teamName);
           imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initialsText)}</span>`;
@@ -1836,8 +1939,10 @@
     const wrapper = document.createElement('div');
     wrapper.className = 'match-card-wrapper';
 
+    const isByeMatch = isByeTeam(match.team1) || isByeTeam(match.team2);
+
     const card = document.createElement('div');
-    card.className = 'match-card';
+    card.className = 'match-card' + (isByeMatch ? ' match-bye' : '');
     card.dataset.matchId = match.id;
 
     const isLive = match.status === 'live';
@@ -1854,7 +1959,7 @@
 
     const matchLabel = document.createElement('span');
     matchLabel.className = 'match-id';
-    matchLabel.textContent = `Jogo ${mIdx + 1}`;
+    matchLabel.textContent = isByeMatch ? `BYE` : `Jogo ${mIdx + 1}`;
     header.appendChild(matchLabel);
 
     const bothTeams = match.team1 && match.team2;
@@ -2333,6 +2438,17 @@
       nameSpan.className = 'team-name-bracket tbd';
       nameSpan.textContent = 'A definir';
       slot.appendChild(nameSpan);
+      return slot;
+    }
+
+    // BYE slot
+    if (isByeTeam(team)) {
+      slot.classList.add('bye-slot');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'team-name-bracket bye-label';
+      nameSpan.textContent = 'BYE';
+      slot.appendChild(nameSpan);
+      slot.draggable = false;
       return slot;
     }
 
@@ -4860,9 +4976,15 @@
       });
     }
 
-    // Sync team count from select
-    const countSelect = $('#team-count');
-    const requiredCount = parseInt(countSelect ? countSelect.value : state.teamCount, 10);
+    // Sync team count from input
+    const countInput = $('#team-count');
+    const requiredCount = parseInt(countInput ? countInput.value : state.teamCount, 10);
+
+    if (isNaN(requiredCount) || requiredCount < 2) {
+      showToast('Quantidade inválida. Mínimo de 2 participantes.', 'error');
+      return;
+    }
+
     state.teamCount = requiredCount;
 
     // Sync tournament name
@@ -4870,7 +4992,7 @@
 
     const roundNames = getRoundNames(requiredCount);
     if (roundNames.length === 0) {
-      showToast('Quantidade de times inválida. Escolha 4, 8, 16 ou 32.', 'error');
+      showToast('Quantidade de times inválida.', 'error');
       return;
     }
 
@@ -4880,54 +5002,13 @@
       shuffled = shuffleArray([...state.teams]);
     }
 
-    let matchesInRound = requiredCount / 2;
-    const rounds = [];
-
-    roundNames.forEach((name, rIdx) => {
-      const matches = [];
-      for (let m = 0; m < matchesInRound; m++) {
-        const match = {
-          id: `r${rIdx}m${m}`,
-          team1: null,
-          team2: null,
-          winner: null,
-          penalties: null,
-          dateTime: null,
-          status: 'not_started',
-          liveEvents: [],
-          liveStartedAt: null,
-          liveElapsed: 0
-        };
-
-        // Fill first round with the shuffled teams
-        if (rIdx === 0) {
-          const idx1 = m * 2;
-          const idx2 = m * 2 + 1;
-          if (idx1 < shuffled.length) {
-            match.team1 = makeTeamSlotData(shuffled[idx1]);
-          }
-          if (idx2 < shuffled.length) {
-            match.team2 = makeTeamSlotData(shuffled[idx2]);
-          }
-        }
-
-        matches.push(match);
-      }
-      rounds.push({ name, matches });
-      matchesInRound = Math.floor(matchesInRound / 2);
-    });
-
-    state.bracket = { rounds };
+    state.bracket = buildBracketStructure(shuffled, requiredCount);
     state.champion = null;
+
     saveState();
     renderBracket();
-
-    const remaining = requiredCount - (shuffled ? shuffled.length : 0);
-    if (remaining > 0) {
-      showToast(`Chaveamento embaralhado e redimensionado! Aguardando ${remaining} participante(s).`, 'success');
-    } else {
-      showToast('Chaveamento embaralhado e ajustado ao tamanho selecionado!', 'success');
-    }
+    updateTeamCountInfo();
+    showToast('Chaveamento embaralhado!', 'success');
   }
 
   /** Swap two teams in the bracket */
@@ -5230,14 +5311,51 @@
       tournamentNameInput.addEventListener('change', syncTournamentName);
     }
 
-    // Team count select: save on change
-    const teamCountSelect = $('#team-count');
-    if (teamCountSelect) {
-      teamCountSelect.addEventListener('change', () => {
-        state.teamCount = parseInt(teamCountSelect.value, 10);
+    // Team count input: save on change and auto-regenerate bracket
+    const teamCountInput = $('#team-count');
+    let _teamCountDebounce = null;
+    if (teamCountInput) {
+      teamCountInput.addEventListener('input', () => {
+        const val = parseInt(teamCountInput.value, 10);
+        updateTeamCountInfo();
+        if (isNaN(val) || val < 2 || val > 128) return;
+
+        state.teamCount = val;
         saveState();
         renderTeamList();
+
+        // Debounce: rebuild bracket after user stops typing (400ms)
+        clearTimeout(_teamCountDebounce);
+        _teamCountDebounce = setTimeout(() => {
+          // Revert existing stats before rebuilding
+          if (state.bracket && state.bracket.rounds) {
+            state.bracket.rounds.forEach(round => {
+              round.matches.forEach(m => {
+                if (m.statsApplied && typeof revertMatchStats === 'function') {
+                  revertMatchStats(m);
+                }
+              });
+            });
+          }
+
+          const shuffled = shuffleArray([...state.teams]);
+          state.bracket = buildBracketStructure(shuffled, val);
+          state.champion = null;
+          saveState();
+          renderBracket();
+          renderTop3();
+
+          const totalSlots = nextPowerOf2(val);
+          const numByes = totalSlots - val;
+          if (numByes > 0) {
+            showToast(`Chaveamento atualizado: ${val} participantes, ${numByes} bye(s).`, 'success');
+          } else {
+            showToast(`Chaveamento atualizado para ${val} participantes.`, 'success');
+          }
+        }, 400);
       });
+      // Initialize info display
+      updateTeamCountInfo();
     }
 
     // Mobile menu toggle
@@ -5518,9 +5636,9 @@
     });
 
     // Re-populate client select when teams change
-    const teamCountSelectForClients = $('#team-count');
-    if (teamCountSelectForClients) {
-      teamCountSelectForClients.addEventListener('change', () => {
+    const teamCountInputForClients = $('#team-count');
+    if (teamCountInputForClients) {
+      teamCountInputForClients.addEventListener('input', () => {
         populateClientSelect();
       });
     }

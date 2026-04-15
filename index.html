@@ -483,13 +483,11 @@
             <input type="text" id="tournament-name" placeholder="Ex: Copa Psyzon 2025" maxlength="60">
           </div>
           <div class="form-group">
-            <label for="team-count">Quantidade de Times</label>
-            <select id="team-count">
-              <option value="4">4 Times</option>
-              <option value="8" selected>8 Times</option>
-              <option value="16">16 Times</option>
-              <option value="32">32 Times</option>
-            </select>
+            <label for="team-count">Quantidade de Participantes</label>
+            <div class="team-count-input-wrapper">
+              <input type="number" id="team-count" min="2" max="128" value="8" placeholder="Ex: 8">
+              <span id="team-count-info" class="team-count-info"></span>
+            </div>
           </div>
           <div class="form-group" style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
             <input type="checkbox" id="two-legged-tournament" style="width: 18px; height: 18px; cursor: pointer;">
