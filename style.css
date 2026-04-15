@@ -5300,9 +5300,10 @@ body.fs-3col-active {
 
 /* ── Left column: Bracket ── */
 #fs-3col-overlay .fs-col-bracket {
-  overflow-y: auto;
-  overflow-x: auto;
-  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px 10px;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.2);
   scrollbar-width: thin;
@@ -5332,19 +5333,62 @@ body.fs-3col-active {
   padding-top: 4px;
 }
 
-/* Scale bracket to fit the column — bigger now without sponsors column */
+/* Bracket in fullscreen: vertical layout, one round at a time */
 #fs-3col-overlay .fs-col-bracket .bracket {
-  transform: scale(0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transform: none;
   transform-origin: top left;
+  min-width: unset;
+  padding: 0;
+  transition: none;
+}
+
+/* Each round displayed as a full-width block */
+#fs-3col-overlay .fs-col-bracket .round {
+  min-width: unset;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Hide connector columns — not needed in vertical layout */
+#fs-3col-overlay .fs-col-bracket .connector-col {
+  display: none;
 }
 
 #fs-3col-overlay .fs-col-bracket .match-card {
-  width: 280px;
+  width: 100%;
+  max-width: 320px;
+}
+
+#fs-3col-overlay .fs-col-bracket .match-card-wrapper {
+  width: 100%;
+  max-width: 320px;
 }
 
 #fs-3col-overlay .fs-col-bracket .bracket-container {
   overflow: visible;
   padding: 0;
+}
+
+/* Round title styling in fullscreen */
+#fs-3col-overlay .fs-col-bracket .round-title {
+  font-size: 11px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Round matches layout */
+#fs-3col-overlay .fs-col-bracket .round-matches {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
 }
 
 /* Hide irrelevant items in the bracket clone */
@@ -5355,6 +5399,69 @@ body.fs-3col-active {
 #fs-3col-overlay .fs-col-bracket .match-filter-bar,
 #fs-3col-overlay .fs-col-bracket .live-matches-area {
   display: none !important;
+}
+
+/* All rounds hidden by default; JS adds .fs-round-visible to the active one */
+#fs-3col-overlay .fs-col-bracket .round {
+  display: none;
+}
+
+#fs-3col-overlay .fs-col-bracket .round.fs-round-visible {
+  display: flex;
+}
+
+/* Round navigation tabs at top of bracket column */
+.fs-round-nav {
+  display: flex;
+  gap: 4px;
+  padding: 0 4px 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.fs-round-tab {
+  padding: 4px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.fs-round-tab:hover {
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.fs-round-tab.active {
+  color: rgba(173, 199, 255, 0.9);
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.fs-round-tab.completed {
+  color: rgba(74, 222, 128, 0.7);
+  border-color: rgba(74, 222, 128, 0.15);
+}
+
+.fs-round-tab.has-live {
+  color: rgba(239, 68, 68, 0.9);
+  border-color: rgba(239, 68, 68, 0.3);
+  animation: fsLiveGlow 2s ease-in-out infinite;
+}
+
+/* Auto-scroll smooth animation */
+.fs-bracket-scroll-area {
+  flex: 1;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* Highlight live match cards within the bracket */
@@ -5393,22 +5500,26 @@ body.fs-3col-active {
   align-items: center;
   justify-content: center;
   min-height: 0;
+  overflow: hidden;
 }
 
 #fs-3col-overlay .fs-col-slideshow .sponsor-slidecase-card {
   max-width: 100%;
   width: 100%;
+  max-height: 100%;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
 #fs-3col-overlay .fs-col-slideshow .sponsor-slide-img {
-  max-height: 78vh;
+  max-height: calc(100vh - 180px);
+  width: 100%;
   object-fit: contain;
 }
 
 #fs-3col-overlay .fs-col-slideshow .sponsor-slide-video {
-  max-height: 78vh;
+  max-height: calc(100vh - 180px);
 }
 
 #fs-3col-overlay .fs-col-slideshow .sponsors-nav {

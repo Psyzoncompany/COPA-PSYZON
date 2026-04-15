@@ -896,20 +896,180 @@ async function initSponsorsShowcase() {
     isFullscreen = true;
     overlay = buildOverlay();
 
-    // ─── Clone bracket content into left column ───
+    // ─── Build bracket column with round navigation ───
     var colBracket = overlay.querySelector('.fs-col-bracket');
     colBracket.innerHTML = '';
+
     var bracketContainer = document.getElementById('bracket-container');
     var repescagemPanel = document.getElementById('repescagem-panel');
+
     if (bracketContainer) {
       var bracketClone = bracketContainer.cloneNode(true);
       bracketClone.id = 'fs-bracket-clone';
-      colBracket.appendChild(bracketClone);
+
+      // Find all rounds in the clone
+      var rounds = bracketClone.querySelectorAll('.round:not(.connector-col)');
+
+      // Determine which rounds are completed and which is the "active" round
+      var activeRoundIdx = 0;
+      try {
+        if (typeof state !== 'undefined' && state.bracket && state.bracket.rounds) {
+          for (var ri = 0; ri < state.bracket.rounds.length; ri++) {
+            var rnMatches = state.bracket.rounds[ri].matches;
+            var allDone = rnMatches.length > 0 && rnMatches.every(function(m) {
+              return m.winner || m.status === 'finished';
+            });
+            if (allDone && ri < state.bracket.rounds.length - 1) {
+              activeRoundIdx = ri + 1;
+            }
+          }
+          // If any round has a live match, focus on that
+          for (var ri2 = 0; ri2 < state.bracket.rounds.length; ri2++) {
+            var hasLive = state.bracket.rounds[ri2].matches.some(function(m) {
+              return m.status === 'live' || m.status === 'paused';
+            });
+            if (hasLive) {
+              activeRoundIdx = ri2;
+              break;
+            }
+          }
+        }
+      } catch(e) {}
+
+      // Build round navigation tabs
+      var roundNav = document.createElement('div');
+      roundNav.className = 'fs-round-nav';
+
+      var roundDataArr = [];
+      rounds.forEach(function(rEl, idx) {
+        var titleEl = rEl.querySelector('.round-title');
+        var label = titleEl ? (titleEl.textContent || '').trim() : 'Fase ' + (idx + 1);
+        // Trim icon text
+        label = label.replace(/^\s*[\u2606\u2605\u26BD\u2B50\u2728\uD83C\uDFC6]/u, '').trim();
+
+        var tab = document.createElement('button');
+        tab.className = 'fs-round-tab';
+        tab.textContent = label;
+        tab.setAttribute('data-round-idx', idx);
+
+        // Mark completed
+        try {
+          if (typeof state !== 'undefined' && state.bracket && state.bracket.rounds[idx]) {
+            var rm = state.bracket.rounds[idx].matches;
+            var done = rm.length > 0 && rm.every(function(m) { return m.winner || m.status === 'finished'; });
+            if (done) tab.classList.add('completed');
+            var live = rm.some(function(m) { return m.status === 'live' || m.status === 'paused'; });
+            if (live) tab.classList.add('has-live');
+          }
+        } catch(e) {}
+
+        if (idx === activeRoundIdx) tab.classList.add('active');
+
+        tab.addEventListener('click', function() {
+          showFsRound(idx);
+        });
+        roundNav.appendChild(tab);
+        roundDataArr.push({ el: rEl, tab: tab });
+      });
+
+      colBracket.appendChild(roundNav);
+
+      // Scroll area wrapper
+      var scrollArea = document.createElement('div');
+      scrollArea.className = 'fs-bracket-scroll-area';
+      scrollArea.appendChild(bracketClone);
+      colBracket.appendChild(scrollArea);
+
+      // Show active round
+      function showFsRound(idx) {
+        rounds.forEach(function(r, i) {
+          r.classList.toggle('fs-round-visible', i === idx);
+        });
+        roundDataArr.forEach(function(rd, i) {
+          rd.tab.classList.toggle('active', i === idx);
+        });
+        currentFsRound = idx;
+        // Reset auto-scroll
+        resetAutoScroll();
+      }
+
+      showFsRound(activeRoundIdx);
+
+      // ─── Auto-scroll vertical logic ───
+      var currentFsRound = activeRoundIdx;
+      var autoScrollDir = 1; // 1 = down, -1 = up
+      var autoScrollSpeed = 0.6; // px per frame
+      var autoScrollRAF = null;
+      var autoScrollPaused = false;
+
+      function autoScrollStep() {
+        if (!isFullscreen || autoScrollPaused) {
+          autoScrollRAF = null;
+          return;
+        }
+        var maxScroll = scrollArea.scrollHeight - scrollArea.clientHeight;
+        if (maxScroll <= 0) {
+          // Content fits, no need to scroll
+          autoScrollRAF = requestAnimationFrame(autoScrollStep);
+          return;
+        }
+
+        scrollArea.scrollTop += autoScrollDir * autoScrollSpeed;
+
+        // Bounce at edges
+        if (scrollArea.scrollTop >= maxScroll) {
+          scrollArea.scrollTop = maxScroll;
+          autoScrollDir = -1;
+        } else if (scrollArea.scrollTop <= 0) {
+          scrollArea.scrollTop = 0;
+          autoScrollDir = 1;
+        }
+
+        autoScrollRAF = requestAnimationFrame(autoScrollStep);
+      }
+
+      function resetAutoScroll() {
+        scrollArea.scrollTop = 0;
+        autoScrollDir = 1;
+        if (!autoScrollRAF && !autoScrollPaused) {
+          autoScrollRAF = requestAnimationFrame(autoScrollStep);
+        }
+      }
+
+      // Pause auto-scroll on hover, resume on leave
+      scrollArea.addEventListener('mouseenter', function() {
+        autoScrollPaused = true;
+        scrollArea.style.overflowY = 'auto';
+      });
+      scrollArea.addEventListener('mouseleave', function() {
+        autoScrollPaused = false;
+        scrollArea.style.overflowY = 'hidden';
+        if (!autoScrollRAF) {
+          autoScrollRAF = requestAnimationFrame(autoScrollStep);
+        }
+      });
+
+      // Start auto-scroll after a short delay
+      setTimeout(function() {
+        if (isFullscreen) {
+          autoScrollRAF = requestAnimationFrame(autoScrollStep);
+        }
+      }, 800);
+
+      // Store cleanup function
+      overlay._cleanupBracket = function() {
+        if (autoScrollRAF) {
+          cancelAnimationFrame(autoScrollRAF);
+          autoScrollRAF = null;
+        }
+      };
     }
+
     if (repescagemPanel && repescagemPanel.style.display !== 'none') {
       var repClone = repescagemPanel.cloneNode(true);
       repClone.id = 'fs-repescagem-clone';
-      colBracket.appendChild(repClone);
+      var scrollAreaEl = colBracket.querySelector('.fs-bracket-scroll-area');
+      if (scrollAreaEl) scrollAreaEl.appendChild(repClone);
     }
 
     // ─── Move slideshow container into right column ───
@@ -923,10 +1083,72 @@ async function initSponsorsShowcase() {
 
     // ─── Update live match bar ───
     updateLiveBar();
-    // Auto-refresh live bar every 1s
+    // Auto-refresh live bar + check round completion every 1s
     if (fsLiveInterval) clearInterval(fsLiveInterval);
     fsLiveInterval = setInterval(function() {
-      if (isFullscreen) updateLiveBar();
+      if (!isFullscreen) return;
+      updateLiveBar();
+
+      // Check if current round is completed → auto-advance to next
+      try {
+        if (typeof state !== 'undefined' && state.bracket && state.bracket.rounds && overlay) {
+          var tabs = overlay.querySelectorAll('.fs-round-tab');
+          var visibleRounds = overlay.querySelectorAll('.round:not(.connector-col)');
+          var curIdx = -1;
+          tabs.forEach(function(t, i) { if (t.classList.contains('active')) curIdx = i; });
+
+          if (curIdx >= 0 && curIdx < state.bracket.rounds.length) {
+            var curMatches = state.bracket.rounds[curIdx].matches;
+            var allFinished = curMatches.length > 0 && curMatches.every(function(m) {
+              return m.winner || m.status === 'finished';
+            });
+            if (allFinished && curIdx < state.bracket.rounds.length - 1) {
+              // Advance to next round
+              visibleRounds.forEach(function(r, i) {
+                r.classList.toggle('fs-round-visible', i === curIdx + 1);
+              });
+              tabs.forEach(function(t, i) {
+                t.classList.toggle('active', i === curIdx + 1);
+                // Update completed status
+                if (i <= curIdx) t.classList.add('completed');
+              });
+              // Reset scroll
+              var scrollAreaCheck = overlay.querySelector('.fs-bracket-scroll-area');
+              if (scrollAreaCheck) scrollAreaCheck.scrollTop = 0;
+            }
+
+            // Update live indicators on tabs
+            tabs.forEach(function(t, i) {
+              if (i < state.bracket.rounds.length) {
+                var rm = state.bracket.rounds[i].matches;
+                var done = rm.length > 0 && rm.every(function(m) { return m.winner || m.status === 'finished'; });
+                var live = rm.some(function(m) { return m.status === 'live' || m.status === 'paused'; });
+                t.classList.toggle('completed', done);
+                t.classList.toggle('has-live', live);
+              }
+            });
+
+            // Re-clone the bracket to update scores/statuses
+            var bracketContainer2 = document.getElementById('bracket-container');
+            if (bracketContainer2) {
+              var scrollAreaUpd = overlay.querySelector('.fs-bracket-scroll-area');
+              var oldClone = scrollAreaUpd ? scrollAreaUpd.querySelector('#fs-bracket-clone') : null;
+              if (oldClone && scrollAreaUpd) {
+                var newClone = bracketContainer2.cloneNode(true);
+                newClone.id = 'fs-bracket-clone';
+                // Re-apply round visibility
+                var newRounds = newClone.querySelectorAll('.round:not(.connector-col)');
+                var activeIdx = -1;
+                tabs.forEach(function(t, i) { if (t.classList.contains('active')) activeIdx = i; });
+                newRounds.forEach(function(r, i) {
+                  r.classList.toggle('fs-round-visible', i === activeIdx);
+                });
+                scrollAreaUpd.replaceChild(newClone, oldClone);
+              }
+            }
+          }
+        }
+      } catch(e) {}
     }, 1000);
 
     // Activate
@@ -953,6 +1175,11 @@ async function initSponsorsShowcase() {
     if (fsLiveInterval) {
       clearInterval(fsLiveInterval);
       fsLiveInterval = null;
+    }
+
+    // Cleanup auto-scroll
+    if (overlay && overlay._cleanupBracket) {
+      overlay._cleanupBracket();
     }
 
     // ─── Move slideshow container back to its original position ───
