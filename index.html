@@ -799,29 +799,37 @@
             <span>Arraste para os lados</span>
           </div>
 
-          <!-- Bracket -->
-          <div id="bracket-container" class="bracket-container"></div>
+          <!-- Desktop 3-column layout: bracket | slideshow | sponsors -->
+          <div class="bracket-sponsors-layout">
 
-          <!-- Repescagem Panel -->
-          <div id="repescagem-panel" style="display:none;"></div>
+            <!-- Column 1: Bracket / Chaveamento -->
+            <div class="bsl-col bsl-bracket">
+              <div id="bracket-container" class="bracket-container"></div>
+              <div id="repescagem-panel" style="display:none;"></div>
+              <div id="list-container" class="list-container" style="display:none;"></div>
+              <div id="empty-state" class="empty-state" style="display:none;">
+                <span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    <path d="M2 12h20" />
+                  </svg></span>
+                <p class="empty-title">Nenhum torneio ativo</p>
+                <p class="empty-subtitle">Configure os times e gere o chaveamento para começar.</p>
+              </div>
+            </div>
 
-          <!-- List View -->
-          <div id="list-container" class="list-container" style="display:none;"></div>
+            <!-- Column 2: Sponsors Slideshow -->
+            <div class="bsl-col bsl-slideshow">
+              <div id="bracket-sponsors-showcase" class="sponsors-showcase"></div>
+            </div>
 
-          <!-- Empty State -->
-          <div id="empty-state" class="empty-state" style="display:none;">
-            <span class="empty-icon"><svg class="svg-icon svg-icon-empty" width="72" height="72" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                <path d="M2 12h20" />
-              </svg></span>
-            <p class="empty-title">Nenhum torneio ativo</p>
-            <p class="empty-subtitle">Configure os times e gere o chaveamento para começar.</p>
+            <!-- Column 3: Sponsors Grid / Logos -->
+            <div class="bsl-col bsl-sponsors">
+              <div class="sponsors-wrapper"></div>
+            </div>
+
           </div>
-
-          <!-- Sponsors Slideshow -->
-          <div id="bracket-sponsors-showcase" class="sponsors-showcase"></div>
 
         </div>
 
@@ -868,8 +876,8 @@
           </div>
         </div>
 
-        <!-- Sponsors Section (Global) -->
-        <div class="sponsors-wrapper px-5" style="margin-top: 50px; margin-bottom: 20px;"></div>
+        <!-- Sponsors Section (Global — hidden on desktop, shown on mobile/other tabs) -->
+        <div class="sponsors-wrapper sponsors-wrapper-global px-5" style="margin-top: 50px; margin-bottom: 20px;"></div>
       </main>
 
     </div><!-- /.content-wrapper -->
