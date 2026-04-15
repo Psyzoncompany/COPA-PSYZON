@@ -746,18 +746,100 @@ async function initSponsorsShowcase() {
     }
   });
 
-  // ─── Fullscreen (Tela Cheia para telão) ───
+  // ─── Fullscreen 3-Column Overlay (bracket | slideshow | sponsors) ───
   var isFullscreen = false;
+  var overlay = null;
+  var containerPlaceholder = null; // marks where the container was before moving
+
+  function buildOverlay() {
+    if (document.getElementById('fs-3col-overlay')) {
+      return document.getElementById('fs-3col-overlay');
+    }
+
+    var ov = document.createElement('div');
+    ov.id = 'fs-3col-overlay';
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.id = 'fs-3col-close';
+    closeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
+    closeBtn.title = 'Sair da Tela Cheia';
+    closeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      exitFullscreen();
+    });
+    ov.appendChild(closeBtn);
+
+    // Column 1: Bracket
+    var colBracket = document.createElement('div');
+    colBracket.className = 'fs-col-bracket';
+    ov.appendChild(colBracket);
+
+    // Column 2: Slideshow (container will be moved here)
+    var colSlideshow = document.createElement('div');
+    colSlideshow.className = 'fs-col-slideshow';
+    ov.appendChild(colSlideshow);
+
+    // Column 3: Sponsors Grid
+    var colSponsors = document.createElement('div');
+    colSponsors.className = 'fs-col-sponsors';
+    ov.appendChild(colSponsors);
+
+    document.body.appendChild(ov);
+    return ov;
+  }
 
   function enterFullscreen() {
     isFullscreen = true;
-    container.classList.add('sponsors-fullscreen');
-    document.body.classList.add('sponsors-fullscreen-active');
+    overlay = buildOverlay();
+
+    // ─── Move bracket content into left column ───
+    var colBracket = overlay.querySelector('.fs-col-bracket');
+    colBracket.innerHTML = ''; // clear previous
+    var bracketContainer = document.getElementById('bracket-container');
+    var repescagemPanel = document.getElementById('repescagem-panel');
+    if (bracketContainer) {
+      var bracketClone = bracketContainer.cloneNode(true);
+      bracketClone.id = 'fs-bracket-clone';
+      colBracket.appendChild(bracketClone);
+    }
+    if (repescagemPanel && repescagemPanel.style.display !== 'none') {
+      var repClone = repescagemPanel.cloneNode(true);
+      repClone.id = 'fs-repescagem-clone';
+      colBracket.appendChild(repClone);
+    }
+
+    // ─── Move slideshow container into center column ───
+    var colSlideshow = overlay.querySelector('.fs-col-slideshow');
+    colSlideshow.innerHTML = '';
+    // Create placeholder to remember position
+    containerPlaceholder = document.createElement('div');
+    containerPlaceholder.id = 'fs-container-placeholder';
+    containerPlaceholder.style.display = 'none';
+    container.parentNode.insertBefore(containerPlaceholder, container);
+    colSlideshow.appendChild(container); // move (not clone) to keep event listeners
+
+    // ─── Populate sponsors grid in right column ───
+    var colSponsors = overlay.querySelector('.fs-col-sponsors');
+    var sponsorSource = document.getElementById('fs-sponsors-source');
+    if (sponsorSource) {
+      colSponsors.innerHTML = sponsorSource.innerHTML;
+    } else {
+      // Fallback: use any existing sponsors-wrapper content
+      var anyWrapper = document.querySelector('.sponsors-wrapper');
+      if (anyWrapper) {
+        colSponsors.innerHTML = anyWrapper.innerHTML;
+      }
+    }
+
+    // Activate
+    overlay.classList.add('fs-active');
+    document.body.classList.add('fs-3col-active');
     btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen_exit</span>';
     btnFullscreen.title = 'Sair da Tela Cheia';
 
-    // Tenta usar a API nativa de fullscreen do navegador
-    var elem = container;
+    // Try native fullscreen API on the overlay
+    var elem = overlay;
     if (elem.requestFullscreen) {
       elem.requestFullscreen().catch(function() {});
     } else if (elem.webkitRequestFullscreen) {
@@ -769,11 +851,23 @@ async function initSponsorsShowcase() {
 
   function exitFullscreen() {
     isFullscreen = false;
-    container.classList.remove('sponsors-fullscreen');
-    document.body.classList.remove('sponsors-fullscreen-active');
+
+    // ─── Move slideshow container back to its original position ───
+    if (containerPlaceholder && containerPlaceholder.parentNode) {
+      containerPlaceholder.parentNode.insertBefore(container, containerPlaceholder);
+      containerPlaceholder.parentNode.removeChild(containerPlaceholder);
+      containerPlaceholder = null;
+    }
+
+    // Deactivate overlay
+    if (overlay) {
+      overlay.classList.remove('fs-active');
+    }
+    document.body.classList.remove('fs-3col-active');
     btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
     btnFullscreen.title = 'Tela Cheia';
 
+    // Exit native fullscreen if active
     if (document.fullscreenElement || document.webkitFullscreenElement) {
       if (document.exitFullscreen) {
         document.exitFullscreen().catch(function() {});
@@ -800,20 +894,12 @@ async function initSponsorsShowcase() {
   // Sai do fullscreen se o navegador sair (ESC nativo)
   document.addEventListener('fullscreenchange', function () {
     if (!document.fullscreenElement && isFullscreen) {
-      isFullscreen = false;
-      container.classList.remove('sponsors-fullscreen');
-      document.body.classList.remove('sponsors-fullscreen-active');
-      btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
-      btnFullscreen.title = 'Tela Cheia';
+      exitFullscreen();
     }
   });
   document.addEventListener('webkitfullscreenchange', function () {
     if (!document.webkitFullscreenElement && isFullscreen) {
-      isFullscreen = false;
-      container.classList.remove('sponsors-fullscreen');
-      document.body.classList.remove('sponsors-fullscreen-active');
-      btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
-      btnFullscreen.title = 'Tela Cheia';
+      exitFullscreen();
     }
   });
 

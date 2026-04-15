@@ -1819,11 +1819,6 @@ textarea::placeholder {
   #bracket-tab {
     overflow: visible;
   }
-
-  /* In the side-column layout, bracket-container must scroll within its column */
-  .bsl-bracket .bracket-container {
-    overflow: visible;
-  }
 }
 
 /* ---------- 14a. Bracket Display Mode Selector ---------- */
@@ -5127,298 +5122,259 @@ textarea::placeholder {
 }
 
 /* ============================================
-   13b. BRACKET + SPONSORS DESKTOP LAYOUT (3 colunas)
+   13b. FULLSCREEN 3-COLUMN OVERLAY (bracket | slideshow | sponsors)
+   Activated only when the user clicks the fullscreen button.
    ============================================ */
 
-/* Mobile / default: stacked vertically */
-.bracket-sponsors-layout {
-  display: block;
-}
-
-.bsl-col {
-  /* Default: block layout, stacked */
-}
-
-/* Hide the right-column sponsors-wrapper on mobile (use the global one instead) */
-.bsl-sponsors {
+/* The overlay is created by JS and hidden by default */
+#fs-3col-overlay {
   display: none;
 }
 
-/* ===== DESKTOP LARGE (≥1400px): Full 3-column layout ===== */
-@media (min-width: 1400px) {
-  /* Hide scroll hint — bracket scrolls within its column */
-  #bracket-tab > .scroll-hint-wrapper {
-    display: none;
-  }
-
-  .bracket-sponsors-layout {
-    display: grid;
-    grid-template-columns: minmax(260px, 1.2fr) minmax(400px, 2fr) minmax(220px, 1fr);
-    gap: 20px;
-    align-items: start;
-    padding: 0 8px;
-  }
-
-  /* Left: Bracket */
-  .bsl-bracket {
-    position: sticky;
-    top: calc(var(--header-height, 64px) + 16px);
-    max-height: calc(100vh - var(--header-height, 64px) - 32px);
-    overflow-y: auto;
-    overflow-x: auto;
-    border-radius: 12px;
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 32px 8px 12px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-  }
-
-  .bsl-bracket::before {
-    content: 'CHAVEAMENTO';
-    display: block;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(173, 199, 255, 0.45);
-    text-align: center;
-    margin-bottom: 8px;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
-
-  .bsl-bracket::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-
-  .bsl-bracket::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-  }
-
-  .bsl-bracket::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  /* Scale down bracket cards in the side column */
-  .bsl-bracket .bracket-container {
-    overflow: visible;
-    padding: 0;
-  }
-
-  .bsl-bracket .bracket {
-    transform: scale(0.65);
-    transform-origin: top left;
-  }
-
-  .bsl-bracket .match-card {
-    width: 260px;
-  }
-
-  .bsl-bracket .scroll-hint-wrapper {
-    display: none;
-  }
-
-  /* Center: Slideshow */
-  .bsl-slideshow {
-    min-width: 0;
-  }
-
-  .bsl-slideshow .sponsors-showcase {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
-  .bsl-slideshow .sponsors-showcase-stage {
-    max-width: 100%;
-  }
-
-  .bsl-slideshow .sponsors-nav {
-    max-width: 100%;
-  }
-
-  .bsl-slideshow .sponsor-slide-img {
-    max-height: 60vh;
-  }
-
-  /* Right: Sponsors Grid */
-  .bsl-sponsors {
-    display: block;
-    position: sticky;
-    top: calc(var(--header-height, 64px) + 16px);
-    max-height: calc(100vh - var(--header-height, 64px) - 32px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    border-radius: 12px;
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 16px 10px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-  }
-
-  .bsl-sponsors::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .bsl-sponsors::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-  }
-
-  .bsl-sponsors::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  /* Compact sponsor cards in the side column */
-  .bsl-sponsors .sponsors-card {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    border: none;
-    box-shadow: none;
-  }
-
-  .bsl-sponsors .sponsors-title {
-    font-size: 10px;
-    margin-bottom: 12px;
-    letter-spacing: 0.15em;
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .bsl-sponsors .sponsors-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    justify-items: center;
-  }
-
-  .bsl-sponsors .sponsor-placeholder {
-    width: 100%;
-    max-width: 90px;
-    height: auto;
-    aspect-ratio: 1;
-    padding: 6px;
-    border-radius: 10px;
-  }
-
-  .bsl-sponsors .sponsor-placeholder img {
-    width: 90%;
-    height: 90%;
-  }
-
-  /* Hide global sponsors section on desktop — the bsl-sponsors column handles it */
-  .sponsors-wrapper-global {
-    display: none !important;
-  }
+/* When active: covers entire screen with 3-column grid */
+#fs-3col-overlay.fs-active {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: linear-gradient(135deg, #0a0e17 0%, #111827 50%, #0a0e17 100%);
+  grid-template-columns: minmax(240px, 1fr) minmax(420px, 2.2fr) minmax(200px, 0.9fr);
+  gap: 0;
+  overflow: hidden;
 }
 
-/* ===== DESKTOP MEDIUM (1200px–1399px): 2-column layout ===== */
-@media (min-width: 1200px) and (max-width: 1399px) {
-  .bracket-sponsors-layout {
-    display: grid;
-    grid-template-columns: minmax(300px, 1.5fr) minmax(200px, 1fr);
-    grid-template-rows: auto auto;
-    gap: 16px;
-    padding: 0 4px;
-  }
+body.fs-3col-active {
+  overflow: hidden !important;
+}
 
-  /* Bracket spans full width on top */
-  .bsl-bracket {
-    grid-column: 1 / -1;
-    grid-row: 1;
-  }
+/* ── Left column: Bracket ── */
+#fs-3col-overlay .fs-col-bracket {
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 16px 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.25);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
 
-  /* Slideshow on left */
-  .bsl-slideshow {
-    grid-column: 1;
-    grid-row: 2;
-    min-width: 0;
-  }
+#fs-3col-overlay .fs-col-bracket::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
 
-  .bsl-slideshow .sponsors-showcase {
-    margin-top: 16px;
-    margin-bottom: 0;
-  }
+#fs-3col-overlay .fs-col-bracket::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
 
-  .bsl-slideshow .sponsors-showcase-stage {
-    max-width: 100%;
-  }
+#fs-3col-overlay .fs-col-bracket::before {
+  content: 'CHAVEAMENTO';
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(173, 199, 255, 0.4);
+  text-align: center;
+  margin-bottom: 10px;
+  padding-top: 4px;
+}
 
-  .bsl-slideshow .sponsors-nav {
-    max-width: 100%;
-  }
+/* Scale bracket to fit the narrow column */
+#fs-3col-overlay .fs-col-bracket .bracket {
+  transform: scale(0.55);
+  transform-origin: top left;
+}
 
-  /* Sponsors Grid on right, next to slideshow */
-  .bsl-sponsors {
-    display: block;
-    grid-column: 2;
-    grid-row: 2;
-    position: sticky;
-    top: calc(var(--header-height, 64px) + 16px);
-    max-height: calc(100vh - var(--header-height, 64px) - 32px);
+#fs-3col-overlay .fs-col-bracket .match-card {
+  width: 260px;
+}
+
+#fs-3col-overlay .fs-col-bracket .bracket-container {
+  overflow: visible;
+  padding: 0;
+}
+
+/* Hide list-container and display-mode-selector inside fullscreen bracket */
+#fs-3col-overlay .fs-col-bracket .list-container,
+#fs-3col-overlay .fs-col-bracket .display-mode-selector,
+#fs-3col-overlay .fs-col-bracket .scroll-hint-wrapper,
+#fs-3col-overlay .fs-col-bracket .empty-state {
+  display: none !important;
+}
+
+/* ── Center column: Slideshow ── */
+#fs-3col-overlay .fs-col-slideshow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 12px 8px;
+  min-width: 0;
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsors-showcase {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsors-showcase-title {
+  display: none;
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsors-showcase-stage {
+  max-width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsor-slidecase-card {
+  max-width: 100%;
+  width: 100%;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsor-slide-img {
+  max-height: 75vh;
+  object-fit: contain;
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsor-slide-video {
+  max-height: 75vh;
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsors-nav {
+  max-width: 100%;
+  position: static;
+  opacity: 1;
+  pointer-events: auto;
+  margin-top: 8px;
+}
+
+#fs-3col-overlay .fs-col-slideshow .sponsor-global-controls {
+  position: static;
+  opacity: 1;
+  pointer-events: auto;
+  margin-top: 6px;
+}
+
+/* ── Right column: Sponsors Grid ── */
+#fs-3col-overlay .fs-col-sponsors {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.25);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+#fs-3col-overlay .fs-col-sponsors::-webkit-scrollbar {
+  width: 5px;
+}
+
+#fs-3col-overlay .fs-col-sponsors::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+#fs-3col-overlay .fs-col-sponsors .sponsors-card {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+}
+
+#fs-3col-overlay .fs-col-sponsors .sponsors-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(173, 199, 255, 0.4);
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+#fs-3col-overlay .fs-col-sponsors .sponsors-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  justify-items: center;
+}
+
+#fs-3col-overlay .fs-col-sponsors .sponsor-placeholder {
+  width: 100%;
+  max-width: 85px;
+  height: auto;
+  aspect-ratio: 1;
+  padding: 5px;
+  border-radius: 10px;
+}
+
+#fs-3col-overlay .fs-col-sponsors .sponsor-placeholder img {
+  width: 90%;
+  height: 90%;
+}
+
+/* ── Close button (top-right) ── */
+#fs-3col-close {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 100001;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s, transform 0.2s;
+}
+
+#fs-3col-close:hover {
+  background: rgba(255, 60, 60, 0.5);
+  transform: scale(1.1);
+}
+
+/* ── Mobile fullscreen: stack columns vertically ── */
+@media (max-width: 1024px) {
+  #fs-3col-overlay.fs-active {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
     overflow-y: auto;
-    overflow-x: hidden;
-    border-radius: 12px;
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 16px 10px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
   }
 
-  .bsl-sponsors::-webkit-scrollbar {
-    width: 5px;
+  #fs-3col-overlay .fs-col-bracket {
+    max-height: 35vh;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .bsl-sponsors::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
+  #fs-3col-overlay .fs-col-sponsors {
+    max-height: 30vh;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  /* Compact sponsor cards */
-  .bsl-sponsors .sponsors-card {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    border: none;
-    box-shadow: none;
-  }
-
-  .bsl-sponsors .sponsors-title {
-    font-size: 10px;
-    margin-bottom: 12px;
-    letter-spacing: 0.15em;
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .bsl-sponsors .sponsors-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    justify-items: center;
-  }
-
-  .bsl-sponsors .sponsor-placeholder {
-    width: 100%;
-    max-width: 80px;
-    height: auto;
-    aspect-ratio: 1;
-    padding: 5px;
-    border-radius: 10px;
-  }
-
-  .bsl-sponsors .sponsor-placeholder img {
-    width: 90%;
-    height: 90%;
-  }
-
-  /* Hide global sponsors section */
-  .sponsors-wrapper-global {
-    display: none !important;
+  #fs-3col-overlay .fs-col-sponsors .sponsors-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -5783,191 +5739,18 @@ textarea::placeholder {
   border-left: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* ========== FULLSCREEN MODE ========== */
-body.sponsors-fullscreen-active {
-  overflow: hidden !important;
-}
-
-.sponsors-fullscreen {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 99999;
-  background: #000 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.sponsors-fullscreen .sponsors-showcase-title {
-  display: none;
-}
-
-.sponsors-fullscreen .sponsors-showcase-stage {
-  max-width: 100%;
-  width: 100%;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-}
-
-.sponsors-fullscreen .sponsor-slidecase-card {
-  max-width: 100%;
-  width: 100%;
-  height: 100%;
-  border-radius: 0;
-  border: none;
-  background: #000;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-}
-
-.sponsors-fullscreen .sponsor-logo-area {
-  padding: 16px 32px;
-  background: rgba(0, 0, 0, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.sponsors-fullscreen .sponsor-logo-img {
-  max-width: 72px;
-  max-height: 72px;
-}
-
-.sponsors-fullscreen .sponsor-logo-name {
-  font-size: 1.4rem;
-}
-
-.sponsors-fullscreen .sponsor-logo-area.logo-only {
-  flex: 1;
-  padding: 60px 40px;
-}
-
-.sponsors-fullscreen .sponsor-logo-img.logo-only-img {
-  max-width: 320px;
-  max-height: 320px;
-}
-
-.sponsors-fullscreen .sponsor-slides-area {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sponsors-fullscreen .sponsor-slide-img {
-  max-height: 85vh;
-  object-fit: contain;
-}
-
-.sponsors-fullscreen .sponsor-slide-video {
-  max-height: 85vh;
-}
-
-/* Nav logos no fullscreen */
-.sponsors-fullscreen .sponsors-nav {
-  position: fixed;
-  bottom: 56px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100001;
-  background: rgba(0, 0, 0, 0.85);
-  padding: 8px 16px;
-  border-radius: 32px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  max-width: 90vw;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.sponsors-fullscreen:hover .sponsors-nav {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Controls no fullscreen */
-.sponsors-fullscreen .sponsor-global-controls {
-  position: fixed;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100002;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.sponsors-fullscreen:hover .sponsor-global-controls {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Ajusta slide para não ser coberto pela nav */
-.sponsors-fullscreen .sponsor-slide-img {
-  max-height: 80vh;
-}
-
-.sponsors-fullscreen .sponsor-slide-video {
-  max-height: 80vh;
-}
-
-/* Hide footer sponsors when fullscreen is active */
-body.sponsors-fullscreen-active .sponsors-wrapper,
-body.sponsors-fullscreen-active .sponsors-card {
-  display: none !important;
-}
+/* ========== FULLSCREEN MODE ==========
+   Now handled by the #fs-3col-overlay system (see section 13b above).
+   The overlay is built dynamically by sponsors_slideshow.js.
+   ========== */
 
 /* Fullscreen API support */
-.sponsors-showcase:fullscreen {
-  background: #000;
+#fs-3col-overlay:fullscreen {
+  background: linear-gradient(135deg, #0a0e17 0%, #111827 50%, #0a0e17 100%);
 }
 
-.sponsors-showcase:-webkit-full-screen {
-  background: #000;
-}
-
-/* Mobile fullscreen: mostrar só 3 logos próximos */
-@media (max-width: 768px) {
-  .sponsors-fullscreen .sponsors-nav {
-    bottom: 50px;
-    padding: 6px 12px;
-    gap: 6px;
-  }
-
-  .sponsors-fullscreen .sponsor-nav-logo {
-    display: none;
-  }
-
-  .sponsors-fullscreen .sponsor-nav-logo.nearby {
-    display: block;
-    width: 36px;
-    height: 36px;
-  }
-
-  .sponsors-fullscreen .sponsor-global-controls {
-    bottom: 8px;
-  }
-
-  .sponsors-fullscreen .sponsor-slide-img {
-    max-height: 75vh;
-  }
-
-  .sponsors-fullscreen .sponsor-slide-video {
-    max-height: 75vh;
-  }
+#fs-3col-overlay:-webkit-full-screen {
+  background: linear-gradient(135deg, #0a0e17 0%, #111827 50%, #0a0e17 100%);
 }
 
 /* ---------- SPONSORS SHOWCASE MOBILE ---------- */
