@@ -892,6 +892,82 @@ async function initSponsorsShowcase() {
     return div.innerHTML;
   }
 
+  /** Build the Top 3 scorers widget for fullscreen bracket */
+  function buildTopScorersWidget() {
+    try {
+      if (typeof state === 'undefined' || !state.playerStats || !state.teams) return null;
+
+      // Build sorted list of scorers
+      var scorers = [];
+      state.teams.forEach(function(team) {
+        var stats = state.playerStats[team.id];
+        if (stats && stats.goals > 0) {
+          scorers.push({
+            playerName: team.playerName || '',
+            teamName: team.teamName || '',
+            goals: stats.goals
+          });
+        }
+      });
+
+      if (scorers.length === 0) return null;
+
+      scorers.sort(function(a, b) { return b.goals - a.goals; });
+      var top3 = scorers.slice(0, 3);
+
+      var widget = document.createElement('div');
+      widget.className = 'fs-top-scorers';
+
+      var title = document.createElement('div');
+      title.className = 'fs-top-scorers-title';
+      title.textContent = '\u26BD ARTILHEIROS';
+      widget.appendChild(title);
+
+      var list = document.createElement('div');
+      list.className = 'fs-scorers-list';
+
+      var medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49']; // 🥇🥈🥉
+
+      top3.forEach(function(s, idx) {
+        var item = document.createElement('div');
+        item.className = 'fs-scorer-item';
+
+        var rank = document.createElement('span');
+        rank.className = 'fs-scorer-rank';
+        rank.setAttribute('data-rank', idx + 1);
+        rank.textContent = medals[idx] || (idx + 1);
+        item.appendChild(rank);
+
+        var info = document.createElement('div');
+        info.style.cssText = 'display:flex;flex-direction:column;min-width:0;';
+
+        var name = document.createElement('span');
+        name.className = 'fs-scorer-name';
+        name.textContent = s.playerName;
+        info.appendChild(name);
+
+        var team = document.createElement('span');
+        team.className = 'fs-scorer-team';
+        team.textContent = s.teamName;
+        info.appendChild(team);
+
+        item.appendChild(info);
+
+        var goals = document.createElement('span');
+        goals.className = 'fs-scorer-goals';
+        goals.innerHTML = '<span class="goal-icon">\u26BD</span>' + s.goals;
+        item.appendChild(goals);
+
+        list.appendChild(item);
+      });
+
+      widget.appendChild(list);
+      return widget;
+    } catch(e) {
+      return null;
+    }
+  }
+
   function enterFullscreen() {
     isFullscreen = true;
     overlay = buildOverlay();
@@ -973,6 +1049,10 @@ async function initSponsorsShowcase() {
       });
 
       colBracket.appendChild(roundNav);
+
+      // ─── Top 3 Scorers Widget ───
+      var scorersWidget = buildTopScorersWidget();
+      if (scorersWidget) colBracket.appendChild(scorersWidget);
 
       // Scroll area wrapper
       var scrollArea = document.createElement('div');
@@ -1144,6 +1224,21 @@ async function initSponsorsShowcase() {
                   r.classList.toggle('fs-round-visible', i === activeIdx);
                 });
                 scrollAreaUpd.replaceChild(newClone, oldClone);
+              }
+            }
+
+            // Refresh top scorers widget
+            var colBracketUpd = overlay.querySelector('.fs-col-bracket');
+            if (colBracketUpd) {
+              var oldScorers = colBracketUpd.querySelector('.fs-top-scorers');
+              var newScorers = buildTopScorersWidget();
+              if (oldScorers && newScorers) {
+                colBracketUpd.replaceChild(newScorers, oldScorers);
+              } else if (!oldScorers && newScorers) {
+                var navEl = colBracketUpd.querySelector('.fs-round-nav');
+                if (navEl && navEl.nextSibling) {
+                  colBracketUpd.insertBefore(newScorers, navEl.nextSibling);
+                }
               }
             }
           }

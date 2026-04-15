@@ -2290,7 +2290,22 @@
 
     const matchLabel = document.createElement('span');
     matchLabel.className = 'match-id';
-    matchLabel.textContent = isByeMatch ? `BYE` : `Jogo ${mIdx + 1}`;
+    if (isByeMatch) {
+      matchLabel.textContent = 'BYE';
+    } else {
+      // Use short round name prefix instead of "Jogo"
+      let roundPrefix = 'Jogo';
+      try {
+        const rName = state.bracket.rounds[rIdx].name || '';
+        if (/oitavas/i.test(rName)) roundPrefix = 'Oitavas';
+        else if (/quartas/i.test(rName)) roundPrefix = 'Quartas';
+        else if (/semi/i.test(rName)) roundPrefix = 'Semi';
+        else if (/final/i.test(rName) && !/semi/i.test(rName)) roundPrefix = 'Final';
+        else if (/dezesseis/i.test(rName)) roundPrefix = '16 Avos';
+        else if (/fase/i.test(rName)) roundPrefix = rName.replace(/\s*\(.*\)/, '');
+      } catch(e) {}
+      matchLabel.textContent = roundPrefix === 'Final' ? 'FINAL' : `${roundPrefix} ${mIdx + 1}`;
+    }
     header.appendChild(matchLabel);
 
     const bothTeams = match.team1 && match.team2;

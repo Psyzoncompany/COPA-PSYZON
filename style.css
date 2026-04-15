@@ -5464,6 +5464,93 @@ body.fs-3col-active {
   position: relative;
 }
 
+/* ── Top 3 Scorers Widget ── */
+.fs-top-scorers {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.fs-top-scorers-title {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 215, 0, 0.6);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.fs-scorers-list {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.fs-scorer-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.fs-scorer-rank {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 16px;
+  text-align: center;
+}
+
+.fs-scorer-rank[data-rank="1"] {
+  color: rgba(255, 215, 0, 0.9);
+}
+
+.fs-scorer-rank[data-rank="2"] {
+  color: rgba(192, 192, 192, 0.9);
+}
+
+.fs-scorer-rank[data-rank="3"] {
+  color: rgba(205, 127, 50, 0.9);
+}
+
+.fs-scorer-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.fs-scorer-team {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.fs-scorer-goals {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(74, 222, 128, 0.9);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.fs-scorer-goals .goal-icon {
+  font-size: 10px;
+  margin-right: 2px;
+}
+
 /* Highlight live match cards within the bracket */
 #fs-3col-overlay .fs-col-bracket .match-card.match-live {
   border-color: rgba(239, 68, 68, 0.5);
@@ -5505,17 +5592,23 @@ body.fs-3col-active {
 
 #fs-3col-overlay .fs-col-slideshow .sponsor-slidecase-card {
   max-width: 100%;
-  width: 100%;
+  width: auto;
   max-height: 100%;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.35);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #fs-3col-overlay .fs-col-slideshow .sponsor-slide-img {
   max-height: calc(100vh - 180px);
-  width: 100%;
+  max-width: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  display: block;
 }
 
 #fs-3col-overlay .fs-col-slideshow .sponsor-slide-video {
