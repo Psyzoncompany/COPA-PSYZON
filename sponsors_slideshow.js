@@ -746,10 +746,11 @@ async function initSponsorsShowcase() {
     }
   });
 
-  // ─── Fullscreen 3-Column Overlay (bracket | slideshow | sponsors) ───
+  // ─── Fullscreen 2-Column Overlay (bracket | slideshow) + live match bar ───
   var isFullscreen = false;
   var overlay = null;
   var containerPlaceholder = null; // marks where the container was before moving
+  var fsLiveInterval = null;
 
   function buildOverlay() {
     if (document.getElementById('fs-3col-overlay')) {
@@ -770,32 +771,134 @@ async function initSponsorsShowcase() {
     });
     ov.appendChild(closeBtn);
 
+    // Live match bar (top, hidden by default)
+    var liveBar = document.createElement('div');
+    liveBar.className = 'fs-live-bar';
+    liveBar.id = 'fs-live-bar';
+    ov.appendChild(liveBar);
+
+    // Main content area (2 columns)
+    var mainArea = document.createElement('div');
+    mainArea.className = 'fs-main-area';
+
     // Column 1: Bracket
     var colBracket = document.createElement('div');
     colBracket.className = 'fs-col-bracket';
-    ov.appendChild(colBracket);
+    mainArea.appendChild(colBracket);
 
-    // Column 2: Slideshow (container will be moved here)
+    // Column 2: Slideshow
     var colSlideshow = document.createElement('div');
     colSlideshow.className = 'fs-col-slideshow';
-    ov.appendChild(colSlideshow);
+    mainArea.appendChild(colSlideshow);
 
-    // Column 3: Sponsors Grid
-    var colSponsors = document.createElement('div');
-    colSponsors.className = 'fs-col-sponsors';
-    ov.appendChild(colSponsors);
+    ov.appendChild(mainArea);
 
     document.body.appendChild(ov);
     return ov;
+  }
+
+  /** Scans the bracket for live/paused matches and returns an array of info objects */
+  function getLiveMatches() {
+    var liveList = [];
+    try {
+      // Access the global state from script.js
+      if (typeof state === 'undefined' || !state.bracket || !state.bracket.rounds) return liveList;
+      state.bracket.rounds.forEach(function(round, rIdx) {
+        round.matches.forEach(function(match, mIdx) {
+          if (match.status === 'live' || match.status === 'paused') {
+            var t1 = match.team1;
+            var t2 = match.team2;
+            liveList.push({
+              match: match,
+              rIdx: rIdx,
+              mIdx: mIdx,
+              roundName: round.name,
+              t1Name: t1 ? (t1.teamName || t1.playerName || '?') : 'A definir',
+              t2Name: t2 ? (t2.teamName || t2.playerName || '?') : 'A definir',
+              s1: t1 ? (t1.score || 0) : 0,
+              s2: t2 ? (t2.score || 0) : 0,
+              isLive: match.status === 'live',
+              isPaused: match.status === 'paused'
+            });
+          }
+        });
+      });
+    } catch(e) {}
+    return liveList;
+  }
+
+  /** Renders the live match bar at the top of fullscreen */
+  function updateLiveBar() {
+    var bar = document.getElementById('fs-live-bar');
+    if (!bar) return;
+
+    var liveMatches = getLiveMatches();
+    if (liveMatches.length === 0) {
+      bar.classList.remove('has-live');
+      bar.innerHTML = '';
+      return;
+    }
+
+    bar.classList.add('has-live');
+    var html = '';
+    liveMatches.forEach(function(info) {
+      var statusClass = info.isLive ? 'fs-live-card--live' : 'fs-live-card--paused';
+      var statusText = info.isLive ? 'AO VIVO' : 'PAUSADO';
+      var statusDotClass = info.isLive ? '' : ' paused';
+
+      // Calculate elapsed time
+      var elapsed = '00:00';
+      try {
+        if (typeof getMatchElapsedSeconds === 'function') {
+          var secs = getMatchElapsedSeconds(info.match);
+          var m = Math.floor(secs / 60);
+          var s = secs % 60;
+          elapsed = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+        }
+      } catch(e) {}
+
+      // Leg indicator
+      var legHtml = '';
+      try {
+        if (typeof state !== 'undefined' && state.twoLegged && info.match.currentLeg) {
+          var legText = info.match.currentLeg === 'ida' ? 'Ida' : 'Volta';
+          legHtml = '<span class="fs-live-leg">' + legText + '</span>';
+        }
+      } catch(e) {}
+
+      html += '<div class="fs-live-card ' + statusClass + '">' +
+        '<div class="fs-live-status">' +
+          '<span class="fs-live-dot' + statusDotClass + '"></span>' +
+          '<span class="fs-live-status-text">' + statusText + '</span>' +
+          legHtml +
+        '</div>' +
+        '<div class="fs-live-teams">' +
+          '<span class="fs-live-team">' + escapeHTML(info.t1Name) + '</span>' +
+          '<span class="fs-live-score">' + info.s1 + '</span>' +
+          '<span class="fs-live-vs">\u00d7</span>' +
+          '<span class="fs-live-score">' + info.s2 + '</span>' +
+          '<span class="fs-live-team">' + escapeHTML(info.t2Name) + '</span>' +
+        '</div>' +
+        '<span class="fs-live-timer" data-match-id="' + (info.match.id || '') + '">' + elapsed + '</span>' +
+      '</div>';
+    });
+    bar.innerHTML = html;
+  }
+
+  /** Simple HTML escape */
+  function escapeHTML(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   function enterFullscreen() {
     isFullscreen = true;
     overlay = buildOverlay();
 
-    // ─── Move bracket content into left column ───
+    // ─── Clone bracket content into left column ───
     var colBracket = overlay.querySelector('.fs-col-bracket');
-    colBracket.innerHTML = ''; // clear previous
+    colBracket.innerHTML = '';
     var bracketContainer = document.getElementById('bracket-container');
     var repescagemPanel = document.getElementById('repescagem-panel');
     if (bracketContainer) {
@@ -809,28 +912,22 @@ async function initSponsorsShowcase() {
       colBracket.appendChild(repClone);
     }
 
-    // ─── Move slideshow container into center column ───
+    // ─── Move slideshow container into right column ───
     var colSlideshow = overlay.querySelector('.fs-col-slideshow');
     colSlideshow.innerHTML = '';
-    // Create placeholder to remember position
     containerPlaceholder = document.createElement('div');
     containerPlaceholder.id = 'fs-container-placeholder';
     containerPlaceholder.style.display = 'none';
     container.parentNode.insertBefore(containerPlaceholder, container);
-    colSlideshow.appendChild(container); // move (not clone) to keep event listeners
+    colSlideshow.appendChild(container);
 
-    // ─── Populate sponsors grid in right column ───
-    var colSponsors = overlay.querySelector('.fs-col-sponsors');
-    var sponsorSource = document.getElementById('fs-sponsors-source');
-    if (sponsorSource) {
-      colSponsors.innerHTML = sponsorSource.innerHTML;
-    } else {
-      // Fallback: use any existing sponsors-wrapper content
-      var anyWrapper = document.querySelector('.sponsors-wrapper');
-      if (anyWrapper) {
-        colSponsors.innerHTML = anyWrapper.innerHTML;
-      }
-    }
+    // ─── Update live match bar ───
+    updateLiveBar();
+    // Auto-refresh live bar every 1s
+    if (fsLiveInterval) clearInterval(fsLiveInterval);
+    fsLiveInterval = setInterval(function() {
+      if (isFullscreen) updateLiveBar();
+    }, 1000);
 
     // Activate
     overlay.classList.add('fs-active');
@@ -851,6 +948,12 @@ async function initSponsorsShowcase() {
 
   function exitFullscreen() {
     isFullscreen = false;
+
+    // Stop live bar refresh
+    if (fsLiveInterval) {
+      clearInterval(fsLiveInterval);
+      fsLiveInterval = null;
+    }
 
     // ─── Move slideshow container back to its original position ───
     if (containerPlaceholder && containerPlaceholder.parentNode) {
