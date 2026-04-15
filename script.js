@@ -219,7 +219,12 @@
    * Ensure a bracket always exists. If not, auto-create one with empty slots.
    */
   function ensureBracketExists() {
-    if (state.bracket && state.bracket.rounds && state.bracket.rounds.length > 0) return;
+    if (state.bracket && state.bracket.rounds && state.bracket.rounds.length > 0) {
+      // Ensure repescagem pools exist for legacy brackets
+      if (!state.bracket.repescagemPool) state.bracket.repescagemPool = [];
+      if (!state.bracket.thirdChancePool) state.bracket.thirdChancePool = [];
+      return;
+    }
 
     const count = state.teamCount || 8;
     const existingTeams = [...(state.teams || [])];
@@ -925,6 +930,9 @@
   function makeTeamSlotData(t) {
     const slot = { id: t.id, teamName: t.teamName, playerName: t.playerName, score: null };
     if (t.photo) slot.photo = t.photo;
+    // Preserve repescagem / third chance flags through bracket advancement
+    if (t.isRepescagem) slot.isRepescagem = true;
+    if (t.isThirdChance) slot.isThirdChance = true;
     return slot;
   }
 
@@ -1073,7 +1081,287 @@
       });
     }
 
-    return { rounds };
+    return { rounds, repescagemPool: [], thirdChancePool: [] };
+  }
+
+  /* ==========================================================
+     11b. REPESCAGEM (LOSERS BRACKET) SYSTEM
+     ========================================================== */
+
+  /**
+   * Add a loser to the repescagem pool after a match finishes.
+   * @param {object} loserTeam - team slot data of the losing team
+   * @param {object} match - the match object
+   * @param {number} loserNum - 1 or 2 (which team lost)
+   */
+  function addToRepescagemPool(loserTeam, match, loserNum) {
+    if (!loserTeam || isByeTeam(loserTeam)) return;
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+
+    if (!bracket.repescagemPool) bracket.repescagemPool = [];
+
+    // Don't add if already in pool
+    const already = bracket.repescagemPool.find(e => e.team && e.team.id === loserTeam.id);
+    if (already) return;
+
+    const goalsScored = loserTeam.score || 0;
+    const goalsConceded = loserNum === 1 ? (match.team2 ? match.team2.score || 0 : 0)
+                                         : (match.team1 ? match.team1.score || 0 : 0);
+    const goalDiff = goalsScored - goalsConceded;
+    const lossMargin = Math.abs(goalDiff);
+    const matchElapsed = match.liveElapsed || 0;
+
+    bracket.repescagemPool.push({
+      team: makeTeamSlotData(loserTeam),
+      goalsScored,
+      goalsConceded,
+      goalDiff,
+      lossMargin,
+      matchElapsed,
+      usedInRepescagem: false
+    });
+  }
+
+  /**
+   * Add a repescagem player who lost again to the third chance pool.
+   * @param {object} loserTeam - team slot data
+   * @param {object} match - the match object
+   * @param {number} loserNum - 1 or 2
+   */
+  function addToThirdChancePool(loserTeam, match, loserNum) {
+    if (!loserTeam || isByeTeam(loserTeam)) return;
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+
+    if (!bracket.thirdChancePool) bracket.thirdChancePool = [];
+
+    const already = bracket.thirdChancePool.find(e => e.team && e.team.id === loserTeam.id);
+    if (already) return;
+
+    const goalsScored = loserTeam.score || 0;
+    const goalsConceded = loserNum === 1 ? (match.team2 ? match.team2.score || 0 : 0)
+                                         : (match.team1 ? match.team1.score || 0 : 0);
+    const goalDiff = goalsScored - goalsConceded;
+    const lossMargin = Math.abs(goalDiff);
+    const matchElapsed = match.liveElapsed || 0;
+
+    bracket.thirdChancePool.push({
+      team: makeTeamSlotData(loserTeam),
+      goalsScored,
+      goalsConceded,
+      goalDiff,
+      lossMargin,
+      matchElapsed,
+      usedInThirdChance: false
+    });
+  }
+
+  /**
+   * Sort repescagem/third-chance candidates by ranking criteria:
+   * 1. Fewer goals conceded (ASC)
+   * 2. More goals scored (DESC)
+   * 3. Better goal difference (DESC)
+   * 4. Smaller loss margin (ASC)
+   * 5. Shorter match time (ASC)
+   */
+  function rankRepescagemCandidates(candidates) {
+    return [...candidates].sort((a, b) => {
+      if (a.goalsConceded !== b.goalsConceded) return a.goalsConceded - b.goalsConceded;
+      if (a.goalsScored !== b.goalsScored) return b.goalsScored - a.goalsScored;
+      if (a.goalDiff !== b.goalDiff) return b.goalDiff - a.goalDiff;
+      if (a.lossMargin !== b.lossMargin) return a.lossMargin - b.lossMargin;
+      return a.matchElapsed - b.matchElapsed;
+    });
+  }
+
+  /**
+   * Check if a team is in the repescagem pool (was placed via repescagem).
+   * @param {object} teamSlot - team slot data
+   * @returns {boolean}
+   */
+  function isRepescagemTeam(teamSlot) {
+    return teamSlot && teamSlot.isRepescagem === true;
+  }
+
+  /**
+   * Check if a team is a third-chance team.
+   * @param {object} teamSlot - team slot data
+   * @returns {boolean}
+   */
+  function isThirdChanceTeam(teamSlot) {
+    return teamSlot && teamSlot.isThirdChance === true;
+  }
+
+  /**
+   * Scan the bracket for empty slots in rounds after the first round
+   * and fill them with repescagem candidates.
+   * Returns the number of slots filled.
+   */
+  function fillEmptySlotsFromRepescagem() {
+    const bracket = getCurrentBracket();
+    if (!bracket || !bracket.rounds) return 0;
+    if (!bracket.repescagemPool) bracket.repescagemPool = [];
+    if (!bracket.thirdChancePool) bracket.thirdChancePool = [];
+
+    let filledCount = 0;
+
+    // Find all empty team slots in unfinished matches (rounds > 0)
+    for (let rIdx = 1; rIdx < bracket.rounds.length; rIdx++) {
+      const round = bracket.rounds[rIdx];
+      for (let mIdx = 0; mIdx < round.matches.length; mIdx++) {
+        const match = round.matches[mIdx];
+        if (match.winner) continue; // Already finished
+        if (isByeTeam(match.team1) || isByeTeam(match.team2)) continue;
+
+        const emptySlots = [];
+        if (!match.team1) emptySlots.push('team1');
+        if (!match.team2) emptySlots.push('team2');
+
+        for (const slot of emptySlots) {
+          // Try repescagem pool first
+          const available = rankRepescagemCandidates(
+            bracket.repescagemPool.filter(e => !e.usedInRepescagem)
+          );
+
+          if (available.length > 0) {
+            const best = available[0];
+            best.usedInRepescagem = true;
+            const teamData = makeTeamSlotData(best.team);
+            teamData.isRepescagem = true;
+            match[slot] = teamData;
+            filledCount++;
+            continue;
+          }
+
+          // Try third chance pool
+          const availableThird = rankRepescagemCandidates(
+            bracket.thirdChancePool.filter(e => !e.usedInThirdChance)
+          );
+
+          if (availableThird.length > 0) {
+            const best = availableThird[0];
+            best.usedInThirdChance = true;
+            const teamData = makeTeamSlotData(best.team);
+            teamData.isThirdChance = true;
+            teamData.isRepescagem = true;
+            match[slot] = teamData;
+            filledCount++;
+          }
+        }
+      }
+    }
+
+    return filledCount;
+  }
+
+  /**
+   * Process repescagem after a match is confirmed.
+   * Called from handleConfirmScore and finalizeLiveMatch.
+   * @param {object} match - the finished match
+   * @param {number} winnerNum - 1 or 2
+   * @param {number} rIdx - round index
+   */
+  function processRepescagem(match, winnerNum, rIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return;
+
+    const loserNum = winnerNum === 1 ? 2 : 1;
+    const loserTeam = loserNum === 1 ? match.team1 : match.team2;
+
+    if (!loserTeam || isByeTeam(loserTeam)) return;
+
+    // Check if the loser was a repescagem player
+    if (isRepescagemTeam(loserTeam) && !isThirdChanceTeam(loserTeam)) {
+      // Repescagem player lost → goes to third chance pool
+      addToThirdChancePool(loserTeam, match, loserNum);
+    } else if (!isRepescagemTeam(loserTeam)) {
+      // Regular player lost → goes to repescagem pool
+      addToRepescagemPool(loserTeam, match, loserNum);
+    }
+    // Third chance player who lost → fully eliminated (no more chances)
+
+    // Try to fill any empty slots in the bracket
+    const filled = fillEmptySlotsFromRepescagem();
+    if (filled > 0) {
+      showToast(`Repescagem: ${filled} jogador(es) recolocado(s) no chaveamento!`, 'info');
+    }
+  }
+
+  /**
+   * Render the repescagem pool panel (sidebar or below bracket).
+   */
+  function renderRepescagemPanel() {
+    let panel = $('#repescagem-panel');
+    if (!panel) return;
+
+    const bracket = getCurrentBracket();
+    if (!bracket || !bracket.repescagemPool || bracket.repescagemPool.length === 0) {
+      panel.innerHTML = '';
+      panel.style.display = 'none';
+      return;
+    }
+
+    panel.style.display = '';
+
+    const available = bracket.repescagemPool.filter(e => !e.usedInRepescagem);
+    const used = bracket.repescagemPool.filter(e => e.usedInRepescagem);
+    const thirdAvailable = (bracket.thirdChancePool || []).filter(e => !e.usedInThirdChance);
+    const thirdUsed = (bracket.thirdChancePool || []).filter(e => e.usedInThirdChance);
+
+    let html = `
+      <div class="repescagem-header">
+        <span class="repescagem-icon">&#128260;</span>
+        <h3>Repescagem</h3>
+        <span class="repescagem-count">${available.length} disponível(eis)</span>
+      </div>
+    `;
+
+    if (available.length > 0) {
+      const ranked = rankRepescagemCandidates(available);
+      html += '<div class="repescagem-list">';
+      ranked.forEach((entry, i) => {
+        const t = entry.team;
+        const ini = initials(t.playerName || t.teamName);
+        const avatar = t.photo
+          ? `<img src="${sanitize(t.photo)}" alt="" class="repescagem-avatar">`
+          : `<span class="repescagem-avatar-placeholder">${sanitize(ini)}</span>`;
+        html += `
+          <div class="repescagem-item">
+            <span class="repescagem-rank">#${i + 1}</span>
+            ${avatar}
+            <div class="repescagem-info">
+              <span class="repescagem-name">${sanitize(t.teamName || t.playerName)}</span>
+              <span class="repescagem-stats">GS: ${entry.goalsScored} | GC: ${entry.goalsConceded} | Saldo: ${entry.goalDiff}</span>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+    }
+
+    if (used.length > 0) {
+      html += `<div class="repescagem-used-label">Recolocados (${used.length})</div>`;
+      html += '<div class="repescagem-list repescagem-used">';
+      used.forEach(entry => {
+        const t = entry.team;
+        html += `<div class="repescagem-item used"><span class="repescagem-name">${sanitize(t.teamName || t.playerName)}</span> <span class="repescagem-badge-orange">REPESCAGEM</span></div>`;
+      });
+      html += '</div>';
+    }
+
+    if (thirdAvailable.length > 0 || thirdUsed.length > 0) {
+      html += `<div class="repescagem-third-label">3ª Chance (${thirdAvailable.length} disponível)</div>`;
+      const allThird = [...thirdAvailable, ...thirdUsed];
+      html += '<div class="repescagem-list repescagem-third">';
+      allThird.forEach(entry => {
+        const t = entry.team;
+        const badge = entry.usedInThirdChance ? '<span class="repescagem-badge-third">3ª CHANCE</span>' : '';
+        html += `<div class="repescagem-item third"><span class="repescagem-name">${sanitize(t.teamName || t.playerName)}</span> ${badge}</div>`;
+      });
+      html += '</div>';
+    }
+
+    panel.innerHTML = html;
   }
 
   /**
@@ -1357,6 +1645,9 @@
 
     // Render list view side-by-side
     renderListView();
+
+    // Render repescagem panel
+    renderRepescagemPanel();
   }
 
   /* ---------- 12b. LIST VIEW FEATURE ---------- */
@@ -1597,6 +1888,15 @@
         }
 
         t.innerHTML = `<div class="match-list-avatar">${imgHtml}</div><div class="match-list-name">${nameHtml}</div>`;
+
+        // Repescagem / Third Chance visual in list view
+        if (teamData && isThirdChanceTeam(teamData)) {
+          t.classList.add('team-third-chance');
+          t.classList.add('team-repescagem');
+        } else if (teamData && isRepescagemTeam(teamData)) {
+          t.classList.add('team-repescagem');
+        }
+
         return t;
       }
 
@@ -2577,6 +2877,14 @@
       slot.classList.add('loser');
     }
 
+    // Repescagem / Third Chance visual indicators
+    if (isThirdChanceTeam(team)) {
+      slot.classList.add('team-third-chance');
+      slot.classList.add('team-repescagem');
+    } else if (isRepescagemTeam(team)) {
+      slot.classList.add('team-repescagem');
+    }
+
     // Avatar
     const avatar = document.createElement('div');
     avatar.className = 'team-avatar';
@@ -2634,6 +2942,21 @@
     }
 
     slot.appendChild(nameWrapper);
+
+    // Repescagem / Third Chance badge
+    if (isThirdChanceTeam(team)) {
+      const badge = document.createElement('span');
+      badge.className = 'repescagem-slot-badge third-chance-badge';
+      badge.textContent = '3ª';
+      badge.title = '3ª Chance Extraordinária — Compensação estrutural';
+      slot.appendChild(badge);
+    } else if (isRepescagemTeam(team)) {
+      const badge = document.createElement('span');
+      badge.className = 'repescagem-slot-badge';
+      badge.textContent = 'R';
+      badge.title = 'Repescagem';
+      slot.appendChild(badge);
+    }
 
     // Score
     if (team.score !== null && team.score !== undefined) {
@@ -3033,8 +3356,12 @@
       showToast('Partida finalizada! Vencedor avança.', 'success');
     }
 
+    // Process repescagem: loser enters the pool, empty slots get filled
+    processRepescagem(match, winnerNum, rIdx);
+
     saveState();
     renderBracket();
+    renderRepescagemPanel();
   }
 
   /**
@@ -3377,10 +3704,14 @@
       showToast('Resultado registrado!', 'success');
     }
 
+    // Process repescagem: loser enters the pool, empty slots get filled
+    processRepescagem(match, winnerNum, rIdx);
+
     // Call saveState and renderBracket AFTER the champion state is set to properly persist it
     saveState();
     closeScoreModal();
     renderBracket();
+    renderRepescagemPanel();
   }
 
   /** Reset a match to unplayed state */
@@ -3398,6 +3729,18 @@
     // Revert stats if they were applied
     if (match.statsApplied) {
       revertMatchStats(match);
+    }
+
+    // Remove previous loser from repescagem/third-chance pools
+    if (match.winner && bracket.repescagemPool) {
+      const loserNum = match.winner === 1 ? 2 : 1;
+      const loserTeam = loserNum === 1 ? match.team1 : match.team2;
+      if (loserTeam && loserTeam.id) {
+        bracket.repescagemPool = bracket.repescagemPool.filter(e => !e.team || e.team.id !== loserTeam.id);
+        if (bracket.thirdChancePool) {
+          bracket.thirdChancePool = bracket.thirdChancePool.filter(e => !e.team || e.team.id !== loserTeam.id);
+        }
+      }
     }
 
     // Reset scores and winner
@@ -5311,48 +5654,17 @@
       tournamentNameInput.addEventListener('change', syncTournamentName);
     }
 
-    // Team count input: save on change and auto-regenerate bracket
+    // Team count input: save on change
     const teamCountInput = $('#team-count');
-    let _teamCountDebounce = null;
     if (teamCountInput) {
       teamCountInput.addEventListener('input', () => {
         const val = parseInt(teamCountInput.value, 10);
-        updateTeamCountInfo();
-        if (isNaN(val) || val < 2 || val > 128) return;
-
-        state.teamCount = val;
-        saveState();
-        renderTeamList();
-
-        // Debounce: rebuild bracket after user stops typing (400ms)
-        clearTimeout(_teamCountDebounce);
-        _teamCountDebounce = setTimeout(() => {
-          // Revert existing stats before rebuilding
-          if (state.bracket && state.bracket.rounds) {
-            state.bracket.rounds.forEach(round => {
-              round.matches.forEach(m => {
-                if (m.statsApplied && typeof revertMatchStats === 'function') {
-                  revertMatchStats(m);
-                }
-              });
-            });
-          }
-
-          const shuffled = shuffleArray([...state.teams]);
-          state.bracket = buildBracketStructure(shuffled, val);
-          state.champion = null;
+        if (!isNaN(val) && val >= 2 && val <= 128) {
+          state.teamCount = val;
           saveState();
-          renderBracket();
-          renderTop3();
-
-          const totalSlots = nextPowerOf2(val);
-          const numByes = totalSlots - val;
-          if (numByes > 0) {
-            showToast(`Chaveamento atualizado: ${val} participantes, ${numByes} bye(s).`, 'success');
-          } else {
-            showToast(`Chaveamento atualizado para ${val} participantes.`, 'success');
-          }
-        }, 400);
+          renderTeamList();
+        }
+        updateTeamCountInfo();
       });
       // Initialize info display
       updateTeamCountInfo();
