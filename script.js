@@ -930,9 +930,10 @@
   function makeTeamSlotData(t) {
     const slot = { id: t.id, teamName: t.teamName, playerName: t.playerName, score: null };
     if (t.photo) slot.photo = t.photo;
-    // Preserve repescagem / third chance flags through bracket advancement
-    if (t.isRepescagem) slot.isRepescagem = true;
-    if (t.isThirdChance) slot.isThirdChance = true;
+    // Do NOT copy isRepescagem / isThirdChance here.
+    // applyRepescagem() sets these flags explicitly for placements.
+    // Copying them on winner advancement causes applyRepescagem() to
+    // mistakenly strip the legitimately advanced winner.
     return slot;
   }
 
@@ -1163,6 +1164,32 @@
     const bracket = getCurrentBracket();
     if (!bracket || !bracket.rounds) return { pool: [], thirdChancePool: [], placements: [] };
 
+    // --- Pre-scan: track teams that were placed via repescagem / thirdChance
+    //     and whether they WON or LOST that match.  This prevents:
+    //     1) Re-placing a team that already won its repescagem match (duplication bug)
+    //     2) Treating a repescagem loser as a fresh candidate instead of 3rd-chance
+    const repWinners  = new Set();   // team IDs that WON their repescagem match
+    const repLosers   = new Set();   // team IDs that LOST their repescagem match
+    const thirdWinners = new Set();
+    const thirdLosers  = new Set();
+
+    bracket.rounds.forEach((round) => {
+      round.matches.forEach((match) => {
+        if (!match.winner) return;
+        for (const slotName of ['team1', 'team2']) {
+          const t = match[slotName];
+          if (!t) continue;
+          const isWinner = (slotName === 'team1' && match.winner === 1) ||
+                           (slotName === 'team2' && match.winner === 2);
+          if (t.isThirdChance) {
+            (isWinner ? thirdWinners : thirdLosers).add(t.id);
+          } else if (t.isRepescagem) {
+            (isWinner ? repWinners : repLosers).add(t.id);
+          }
+        }
+      });
+    });
+
     // Collect ALL losers from finished matches with their stats
     const losers = [];
     const loserIds = new Set();
@@ -1176,6 +1203,17 @@
         const loserTeam = loserNum === 1 ? match.team1 : match.team2;
         if (!loserTeam || isByeTeam(loserTeam)) return;
         if (loserIds.has(loserTeam.id)) return;
+
+        // Skip teams that already WON their repescagem/thirdChance match
+        // (they advanced normally — no need to re-place them)
+        if (repWinners.has(loserTeam.id)) return;
+        if (thirdWinners.has(loserTeam.id)) return;
+
+        // Determine wasRepescagem / wasThirdChance:
+        // The loserIds dedup means we may be seeing the ORIGINAL loss, but the
+        // team already played (and lost) a repescagem match recorded elsewhere.
+        const wasRepescagem  = !!loserTeam.isRepescagem  || repLosers.has(loserTeam.id);
+        const wasThirdChance = !!loserTeam.isThirdChance || thirdLosers.has(loserTeam.id);
 
         const goalsScored = loserTeam.score || 0;
         const goalsConceded = loserNum === 1 ? (match.team2 ? match.team2.score || 0 : 0)
@@ -1191,8 +1229,8 @@
           matchElapsed: match.liveElapsed || 0,
           roundIdx: rIdx,
           matchIdx: mIdx,
-          wasRepescagem: !!loserTeam.isRepescagem,
-          wasThirdChance: !!loserTeam.isThirdChance
+          wasRepescagem,
+          wasThirdChance
         });
         loserIds.add(loserTeam.id);
       });
@@ -3276,10 +3314,16 @@
 
     ensureLiveFields(match);
 
-    const s1 = match.team1 ? (match.team1.score || 0) : 0;
-    const s2 = match.team2 ? (match.team2.score || 0) : 0;
+    let s1 = match.team1 ? (match.team1.score || 0) : 0;
+    let s2 = match.team2 ? (match.team2.score || 0) : 0;
     const t1Name = match.team1 ? (match.team1.teamName || match.team1.playerName) : '?';
     const t2Name = match.team2 ? (match.team2.teamName || match.team2.playerName) : '?';
+
+    // Two-legged: use aggregate (ida + volta) instead of just volta scores
+    if (state.twoLegged && match.scoreIda1 != null && match.currentLeg === 'volta') {
+      s1 = (match.scoreIda1 || 0) + s1;
+      s2 = (match.scoreIda2 || 0) + s2;
+    }
 
     // If tied, open score modal for penalties
     if (s1 === s2) {
@@ -3347,13 +3391,26 @@
       match.liveStartedAt = null;
     }
 
-    const s1 = match.team1.score || 0;
-    const s2 = match.team2.score || 0;
+    let s1 = match.team1.score || 0;
+    let s2 = match.team2.score || 0;
+
+    // Two-legged: compute aggregate (ida + volta) for winner determination
+    if (state.twoLegged && match.scoreIda1 != null && match.currentLeg === 'volta') {
+      // Save volta scores before overwriting with aggregate
+      match.scoreVolta1 = s1;
+      match.scoreVolta2 = s2;
+      s1 = (match.scoreIda1 || 0) + s1;
+      s2 = (match.scoreIda2 || 0) + s2;
+    }
 
     if (s1 === s2) {
       showToast('Empate! Defina pênaltis pelo modal de resultado.', 'error');
       return;
     }
+
+    // Store aggregate scores on the team slots
+    match.team1.score = s1;
+    match.team2.score = s2;
 
     // Clear old statsApplied flag (recalc will rebuild from scratch)
     if (match.statsApplied) {
