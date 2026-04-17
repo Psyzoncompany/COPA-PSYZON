@@ -84,7 +84,7 @@ const sponsorsConfig = [
     name: 'Central de Bebidas',
     logo: 'PATROCINADORES/CENTRAL%20ATACADISTA.png',
     images: [],
-    link: 'https://www.instagram.com/gerson.rios01',
+    link: 'https://www.instagram.com/gerson.rios',
     linkFile: null
   },
   {
@@ -221,7 +221,7 @@ const sponsorsConfig = [
       'SLIDES/Presencial-Tecnologia/foto2.png',
       'SLIDES/Presencial-Tecnologia/foto3.png'
     ],
-    link: 'https://www.instagram.com/presencialtecnologia',
+    link: 'https://www.instagram.com/matheus_sobrinhoo',
     linkFile: null
   },
   {
@@ -244,7 +244,7 @@ const sponsorsConfig = [
       'SLIDES/BF-DISTRIBUIDORA/FOTO2.png',
       'SLIDES/BF-DISTRIBUIDORA/FOTO3.png'
     ],
-    link: 'https://www.instagram.com/matheus_sobrinhoo',
+    link: null,
     linkFile: null
   },
   {
@@ -284,7 +284,7 @@ const sponsorsConfig = [
     name: 'Ancore Seguradora',
     logo: 'PATROCINADORES/ANCORE.png',
     images: [],
-    link: null,
+    link: 'https://www.instagram.com/gerson.rios',
     linkFile: null
   }
 ];
