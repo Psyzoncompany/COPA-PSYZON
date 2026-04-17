@@ -369,7 +369,7 @@ async function initSponsorsShowcase() {
   // ─── Estado global do slideshow ───
   var SLIDE_INTERVAL_FULL = 7000;
   var SLIDE_INTERVAL_LOGO = 7000;
-  var VIDEO_MAX_DURATION = 45; // segundos
+  var VIDEO_MAX_DURATION = 40; // segundos
   var currentSponsor = 0;
   var currentSlide = 0;
   var timer = null;
@@ -569,7 +569,7 @@ async function initSponsorsShowcase() {
   var videoMaxTimer = null;
 
   /**
-   * Configura limite de 21s no vídeo ativo.
+   * Configura limite de 40s no vídeo ativo.
    */
   function setupVideoLimit(el) {
     clearVideoLimit();
@@ -725,7 +725,7 @@ async function initSponsorsShowcase() {
 
     var activeEl = activeSlideEls[currentSlide];
 
-    // Se o slide atual for vídeo, limita a 21s e avança ao terminar
+    // Se o slide atual for vídeo, limita a 40s e avança ao terminar
     if (isVideoEl(activeEl)) {
       // Esconde barra de progresso durante vídeo
       if (activeProgressFill) {
@@ -740,7 +740,7 @@ async function initSponsorsShowcase() {
       };
       // Avança quando o vídeo terminar OU quando atingir 21s
       activeEl.addEventListener('ended', endFn, { once: true });
-      // Timer de segurança para 21s
+      // Timer de segurança para 40s
       timer = setTimeout(function() {
         activeEl.removeEventListener('ended', endFn);
         endFn();
