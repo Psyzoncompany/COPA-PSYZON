@@ -1875,8 +1875,13 @@
     modal.style.display = 'none';
     renderGroupsTab();
 
-    // Re-open the group detail modal to show updated results
-    openGroupDetailModal(groupIdx);
+    // Auto-generate repechage when all group matches are finished
+    if (!state.groupRepechage && areAllGroupMatchesFinished()) {
+      generateBracketFromGroups();
+    } else {
+      // Re-open the group detail modal to show updated results
+      openGroupDetailModal(groupIdx);
+    }
   }
 
   /**
