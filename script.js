@@ -229,6 +229,11 @@
       return;
     }
 
+    // Don't auto-build bracket when groups format is active — use placeholder instead
+    if (state.tournamentFormat === 'groups' && state.groups && state.groups.length > 0) {
+      return;
+    }
+
     const count = state.teamCount || 8;
     const existingTeams = [...(state.teams || [])].filter(t => t != null);
 
@@ -1737,6 +1742,7 @@
     }));
     const shuffled = shuffleArray(teamsForBracket);
     state.bracket = buildBracketStructure(shuffled, qualified.length);
+    state.bracketFromGroups = true;
     state.champion = null;
     saveState();
 
@@ -1950,6 +1956,19 @@
     recalcAllGroupStandings();
     let html = '';
 
+    // Classification info buttons block (above groups)
+    html += `<div class="classification-info-block">
+      <h4 class="classification-info-title">${SVG.info} Informações da Classificação</h4>
+      <div class="classification-info-buttons">
+        <button type="button" class="btn btn-outline classification-info-btn" id="btn-show-rules">
+          ${SVG.clipboard} Regras Classificatórias
+        </button>
+        <button type="button" class="btn btn-outline classification-info-btn" id="btn-show-qualifying">
+          ${SVG.check} Quem está se classificando
+        </button>
+      </div>
+    </div>`;
+
     // Render each group card (compact - standings only)
     state.groups.forEach((group, gIdx) => {
       const totalMatches = group.matches.length;
@@ -2070,6 +2089,13 @@
 
     container.innerHTML = html;
 
+    // Bind classification info buttons
+    const btnRules = container.querySelector('#btn-show-rules');
+    if (btnRules) btnRules.addEventListener('click', showClassificationRulesModal);
+
+    const btnQualifying = container.querySelector('#btn-show-qualifying');
+    if (btnQualifying) btnQualifying.addEventListener('click', showQualifyingPlayersModal);
+
     // Bind buttons
     const btnRep = container.querySelector('#btn-generate-repechage');
     if (btnRep) btnRep.addEventListener('click', generateBracketFromGroups);
@@ -2093,6 +2119,200 @@
         if (teamId) openPlayerProfile(teamId);
       });
     });
+  }
+
+  /**
+   * Show a modal with classification rules for the group stage.
+   */
+  function showClassificationRulesModal() {
+    const groupCount = state.groups ? state.groups.length : 5;
+    let modal = document.getElementById('classification-rules-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'classification-rules-modal';
+      modal.className = 'generic-modal-overlay';
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `<div class="generic-modal-card">
+      <div class="gd-header">
+        <h2>${SVG.clipboard} Regras Classificatórias</h2>
+        <button type="button" class="gd-close-btn" id="rules-close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="generic-modal-body">
+        <div class="rules-section">
+          <h3 class="rules-subtitle">${SVG.crown} Formato do Torneio</h3>
+          <p>Fase de Grupos + Mata-Mata (Quartas de Final em diante)</p>
+        </div>
+
+        <div class="rules-section">
+          <h3 class="rules-subtitle">${SVG.soccer} Fase de Grupos</h3>
+          <ul class="rules-list">
+            <li><strong>${groupCount} grupos</strong> com jogadores disputando todos contra todos dentro do grupo</li>
+            <li>Vitória = <strong>3 pontos</strong> | Empate = <strong>1 ponto</strong> | Derrota = <strong>0 pontos</strong></li>
+            <li>Critérios de desempate: <strong>Pontos → Saldo de Gols → Gols Pró</strong></li>
+          </ul>
+        </div>
+
+        <div class="rules-section">
+          <h3 class="rules-subtitle">${SVG.check} Classificação Direta</h3>
+          <div class="rules-highlight direct">
+            <span class="rules-dot qualified"></span>
+            <strong>1º colocado de cada grupo</strong> → Vai direto para as Quartas de Final
+          </div>
+          <p class="rules-detail">${groupCount} vagas diretas</p>
+        </div>
+
+        <div class="rules-section">
+          <h3 class="rules-subtitle">${SVG.refresh} Repescagem</h3>
+          <div class="rules-highlight repechage">
+            <span class="rules-dot repechage-dot"></span>
+            <strong>2º colocado de cada grupo</strong> + <strong>Melhor 3º colocado</strong> → Disputam 3 vagas na repescagem
+          </div>
+          <ul class="rules-list">
+            <li>6 jogadores disputam 3 partidas eliminatórias</li>
+            <li>Confrontos por chave: 1º seed vs 6º, 2º vs 5º, 3º vs 4º</li>
+            <li>Os 3 vencedores avançam para as Quartas de Final</li>
+          </ul>
+        </div>
+
+        <div class="rules-section">
+          <h3 class="rules-subtitle">${SVG.trophy} Mata-Mata</h3>
+          <ul class="rules-list">
+            <li><strong>8 classificados</strong> (${groupCount} diretos + 3 repescagem) disputam as Quartas de Final</li>
+            <li>Quartas → Semifinal → <strong>Final</strong></li>
+            <li>Eliminação direta (quem perde está fora)</li>
+          </ul>
+        </div>
+
+        <div class="rules-section">
+          <h3 class="rules-subtitle">Legenda das Cores</h3>
+          <div class="rules-colors">
+            <span class="rules-color-item"><span class="legend-dot qualified"></span> 1º - Classificado direto</span>
+            <span class="rules-color-item"><span class="legend-dot repechage"></span> 2º - Repescagem</span>
+            <span class="rules-color-item"><span class="legend-dot third"></span> 3º - Melhor 3º (disputando vaga)</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    modal.style.display = 'flex';
+    modal.querySelector('#rules-close-btn').addEventListener('click', () => { modal.style.display = 'none'; });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+  }
+
+  /**
+   * Show a modal with current qualifying players based on live standings.
+   */
+  function showQualifyingPlayersModal() {
+    if (!state.groups || state.groups.length === 0) return;
+
+    const { directQualified, repechagePlayers, bestThird } = getGroupClassification();
+
+    let modal = document.getElementById('qualifying-players-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'qualifying-players-modal';
+      modal.className = 'generic-modal-overlay';
+      document.body.appendChild(modal);
+    }
+
+    let html = `<div class="generic-modal-card">
+      <div class="gd-header">
+        <h2>${SVG.check} Quem está se classificando</h2>
+        <button type="button" class="gd-close-btn" id="qualifying-close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="generic-modal-body">`;
+
+    // Direct qualified
+    html += `<div class="qualifying-section">
+      <h3 class="qualifying-subtitle"><span class="legend-dot qualified"></span> Classificados Diretos (Quartas de Final)</h3>
+      <div class="qualifying-players-list">`;
+
+    directQualified.forEach(p => {
+      const ini = initials(p.playerName || p.teamName);
+      const avatar = p.photo
+        ? `<img src="${sanitize(p.photo)}" alt="" class="qualifying-avatar">`
+        : `<span class="qualifying-avatar-placeholder">${sanitize(ini)}</span>`;
+      html += `<div class="qualifying-player direct">
+        ${avatar}
+        <div class="qualifying-player-info">
+          <strong>${sanitize(p.teamName || p.playerName)}</strong>
+          <small>1º de ${sanitize(p.groupName || '')}</small>
+        </div>
+        <span class="qualifying-pts">${p.points} pts</span>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+
+    // Repechage players
+    html += `<div class="qualifying-section">
+      <h3 class="qualifying-subtitle"><span class="legend-dot repechage-dot"></span> Indo para a Repescagem</h3>
+      <div class="qualifying-players-list">`;
+
+    repechagePlayers.forEach((p, i) => {
+      const ini = initials(p.playerName || p.teamName);
+      const avatar = p.photo
+        ? `<img src="${sanitize(p.photo)}" alt="" class="qualifying-avatar">`
+        : `<span class="qualifying-avatar-placeholder">${sanitize(ini)}</span>`;
+      const isBestThird = bestThird && p.id === bestThird.id;
+      const posLabel = isBestThird ? `Melhor 3º (${sanitize(p.groupName || '')})` : `2º de ${sanitize(p.groupName || '')}`;
+      html += `<div class="qualifying-player repechage ${isBestThird ? 'best-third' : ''}">
+        ${avatar}
+        <div class="qualifying-player-info">
+          <strong>${sanitize(p.teamName || p.playerName)}</strong>
+          <small>${posLabel}</small>
+        </div>
+        <span class="qualifying-pts">${p.points} pts</span>
+        <span class="qualifying-seed">Seed ${i + 1}</span>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+
+    // Eliminated (remaining 3rd placed who aren't the best + 4th+ placed)
+    const eliminatedPlayers = [];
+    state.groups.forEach(group => {
+      const s = group.standings;
+      s.forEach((p, pos) => {
+        if (pos === 0) return; // 1st — direct
+        if (pos === 1) return; // 2nd — repechage
+        if (pos === 2 && bestThird && p.id === bestThird.id) return; // best 3rd — repechage
+        eliminatedPlayers.push({ ...p, groupName: group.name, position: pos + 1 });
+      });
+    });
+
+    if (eliminatedPlayers.length > 0) {
+      html += `<div class="qualifying-section">
+        <h3 class="qualifying-subtitle"><span class="legend-dot eliminated-dot"></span> Eliminados</h3>
+        <div class="qualifying-players-list">`;
+
+      eliminatedPlayers.forEach(p => {
+        const ini = initials(p.playerName || p.teamName);
+        const avatar = p.photo
+          ? `<img src="${sanitize(p.photo)}" alt="" class="qualifying-avatar">`
+          : `<span class="qualifying-avatar-placeholder">${sanitize(ini)}</span>`;
+        html += `<div class="qualifying-player eliminated">
+          ${avatar}
+          <div class="qualifying-player-info">
+            <strong>${sanitize(p.teamName || p.playerName)}</strong>
+            <small>${p.position}º de ${sanitize(p.groupName || '')}</small>
+          </div>
+          <span class="qualifying-pts">${p.points} pts</span>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    }
+
+    html += `<p class="qualifying-note">${SVG.info} A classificação é calculada em tempo real com base nos resultados atuais dos jogos dos grupos.</p>`;
+    html += `</div></div>`;
+
+    modal.innerHTML = html;
+    modal.style.display = 'flex';
+    modal.querySelector('#qualifying-close-btn').addEventListener('click', () => { modal.style.display = 'none'; });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
   }
 
   /**
@@ -2237,6 +2457,7 @@
       state.groupRepechage = null;
       state.groupDirectQualified = null;
       state.bracket = null;
+      state.bracketFromGroups = false;
       state.champion = null;
       saveState();
 
@@ -2324,6 +2545,119 @@
     return state.tournamentName || 'COPA PSYZON';
   }
 
+  /**
+   * Render a placeholder bracket showing where each group qualifier will go.
+   * No real player names - only structural labels like "1º Grupo A", "Venc. Repescagem 1", etc.
+   */
+  function renderPlaceholderBracket(container) {
+    const groupCount = state.groups ? state.groups.length : 5;
+    const groupNames = state.groups ? state.groups.map(g => g.name) : [];
+
+    // Build the 8 quarterfinal slots:
+    // 5 direct qualified (1st of each group) + 3 repechage winners
+    const directSlots = [];
+    for (let i = 0; i < groupCount; i++) {
+      directSlots.push({ label: `1º ${groupNames[i] || ('Grupo ' + String.fromCharCode(65 + i))}`, type: 'direct' });
+    }
+
+    const repSlots = [];
+    repSlots.push({ label: 'Venc. Repescagem 1', type: 'repechage' });
+    repSlots.push({ label: 'Venc. Repescagem 2', type: 'repechage' });
+    repSlots.push({ label: 'Venc. Repescagem 3', type: 'repechage' });
+
+    // QF seeding: alternate direct vs repechage
+    const qfMatchups = [
+      { team1: directSlots[0], team2: repSlots[2] },
+      { team1: directSlots[1], team2: repSlots[1] },
+      { team1: directSlots[2], team2: repSlots[0] },
+      { team1: directSlots[3], team2: directSlots[4] }
+    ];
+
+    // Build repechage section (6 players → 3 matches)
+    const repMatchLabels = [];
+    for (let i = 0; i < groupCount; i++) {
+      repMatchLabels.push(`2º ${groupNames[i] || ('Grupo ' + String.fromCharCode(65 + i))}`);
+    }
+    repMatchLabels.push('Melhor 3º');
+
+    // Seeded repechage: 1st vs 6th, 2nd vs 5th, 3rd vs 4th
+    const repMatchups = [
+      { team1: repMatchLabels[0], team2: repMatchLabels[5] || 'Melhor 3º' },
+      { team1: repMatchLabels[1], team2: repMatchLabels[4] || '5º Melhor 2º' },
+      { team1: repMatchLabels[2], team2: repMatchLabels[3] || '4º Melhor 2º' }
+    ];
+
+    let html = '';
+
+    // Repechage placeholder section
+    html += `<div class="placeholder-repechage">
+      <h3 class="placeholder-section-title">${SVG.refresh} Repescagem</h3>
+      <p class="placeholder-section-subtitle">2º colocados de cada grupo + melhor 3º colocado</p>
+      <div class="placeholder-rep-matches">`;
+
+    repMatchups.forEach((m, i) => {
+      html += `<div class="placeholder-match-card placeholder-rep">
+        <div class="placeholder-match-header">Repescagem ${i + 1}</div>
+        <div class="placeholder-team rep-slot">${sanitize(m.team1)}</div>
+        <div class="placeholder-vs">VS</div>
+        <div class="placeholder-team rep-slot">${sanitize(m.team2)}</div>
+        <div class="placeholder-arrow">${SVG.chevronRight}</div>
+        <div class="placeholder-winner-label">Venc. Repescagem ${i + 1}</div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+
+    // Bracket placeholder (Quartas → Semi → Final)
+    html += `<div class="placeholder-bracket">
+      <h3 class="placeholder-section-title">${SVG.trophy} Mata-Mata</h3>
+      <p class="placeholder-section-subtitle">Estrutura de destino dos classificados</p>
+      <div class="placeholder-bracket-tree">`;
+
+    // Quartas de Final
+    html += `<div class="placeholder-round">
+      <div class="placeholder-round-title">Quartas de Final</div>`;
+    qfMatchups.forEach((m, i) => {
+      const t1Class = m.team1.type === 'repechage' ? 'rep-slot' : 'direct-slot';
+      const t2Class = m.team2.type === 'repechage' ? 'rep-slot' : 'direct-slot';
+      html += `<div class="placeholder-match-card">
+        <div class="placeholder-match-header">QF ${i + 1}</div>
+        <div class="placeholder-team ${t1Class}">${sanitize(m.team1.label)}</div>
+        <div class="placeholder-vs">VS</div>
+        <div class="placeholder-team ${t2Class}">${sanitize(m.team2.label)}</div>
+      </div>`;
+    });
+    html += `</div>`;
+
+    // Semifinais
+    html += `<div class="placeholder-round">
+      <div class="placeholder-round-title">Semifinal</div>`;
+    for (let i = 0; i < 2; i++) {
+      html += `<div class="placeholder-match-card placeholder-future">
+        <div class="placeholder-match-header">SF ${i + 1}</div>
+        <div class="placeholder-team tbd-slot">Vencedor QF ${i * 2 + 1}</div>
+        <div class="placeholder-vs">VS</div>
+        <div class="placeholder-team tbd-slot">Vencedor QF ${i * 2 + 2}</div>
+      </div>`;
+    }
+    html += `</div>`;
+
+    // Final
+    html += `<div class="placeholder-round">
+      <div class="placeholder-round-title">Final</div>
+      <div class="placeholder-match-card placeholder-future">
+        <div class="placeholder-match-header">FINAL</div>
+        <div class="placeholder-team tbd-slot">Vencedor SF 1</div>
+        <div class="placeholder-vs">VS</div>
+        <div class="placeholder-team tbd-slot">Vencedor SF 2</div>
+      </div>
+    </div>`;
+
+    html += `</div></div>`;
+
+    container.innerHTML = html;
+  }
+
   /** Main bracket render function */
   function renderBracket() {
     const container = $('#bracket-container');
@@ -2335,6 +2669,17 @@
 
     // Clear
     container.innerHTML = '';
+
+    // If groups format is active but bracket hasn't been finalized from groups,
+    // show a placeholder bracket with labels instead of real player names
+    if (state.tournamentFormat === 'groups' && state.groups && state.groups.length > 0 && !state.bracketFromGroups) {
+      if (emptyState) emptyState.style.display = 'none';
+      if ($('#btn-finish-tournament')) $('#btn-finish-tournament').style.display = 'none';
+      if ($('#bracket-display-mode-selector')) $('#bracket-display-mode-selector').style.display = 'none';
+      if ($('#list-container')) $('#list-container').innerHTML = '';
+      renderPlaceholderBracket(container);
+      return;
+    }
 
     const bracket = getCurrentBracket();
 
@@ -6419,6 +6764,7 @@
       state.groupRepechage = null;
       state.groupDirectQualified = null;
       state.bracket = null;
+      state.bracketFromGroups = false;
       state.champion = null;
       saveState();
 
