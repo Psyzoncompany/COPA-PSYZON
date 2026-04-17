@@ -7049,11 +7049,39 @@ body.fs-3col-active {
   color: var(--secondary);
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .qualified-chip small {
   color: var(--on-surface-variant);
   font-weight: 400;
+}
+
+/* Auto-scrolling carousel for qualified/repechage names */
+.qualified-carousel {
+  overflow: hidden;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+.qualified-carousel-track {
+  display: flex;
+  gap: 10px;
+  width: max-content;
+  animation: carouselScroll 18s linear infinite;
+}
+
+.qualified-carousel-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes carouselScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 /* Groups config in sidebar */
@@ -8073,7 +8101,6 @@ body.fs-3col-active {
 
 .ph-qualified-chips {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
@@ -8081,6 +8108,7 @@ body.fs-3col-active {
   background: rgba(76, 175, 80, 0.06);
   border: 1px solid rgba(76, 175, 80, 0.15);
   border-radius: var(--radius-md, 12px);
+  overflow: hidden;
 }
 
 .ph-qualified-label {

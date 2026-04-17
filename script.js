@@ -2131,13 +2131,15 @@
 
       html += `</div>`;
 
-      // Direct qualified list
+      // Direct qualified list (auto-scrolling carousel)
       if (state.groupDirectQualified && state.groupDirectQualified.length > 0) {
-        html += `<div class="direct-qualified-list"><h4>${SVG.checkCircle} Classificados Diretos (1º de cada grupo)</h4><div class="qualified-chips">`;
-        state.groupDirectQualified.forEach(t => {
-          html += `<span class="qualified-chip">${sanitize(t.teamName || t.playerName)} <small>(${sanitize(t.groupName || '')})</small></span>`;
-        });
-        html += `</div></div>`;
+        html += `<div class="direct-qualified-list"><h4>${SVG.checkCircle} Classificados Diretos (1º de cada grupo)</h4><div class="qualified-carousel"><div class="qualified-carousel-track">`;
+        // Duplicate items for seamless loop
+        const qualChips = state.groupDirectQualified.map(t =>
+          `<span class="qualified-chip">${sanitize(t.teamName || t.playerName)} <small>(${sanitize(t.groupName || '')})</small></span>`
+        ).join('');
+        html += qualChips + qualChips;
+        html += `</div></div></div>`;
       }
 
       // "Generate Bracket" button
@@ -2780,13 +2782,12 @@
           <span class="ph-section-desc">Insira os resultados das partidas</span>
         </div>`;
 
-      // Direct qualified chips
+      // Direct qualified chips (auto-scrolling carousel)
       if (state.groupDirectQualified && state.groupDirectQualified.length > 0) {
-        html += `<div class="ph-qualified-chips"><span class="ph-qualified-label">${SVG.checkCircle} Classificados diretos:</span>`;
-        state.groupDirectQualified.forEach(t => {
-          html += `<span class="qualified-chip">${sanitize(t.teamName || t.playerName)}</span>`;
-        });
-        html += `</div>`;
+        const qualChips = state.groupDirectQualified.map(t =>
+          `<span class="qualified-chip">${sanitize(t.teamName || t.playerName)}</span>`
+        ).join('');
+        html += `<div class="ph-qualified-chips"><span class="ph-qualified-label">${SVG.checkCircle} Classificados diretos:</span><div class="qualified-carousel"><div class="qualified-carousel-track">${qualChips}${qualChips}</div></div></div>`;
       }
 
       html += `<div class="ph-repechage-grid">`;
@@ -5530,27 +5531,7 @@
       });
     }
 
-    // ── Count group repechage goals ──
-    if (state.groupRepechage && state.groupRepechage.length > 0) {
-      state.groupRepechage.forEach(function(m) {
-        if (!m.winner) return;
-        const s1 = m.team1.score != null ? m.team1.score : 0;
-        const s2 = m.team2.score != null ? m.team2.score : 0;
-        const t1Id = m.team1.id, t2Id = m.team2.id;
-        if (t1Id) {
-          ensureStats(t1Id);
-          state.playerStats[t1Id].goals += s1;
-          state.playerStats[t1Id].goalsTaken += s2;
-          state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
-        }
-        if (t2Id) {
-          ensureStats(t2Id);
-          state.playerStats[t2Id].goals += s2;
-          state.playerStats[t2Id].goalsTaken += s1;
-          state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
-        }
-      });
-    }
+    // Repechage goals are NOT counted in player stats (GP, GC, saldo)
   }
 
   /** Troca dois times de posição no chaveamento (Drag and Drop) */
