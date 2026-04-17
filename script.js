@@ -1940,6 +1940,24 @@
     renderGroupsTab();
   }
 
+  /** Move sponsors showcase to the groups tab slot */
+  function moveSponsorsToGroupsTab() {
+    const sponsors = $('#bracket-sponsors-showcase');
+    const slot = $('#groups-sponsors-slot');
+    if (sponsors && slot && !slot.contains(sponsors)) {
+      slot.appendChild(sponsors);
+    }
+  }
+
+  /** Move sponsors showcase back to the bracket tab */
+  function moveSponsorsToBracketTab() {
+    const sponsors = $('#bracket-sponsors-showcase');
+    const bracketTab = $('#bracket-tab');
+    if (sponsors && bracketTab && !bracketTab.contains(sponsors)) {
+      bracketTab.appendChild(sponsors);
+    }
+  }
+
   /**
    * Render the entire Groups tab content.
    * Group cards show standings only. Click header/empty area → group detail modal.
@@ -2553,19 +2571,17 @@
     const groupCount = state.groups ? state.groups.length : 5;
     const groupNames = state.groups ? state.groups.map(g => g.name) : [];
 
-    // Build the 8 quarterfinal slots:
-    // 5 direct qualified (1st of each group) + 3 repechage winners
+    // Build the 8 quarterfinal slots
     const directSlots = [];
     for (let i = 0; i < groupCount; i++) {
       directSlots.push({ label: `1º ${groupNames[i] || ('Grupo ' + String.fromCharCode(65 + i))}`, type: 'direct' });
     }
+    const repSlots = [
+      { label: 'Venc. Repescagem 1', type: 'repechage' },
+      { label: 'Venc. Repescagem 2', type: 'repechage' },
+      { label: 'Venc. Repescagem 3', type: 'repechage' }
+    ];
 
-    const repSlots = [];
-    repSlots.push({ label: 'Venc. Repescagem 1', type: 'repechage' });
-    repSlots.push({ label: 'Venc. Repescagem 2', type: 'repechage' });
-    repSlots.push({ label: 'Venc. Repescagem 3', type: 'repechage' });
-
-    // QF seeding: alternate direct vs repechage
     const qfMatchups = [
       { team1: directSlots[0], team2: repSlots[2] },
       { team1: directSlots[1], team2: repSlots[1] },
@@ -2573,87 +2589,114 @@
       { team1: directSlots[3], team2: directSlots[4] }
     ];
 
-    // Build repechage section (6 players → 3 matches)
+    // Repechage matchups
     const repMatchLabels = [];
     for (let i = 0; i < groupCount; i++) {
       repMatchLabels.push(`2º ${groupNames[i] || ('Grupo ' + String.fromCharCode(65 + i))}`);
     }
     repMatchLabels.push('Melhor 3º');
 
-    // Seeded repechage: 1st vs 6th, 2nd vs 5th, 3rd vs 4th
     const repMatchups = [
       { team1: repMatchLabels[0], team2: repMatchLabels[5] || 'Melhor 3º' },
       { team1: repMatchLabels[1], team2: repMatchLabels[4] || '5º Melhor 2º' },
       { team1: repMatchLabels[2], team2: repMatchLabels[3] || '4º Melhor 2º' }
     ];
 
+    // Helper to render a placeholder team slot
+    function teamSlotHTML(label, typeClass) {
+      const dotClass = typeClass === 'direct' ? 'ph-dot-direct' : typeClass === 'repechage' ? 'ph-dot-rep' : 'ph-dot-tbd';
+      return `<div class="match-team ph-team-slot ${typeClass}">
+        <div class="team-avatar ph-avatar"><span class="ph-dot ${dotClass}"></span></div>
+        <div class="ph-team-info">
+          <span class="team-name-bracket">${sanitize(label)}</span>
+        </div>
+        <span class="score-display ph-score">–</span>
+      </div>`;
+    }
+
     let html = '';
 
-    // Repechage placeholder section
-    html += `<div class="placeholder-repechage">
-      <h3 class="placeholder-section-title">${SVG.refresh} Repescagem</h3>
-      <p class="placeholder-section-subtitle">2º colocados de cada grupo + melhor 3º colocado</p>
-      <div class="placeholder-rep-matches">`;
+    // ── Repechage Section ──
+    html += `<div class="ph-repechage-section">
+      <div class="ph-section-header">
+        <h3 class="round-title">${SVG.refresh} Repescagem</h3>
+        <span class="ph-section-desc">2º colocados + melhor 3º colocado</span>
+      </div>
+      <div class="ph-repechage-grid">`;
 
     repMatchups.forEach((m, i) => {
-      html += `<div class="placeholder-match-card placeholder-rep">
-        <div class="placeholder-match-header">Repescagem ${i + 1}</div>
-        <div class="placeholder-team rep-slot">${sanitize(m.team1)}</div>
-        <div class="placeholder-vs">VS</div>
-        <div class="placeholder-team rep-slot">${sanitize(m.team2)}</div>
-        <div class="placeholder-arrow">${SVG.chevronRight}</div>
-        <div class="placeholder-winner-label">Venc. Repescagem ${i + 1}</div>
+      html += `<div class="match-card-wrapper">
+        <div class="match-card ph-match-card ph-match-rep">
+          <div class="match-header"><span>Repescagem ${i + 1}</span></div>
+          ${teamSlotHTML(m.team1, 'repechage')}
+          <div class="ph-vs-divider"><span>VS</span></div>
+          ${teamSlotHTML(m.team2, 'repechage')}
+          <div class="ph-winner-arrow">
+            <span class="ph-arrow-icon">${SVG.chevronRight}</span>
+            <span class="ph-winner-text">Venc. Repescagem ${i + 1}</span>
+          </div>
+        </div>
       </div>`;
     });
 
     html += `</div></div>`;
 
-    // Bracket placeholder (Quartas → Semi → Final)
-    html += `<div class="placeholder-bracket">
-      <h3 class="placeholder-section-title">${SVG.trophy} Mata-Mata</h3>
-      <p class="placeholder-section-subtitle">Estrutura de destino dos classificados</p>
-      <div class="placeholder-bracket-tree">`;
+    // ── Bracket Tree (Quartas → Semi → Final) ──
+    html += `<div class="bracket ph-bracket-tree">`;
 
     // Quartas de Final
-    html += `<div class="placeholder-round">
-      <div class="placeholder-round-title">Quartas de Final</div>`;
+    html += `<div class="round ph-round">
+      <div class="round-title">${SVG.soccer} Quartas de Final</div>
+      <div class="round-matches">`;
     qfMatchups.forEach((m, i) => {
-      const t1Class = m.team1.type === 'repechage' ? 'rep-slot' : 'direct-slot';
-      const t2Class = m.team2.type === 'repechage' ? 'rep-slot' : 'direct-slot';
-      html += `<div class="placeholder-match-card">
-        <div class="placeholder-match-header">QF ${i + 1}</div>
-        <div class="placeholder-team ${t1Class}">${sanitize(m.team1.label)}</div>
-        <div class="placeholder-vs">VS</div>
-        <div class="placeholder-team ${t2Class}">${sanitize(m.team2.label)}</div>
+      const t1Type = m.team1.type === 'repechage' ? 'repechage' : 'direct';
+      const t2Type = m.team2.type === 'repechage' ? 'repechage' : 'direct';
+      html += `<div class="match-card-wrapper">
+        <div class="match-card ph-match-card">
+          <div class="match-header"><span>QF ${i + 1}</span></div>
+          ${teamSlotHTML(m.team1.label, t1Type)}
+          ${teamSlotHTML(m.team2.label, t2Type)}
+        </div>
       </div>`;
     });
-    html += `</div>`;
+    html += `</div></div>`;
+
+    // Connector
+    html += `<div class="round connector-col ph-connector"><div class="round-title" style="visibility:hidden">.</div></div>`;
 
     // Semifinais
-    html += `<div class="placeholder-round">
-      <div class="placeholder-round-title">Semifinal</div>`;
+    html += `<div class="round ph-round">
+      <div class="round-title">${SVG.soccer} Semifinal</div>
+      <div class="round-matches">`;
     for (let i = 0; i < 2; i++) {
-      html += `<div class="placeholder-match-card placeholder-future">
-        <div class="placeholder-match-header">SF ${i + 1}</div>
-        <div class="placeholder-team tbd-slot">Vencedor QF ${i * 2 + 1}</div>
-        <div class="placeholder-vs">VS</div>
-        <div class="placeholder-team tbd-slot">Vencedor QF ${i * 2 + 2}</div>
+      html += `<div class="match-card-wrapper">
+        <div class="match-card ph-match-card ph-match-future">
+          <div class="match-header"><span>SF ${i + 1}</span></div>
+          ${teamSlotHTML(`Vencedor QF ${i * 2 + 1}`, 'tbd')}
+          ${teamSlotHTML(`Vencedor QF ${i * 2 + 2}`, 'tbd')}
+        </div>
       </div>`;
     }
-    html += `</div>`;
+    html += `</div></div>`;
+
+    // Connector
+    html += `<div class="round connector-col ph-connector"><div class="round-title" style="visibility:hidden">.</div></div>`;
 
     // Final
-    html += `<div class="placeholder-round">
-      <div class="placeholder-round-title">Final</div>
-      <div class="placeholder-match-card placeholder-future">
-        <div class="placeholder-match-header">FINAL</div>
-        <div class="placeholder-team tbd-slot">Vencedor SF 1</div>
-        <div class="placeholder-vs">VS</div>
-        <div class="placeholder-team tbd-slot">Vencedor SF 2</div>
+    html += `<div class="round ph-round">
+      <div class="round-title">${SVG.trophy} Final</div>
+      <div class="round-matches">
+        <div class="match-card-wrapper">
+          <div class="match-card ph-match-card ph-match-future">
+            <div class="match-header"><span>FINAL</span></div>
+            ${teamSlotHTML('Vencedor SF 1', 'tbd')}
+            ${teamSlotHTML('Vencedor SF 2', 'tbd')}
+          </div>
+        </div>
       </div>
     </div>`;
 
-    html += `</div></div>`;
+    html += `</div>`;
 
     container.innerHTML = html;
   }
@@ -5238,6 +5281,51 @@
         });
       });
     }
+
+    // ── Count group stage goals ──
+    if (state.groups && state.groups.length > 0) {
+      state.groups.forEach(function(group) {
+        group.matches.forEach(function(m) {
+          if (m.team1.score == null || m.team2.score == null) return;
+          const s1 = m.team1.score, s2 = m.team2.score;
+          const t1Id = m.team1.id, t2Id = m.team2.id;
+          if (t1Id) {
+            ensureStats(t1Id);
+            state.playerStats[t1Id].goals += s1;
+            state.playerStats[t1Id].goalsTaken += s2;
+            state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+          }
+          if (t2Id) {
+            ensureStats(t2Id);
+            state.playerStats[t2Id].goals += s2;
+            state.playerStats[t2Id].goalsTaken += s1;
+            state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+          }
+        });
+      });
+    }
+
+    // ── Count group repechage goals ──
+    if (state.groupRepechage && state.groupRepechage.length > 0) {
+      state.groupRepechage.forEach(function(m) {
+        if (!m.winner) return;
+        const s1 = m.team1.score != null ? m.team1.score : 0;
+        const s2 = m.team2.score != null ? m.team2.score : 0;
+        const t1Id = m.team1.id, t2Id = m.team2.id;
+        if (t1Id) {
+          ensureStats(t1Id);
+          state.playerStats[t1Id].goals += s1;
+          state.playerStats[t1Id].goalsTaken += s2;
+          state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+        }
+        if (t2Id) {
+          ensureStats(t2Id);
+          state.playerStats[t2Id].goals += s2;
+          state.playerStats[t2Id].goalsTaken += s1;
+          state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+        }
+      });
+    }
   }
 
   /** Troca dois times de posição no chaveamento (Drag and Drop) */
@@ -6148,13 +6236,40 @@
     const tbody = $('#ranking-tbody');
     if (!tbody) return;
 
-    if (!state.playerStats) state.playerStats = {};
+    // Recalculate stats (includes group goals now)
+    recalcAllPlayerStats();
+
     const ranked = [];
+
+    // Check if groups are active
+    const hasGroups = state.tournamentFormat === 'groups' && state.groups && state.groups.length > 0;
+
+    // Build group standings lookup
+    const groupStatsMap = {};
+    if (hasGroups) {
+      recalcAllGroupStandings();
+      state.groups.forEach(group => {
+        group.standings.forEach(s => {
+          groupStatsMap[s.id] = {
+            groupName: group.name,
+            played: s.played,
+            wins: s.wins,
+            draws: s.draws,
+            losses: s.losses,
+            points: s.points,
+            goalsFor: s.goalsFor,
+            goalsAgainst: s.goalsAgainst,
+            goalDiff: s.goalDiff
+          };
+        });
+      });
+    }
 
     // Participants from invitations
     if (state.participants) {
       state.participants.forEach(p => {
         const stats = state.playerStats[p.id] || {};
+        const gs = groupStatsMap[p.id] || null;
         ranked.push({
           id: p.id,
           name: p.name || 'Sem Nome',
@@ -6164,7 +6279,8 @@
           finals: stats.finals || 0,
           semifinals: stats.semifinals || 0,
           goals: stats.goals || 0,
-          goalDiff: stats.goalDiff || 0
+          goalDiff: stats.goalDiff || 0,
+          gs: gs
         });
       });
     }
@@ -6174,6 +6290,7 @@
       state.teams.forEach(t => {
         if (!ranked.some(r => r.id === t.id)) {
           const stats = state.playerStats[t.id] || {};
+          const gs = groupStatsMap[t.id] || null;
           ranked.push({
             id: t.id,
             name: t.playerName || 'Sem Nome',
@@ -6183,26 +6300,69 @@
             finals: stats.finals || 0,
             semifinals: stats.semifinals || 0,
             goals: stats.goals || 0,
-            goalDiff: stats.goalDiff || 0
+            goalDiff: stats.goalDiff || 0,
+            gs: gs
           });
         }
       });
     }
 
+    // Update table header dynamically
+    const thead = tbody.closest('table').querySelector('thead tr');
+    if (thead) {
+      if (hasGroups) {
+        thead.innerHTML =
+          '<th class="col-pos">POS</th>' +
+          '<th class="col-player">JOGADOR</th>' +
+          '<th class="col-stats rk-group-col" title="Grupo">GRP</th>' +
+          '<th class="col-stats rk-group-col" title="Jogos na Fase de Grupos">J</th>' +
+          '<th class="col-stats rk-group-col" title="Vitórias na Fase de Grupos">V</th>' +
+          '<th class="col-stats rk-group-col" title="Empates na Fase de Grupos">E</th>' +
+          '<th class="col-stats rk-group-col" title="Derrotas na Fase de Grupos">D</th>' +
+          '<th class="col-stats rk-group-col rk-pts-col" title="Pontos na Fase de Grupos">PTS</th>' +
+          '<th class="col-stats" title="Gols Marcados (Total)">GP</th>' +
+          '<th class="col-stats" title="Saldo de Gols (Total)">SG</th>';
+      } else {
+        thead.innerHTML =
+          '<th class="col-pos">POS</th>' +
+          '<th class="col-player">JOGADOR</th>' +
+          '<th class="col-titulos" title="Títulos">TIT</th>' +
+          '<th class="col-stats" title="Finais Alcançadas">FIN</th>' +
+          '<th class="col-stats" title="Semifinais">SEM</th>' +
+          '<th class="col-stats" title="Gols Marcados">GP</th>' +
+          '<th class="col-stats" title="Saldo de Gols">SG</th>';
+      }
+    }
+
+    const colCount = hasGroups ? 10 : 7;
+
     if (ranked.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-tertiary);">Nenhum jogador registrado ainda.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + colCount + '" style="padding:24px;text-align:center;color:var(--text-tertiary);">Nenhum jogador registrado ainda.</td></tr>';
       return;
     }
 
-    // Sorting algorithm: Trophies > Finals > Semifinals > GoalDiff > Goals > Alphabetic
-    ranked.sort((a, b) => {
-      if (b.trophies !== a.trophies) return b.trophies - a.trophies;
-      if (b.finals !== a.finals) return b.finals - a.finals;
-      if (b.semifinals !== a.semifinals) return b.semifinals - a.semifinals;
-      if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
-      if (b.goals !== a.goals) return b.goals - a.goals;
-      return String(a.name).localeCompare(String(b.name));
-    });
+    // Sorting: groups mode → Points > GoalDiff > Goals; else → Trophies > Finals > etc.
+    if (hasGroups) {
+      ranked.sort((a, b) => {
+        const aPts = a.gs ? a.gs.points : 0;
+        const bPts = b.gs ? b.gs.points : 0;
+        if (bPts !== aPts) return bPts - aPts;
+        const aGd = a.gs ? a.gs.goalDiff : 0;
+        const bGd = b.gs ? b.gs.goalDiff : 0;
+        if (bGd !== aGd) return bGd - aGd;
+        if (b.goals !== a.goals) return b.goals - a.goals;
+        return String(a.name).localeCompare(String(b.name));
+      });
+    } else {
+      ranked.sort((a, b) => {
+        if (b.trophies !== a.trophies) return b.trophies - a.trophies;
+        if (b.finals !== a.finals) return b.finals - a.finals;
+        if (b.semifinals !== a.semifinals) return b.semifinals - a.semifinals;
+        if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+        if (b.goals !== a.goals) return b.goals - a.goals;
+        return String(a.name).localeCompare(String(b.name));
+      });
+    }
 
     let html = '';
     ranked.forEach((r, i) => {
@@ -6211,18 +6371,38 @@
         ? '<img src="' + sanitize(r.photo) + '" alt="">'
         : '<span class="av-placeholder" style="font-size:12px;">' + sanitize(initials(r.name)) + '</span>';
 
-      html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
-        '<td class="col-pos">' + (i + 1) + 'º</td>' +
-        '<td class="col-player">' +
-        '<div class="ranking-avatar">' + avatarHtml + '</div>' +
-        '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
-        '</td>' +
-        '<td class="col-titulos">' + r.trophies + '</td>' +
-        '<td class="col-stats">' + r.finals + '</td>' +
-        '<td class="col-stats">' + r.semifinals + '</td>' +
-        '<td class="col-stats">' + r.goals + '</td>' +
-        '<td class="col-stats">' + r.goalDiff + '</td>' +
-        '</tr>';
+      if (hasGroups) {
+        const gs = r.gs || {};
+        const grpName = gs.groupName ? sanitize(gs.groupName).replace('Grupo ', '') : '–';
+        html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
+          '<td class="col-pos">' + (i + 1) + 'º</td>' +
+          '<td class="col-player">' +
+            '<div class="ranking-avatar">' + avatarHtml + '</div>' +
+            '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
+          '</td>' +
+          '<td class="col-stats rk-group-col">' + grpName + '</td>' +
+          '<td class="col-stats rk-group-col">' + (gs.played || 0) + '</td>' +
+          '<td class="col-stats rk-group-col">' + (gs.wins || 0) + '</td>' +
+          '<td class="col-stats rk-group-col">' + (gs.draws || 0) + '</td>' +
+          '<td class="col-stats rk-group-col">' + (gs.losses || 0) + '</td>' +
+          '<td class="col-stats rk-group-col rk-pts-col">' + (gs.points || 0) + '</td>' +
+          '<td class="col-stats">' + r.goals + '</td>' +
+          '<td class="col-stats">' + r.goalDiff + '</td>' +
+          '</tr>';
+      } else {
+        html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
+          '<td class="col-pos">' + (i + 1) + 'º</td>' +
+          '<td class="col-player">' +
+            '<div class="ranking-avatar">' + avatarHtml + '</div>' +
+            '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
+          '</td>' +
+          '<td class="col-titulos">' + r.trophies + '</td>' +
+          '<td class="col-stats">' + r.finals + '</td>' +
+          '<td class="col-stats">' + r.semifinals + '</td>' +
+          '<td class="col-stats">' + r.goals + '</td>' +
+          '<td class="col-stats">' + r.goalDiff + '</td>' +
+          '</tr>';
+      }
     });
 
     tbody.innerHTML = html;
@@ -7283,8 +7463,12 @@
           renderHistory();
         } else if (targetId === 'bracket-tab') {
           renderBracket();
+          // Move sponsors back to bracket tab
+          moveSponsorsToBracketTab();
         } else if (targetId === 'groups-tab') {
           renderGroupsTab();
+          // Move sponsors below groups
+          moveSponsorsToGroupsTab();
           // Trigger scroll hint no chaveamento
           const bracketWrap = $('#bracket-container');
           const hintWrap = target.querySelector('.scroll-hint-wrapper');

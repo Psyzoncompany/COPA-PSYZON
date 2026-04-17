@@ -972,9 +972,41 @@ async function initSponsorsShowcase() {
     isFullscreen = true;
     overlay = buildOverlay();
 
-    // ─── Build bracket column with round navigation ───
+    // ─── Detect if groups are active (not yet in knockout) ───
+    var groupsActive = false;
+    try {
+      groupsActive = typeof state !== 'undefined' &&
+        state.tournamentFormat === 'groups' &&
+        state.groups && state.groups.length > 0 &&
+        !state.bracketFromGroups;
+    } catch(e) {}
+
+    // ─── Build bracket column ───
     var colBracket = overlay.querySelector('.fs-col-bracket');
     colBracket.innerHTML = '';
+
+    if (groupsActive) {
+      // ── Groups mode: show group standings + slideshow vertically ──
+      overlay.classList.add('fs-groups-mode');
+
+      var groupsContainer = document.getElementById('groups-container');
+      if (groupsContainer) {
+        var groupsClone = groupsContainer.cloneNode(true);
+        groupsClone.id = 'fs-groups-clone';
+        groupsClone.className = 'fs-groups-content';
+        // Remove interactive elements that don't work in fullscreen
+        var btns = groupsClone.querySelectorAll('.classification-info-block, .group-actions, .repechage-section, .group-card-footer');
+        btns.forEach(function(el) { el.remove(); });
+        colBracket.appendChild(groupsClone);
+      }
+
+      // No auto-scroll for groups, just allow manual scroll
+      colBracket.style.overflowY = 'auto';
+      overlay._cleanupBracket = function() {};
+
+    } else {
+      // ── Standard knockout bracket ──
+      overlay.classList.remove('fs-groups-mode');
 
     var bracketContainer = document.getElementById('bracket-container');
     var repescagemPanel = document.getElementById('repescagem-panel');
@@ -1152,6 +1184,8 @@ async function initSponsorsShowcase() {
       if (scrollAreaEl) scrollAreaEl.appendChild(repClone);
     }
 
+    } // end else (standard knockout bracket)
+
     // ─── Move slideshow container into right column ───
     var colSlideshow = overlay.querySelector('.fs-col-slideshow');
     colSlideshow.innerHTML = '';
@@ -1168,6 +1202,24 @@ async function initSponsorsShowcase() {
     fsLiveInterval = setInterval(function() {
       if (!isFullscreen) return;
       updateLiveBar();
+
+      // Groups mode: re-clone groups to pick up score changes
+      if (groupsActive) {
+        try {
+          var colBracketUpd = overlay.querySelector('.fs-col-bracket');
+          var oldGroupsClone = colBracketUpd ? colBracketUpd.querySelector('#fs-groups-clone') : null;
+          var groupsContainer2 = document.getElementById('groups-container');
+          if (oldGroupsClone && groupsContainer2 && colBracketUpd) {
+            var newGroupsClone = groupsContainer2.cloneNode(true);
+            newGroupsClone.id = 'fs-groups-clone';
+            newGroupsClone.className = 'fs-groups-content';
+            var btnsToRemove = newGroupsClone.querySelectorAll('.classification-info-block, .group-actions, .repechage-section, .group-card-footer');
+            btnsToRemove.forEach(function(el) { el.remove(); });
+            colBracketUpd.replaceChild(newGroupsClone, oldGroupsClone);
+          }
+        } catch(e) {}
+        return;
+      }
 
       // Check if current round is completed → auto-advance to next
       try {
@@ -1287,6 +1339,7 @@ async function initSponsorsShowcase() {
     // Deactivate overlay
     if (overlay) {
       overlay.classList.remove('fs-active');
+      overlay.classList.remove('fs-groups-mode');
     }
     document.body.classList.remove('fs-3col-active');
     btnFullscreen.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
