@@ -1713,8 +1713,13 @@
     state.groupDirectQualified = directQualified;
 
     saveState();
-    renderGroupsTab();
-    showToast('Repescagem gerada! Insira os resultados das 3 partidas.', 'success');
+
+    // Switch to bracket tab to show repechage matches
+    const bracketTabBtn = document.querySelector('[data-tab="bracket-tab"]');
+    if (bracketTabBtn) bracketTabBtn.click();
+    else renderBracket();
+
+    showToast('Fase de grupos encerrada! Defina os resultados da repescagem.', 'success');
   }
 
   /**
@@ -1951,7 +1956,7 @@
       return;
     }
 
-    renderGroupsTab();
+    renderBracket();
   }
 
   /** Move sponsors showcase to the groups tab slot */
@@ -2351,6 +2356,41 @@
    * Open the group detail modal showing all matches for a specific group.
    * Admin can edit scores; visitor sees results read-only.
    */
+  /**
+   * Simulate all pending matches in a group with random scores (admin testing).
+   */
+  function simulateGroupMatches(gIdx) {
+    const group = state.groups[gIdx];
+    if (!group) return;
+
+    group.matches.forEach(m => {
+      if (m.team1.score != null) return; // already finished
+      const s1 = Math.floor(Math.random() * 6);
+      const s2 = Math.floor(Math.random() * 6);
+      m.team1.score = s1;
+      m.team2.score = s2;
+      if (s1 > s2) m.winner = 1;
+      else if (s2 > s1) m.winner = 2;
+      else m.winner = 0;
+      m.status = 'finished';
+    });
+
+    group.standings = calcGroupStandings(group);
+    saveState();
+
+    // Check if all groups are now finished → auto-generate repechage
+    if (!state.groupRepechage && areAllGroupMatchesFinished()) {
+      const modal = $('#group-detail-modal');
+      if (modal) modal.style.display = 'none';
+      generateBracketFromGroups();
+      return;
+    }
+
+    renderGroupsTab();
+    openGroupDetailModal(gIdx);
+    showToast(`Jogos do ${group.name} simulados!`, 'success');
+  }
+
   function openGroupDetailModal(gIdx) {
     const group = state.groups[gIdx];
     if (!group) return;
@@ -2360,9 +2400,14 @@
 
     recalcAllGroupStandings();
 
+    const hasUnfinished = group.matches.some(m => m.team1.score == null);
+
     let html = `<div class="gd-header">
       <h2>${sanitize(group.name)}</h2>
-      <button type="button" class="gd-close-btn" id="gd-close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <div class="gd-header-actions">
+        ${isAdmin && hasUnfinished ? `<button type="button" class="btn btn-xs btn-outline gd-simulate-btn" id="gd-simulate-btn" data-gidx="${gIdx}" title="Simular todos os jogos pendentes">${SVG.refresh} Simular Todos</button>` : ''}
+        <button type="button" class="gd-close-btn" id="gd-close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
     </div>`;
 
     // Matches list
@@ -2431,6 +2476,15 @@
     // Bind close
     const closeBtn = modal.querySelector('#gd-close-btn');
     if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+
+    // Bind simulate button
+    const simBtn = modal.querySelector('#gd-simulate-btn');
+    if (simBtn) {
+      simBtn.addEventListener('click', () => {
+        const gi = parseInt(simBtn.dataset.gidx, 10);
+        simulateGroupMatches(gi);
+      });
+    }
 
     // Bind edit buttons
     modal.querySelectorAll('.gm-edit-btn').forEach(btn => {
@@ -2596,11 +2650,12 @@
       { label: 'Venc. Repescagem 3', type: 'repechage' }
     ];
 
+    const tbd = { label: 'A definir', type: 'tbd' };
     const qfMatchups = [
-      { team1: directSlots[0], team2: repSlots[2] },
-      { team1: directSlots[1], team2: repSlots[1] },
-      { team1: directSlots[2], team2: repSlots[0] },
-      { team1: directSlots[3], team2: directSlots[4] }
+      { team1: directSlots[0] || tbd, team2: repSlots[2] || tbd },
+      { team1: directSlots[1] || tbd, team2: repSlots[1] || tbd },
+      { team1: directSlots[2] || tbd, team2: repSlots[0] || tbd },
+      { team1: directSlots[3] || tbd, team2: directSlots[4] || tbd }
     ];
 
     // Repechage matchups
@@ -2631,29 +2686,86 @@
     let html = '';
 
     // ── Repechage Section ──
-    html += `<div class="ph-repechage-section">
-      <div class="ph-section-header">
-        <h3 class="round-title">${SVG.refresh} Repescagem</h3>
-        <span class="ph-section-desc">2º colocados + melhor 3º colocado</span>
-      </div>
-      <div class="ph-repechage-grid">`;
+    if (state.groupRepechage) {
+      // REAL repechage matches with editable scores
+      html += `<div class="ph-repechage-section">
+        <div class="ph-section-header">
+          <h3 class="round-title">${SVG.refresh} Repescagem</h3>
+          <span class="ph-section-desc">Insira os resultados das partidas</span>
+        </div>`;
 
-    repMatchups.forEach((m, i) => {
-      html += `<div class="match-card-wrapper">
-        <div class="match-card ph-match-card ph-match-rep">
-          <div class="match-header"><span>Repescagem ${i + 1}</span></div>
-          ${teamSlotHTML(m.team1, 'repechage')}
-          <div class="ph-vs-divider"><span>VS</span></div>
-          ${teamSlotHTML(m.team2, 'repechage')}
-          <div class="ph-winner-arrow">
-            <span class="ph-arrow-icon">${SVG.chevronRight}</span>
-            <span class="ph-winner-text">Venc. Repescagem ${i + 1}</span>
+      // Direct qualified chips
+      if (state.groupDirectQualified && state.groupDirectQualified.length > 0) {
+        html += `<div class="ph-qualified-chips"><span class="ph-qualified-label">${SVG.checkCircle} Classificados diretos:</span>`;
+        state.groupDirectQualified.forEach(t => {
+          html += `<span class="qualified-chip">${sanitize(t.teamName || t.playerName)}</span>`;
+        });
+        html += `</div>`;
+      }
+
+      html += `<div class="ph-repechage-grid">`;
+      state.groupRepechage.forEach((m, mIdx) => {
+        const t1Name = m.team1.teamName || m.team1.playerName;
+        const t2Name = m.team2.teamName || m.team2.playerName;
+        const t1Photo = m.team1.photo;
+        const t2Photo = m.team2.photo;
+        const s1 = m.team1.score != null ? m.team1.score : '–';
+        const s2 = m.team2.score != null ? m.team2.score : '–';
+        const finished = !!m.winner;
+
+        const t1Avatar = t1Photo
+          ? `<img src="${sanitize(t1Photo)}" alt="">`
+          : `<span class="ph-dot ph-dot-rep"></span>`;
+        const t2Avatar = t2Photo
+          ? `<img src="${sanitize(t2Photo)}" alt="">`
+          : `<span class="ph-dot ph-dot-rep"></span>`;
+
+        html += `<div class="match-card-wrapper">
+          <div class="match-card ph-match-card ph-match-rep ${finished ? 'ph-match-done' : ''}">
+            <div class="match-header"><span>Repescagem ${mIdx + 1}</span></div>
+            <div class="match-team ph-team-slot ${m.winner === 1 ? 'ph-winner' : ''}">
+              <div class="team-avatar ph-avatar">${t1Avatar}</div>
+              <div class="ph-team-info"><span class="team-name-bracket">${sanitize(t1Name)}</span></div>
+              <span class="score-display ${finished ? '' : 'ph-score'}">${s1}</span>
+            </div>
+            <div class="ph-vs-divider"><span>VS</span></div>
+            <div class="match-team ph-team-slot ${m.winner === 2 ? 'ph-winner' : ''}">
+              <div class="team-avatar ph-avatar">${t2Avatar}</div>
+              <div class="ph-team-info"><span class="team-name-bracket">${sanitize(t2Name)}</span></div>
+              <span class="score-display ${finished ? '' : 'ph-score'}">${s2}</span>
+            </div>
+            ${isAdmin ? `<button type="button" class="btn btn-xs btn-outline ph-edit-btn" data-repechage-idx="${mIdx}">${SVG.pencil} ${finished ? 'Editar' : 'Definir Placar'}</button>` : ''}
           </div>
-        </div>
-      </div>`;
-    });
+        </div>`;
+      });
+      html += `</div></div>`;
 
-    html += `</div></div>`;
+    } else {
+      // PLACEHOLDER repechage (before groups finish)
+      html += `<div class="ph-repechage-section">
+        <div class="ph-section-header">
+          <h3 class="round-title">${SVG.refresh} Repescagem</h3>
+          <span class="ph-section-desc">2º colocados + melhor 3º colocado</span>
+        </div>
+        <div class="ph-repechage-grid">`;
+
+      repMatchups.forEach((m, i) => {
+        html += `<div class="match-card-wrapper">
+          <div class="match-card ph-match-card ph-match-rep">
+            <div class="match-header"><span>Repescagem ${i + 1}</span></div>
+            ${teamSlotHTML(m.team1, 'repechage')}
+            <div class="ph-vs-divider"><span>VS</span></div>
+            ${teamSlotHTML(m.team2, 'repechage')}
+            <div class="ph-winner-arrow">
+              <span class="ph-arrow-icon">${SVG.chevronRight}</span>
+              <span class="ph-winner-text">Venc. Repescagem ${i + 1}</span>
+            </div>
+          </div>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    }
 
     // ── Bracket Tree (Quartas → Semi → Final) ──
     html += `<div class="bracket ph-bracket-tree">`;
@@ -2663,13 +2775,15 @@
       <div class="round-title">${SVG.soccer} Quartas de Final</div>
       <div class="round-matches">`;
     qfMatchups.forEach((m, i) => {
-      const t1Type = m.team1.type === 'repechage' ? 'repechage' : 'direct';
-      const t2Type = m.team2.type === 'repechage' ? 'repechage' : 'direct';
+      const t1Type = m.team1 && m.team1.type === 'repechage' ? 'repechage' : 'direct';
+      const t2Type = m.team2 && m.team2.type === 'repechage' ? 'repechage' : 'direct';
+      const t1Label = m.team1 ? m.team1.label : 'A definir';
+      const t2Label = m.team2 ? m.team2.label : 'A definir';
       html += `<div class="match-card-wrapper">
         <div class="match-card ph-match-card">
           <div class="match-header"><span>QF ${i + 1}</span></div>
-          ${teamSlotHTML(m.team1.label, t1Type)}
-          ${teamSlotHTML(m.team2.label, t2Type)}
+          ${teamSlotHTML(t1Label, t1Type)}
+          ${teamSlotHTML(t2Label, t2Type)}
         </div>
       </div>`;
     });
@@ -2713,6 +2827,17 @@
     html += `</div>`;
 
     container.innerHTML = html;
+
+    // Bind repechage edit buttons (real matches)
+    if (state.groupRepechage) {
+      container.querySelectorAll('.ph-edit-btn[data-repechage-idx]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const mIdx = parseInt(btn.dataset.repechageIdx, 10);
+          openRepechageScoreModal(mIdx);
+        });
+      });
+    }
   }
 
   /** Main bracket render function */

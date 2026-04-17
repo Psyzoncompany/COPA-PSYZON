@@ -7193,6 +7193,29 @@ body.fs-3col-active {
   margin: 0;
 }
 
+.gd-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gd-simulate-btn {
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+  gap: 4px;
+  color: var(--accent-orange) !important;
+  border-color: rgba(255, 165, 0, 0.3) !important;
+}
+
+.gd-simulate-btn:hover {
+  background: rgba(255, 165, 0, 0.1) !important;
+}
+
+.gd-simulate-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
 .gd-close-btn {
   background: none;
   border: none;
@@ -7828,20 +7851,17 @@ body.fs-3col-active {
   flex: 1;
 }
 
-/* Match card placeholder overrides */
-.ph-match-card {
+/* Match card placeholder overrides (only future/tbd cards) */
+.ph-match-future {
   pointer-events: none;
+  opacity: 0.55;
+  border-style: dashed !important;
 }
 
 .ph-match-rep {
   border-color: rgba(255, 165, 0, 0.2) !important;
   background: linear-gradient(135deg, rgba(255, 165, 0, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%),
               rgba(255, 255, 255, 0.02) !important;
-}
-
-.ph-match-future {
-  opacity: 0.55;
-  border-style: dashed !important;
 }
 
 /* VS divider inside repechage cards */
@@ -7953,6 +7973,67 @@ body.fs-3col-active {
 .ph-connector {
   min-width: 40px !important;
   width: 40px !important;
+}
+
+/* Real repechage match states */
+.ph-match-done {
+  border-color: rgba(76, 175, 80, 0.25) !important;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%),
+              rgba(255, 255, 255, 0.02) !important;
+}
+
+.ph-winner {
+  background: rgba(76, 175, 80, 0.08) !important;
+}
+
+.ph-winner .team-name-bracket {
+  color: #4caf50 !important;
+  font-weight: 700 !important;
+}
+
+.ph-edit-btn {
+  margin-top: 6px;
+  width: 100%;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px !important;
+  color: var(--accent-orange) !important;
+  border-color: rgba(255, 165, 0, 0.3) !important;
+}
+
+.ph-edit-btn:hover {
+  background: rgba(255, 165, 0, 0.1) !important;
+}
+
+.ph-edit-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ph-qualified-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: rgba(76, 175, 80, 0.06);
+  border: 1px solid rgba(76, 175, 80, 0.15);
+  border-radius: var(--radius-md, 12px);
+}
+
+.ph-qualified-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4caf50;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ph-qualified-label svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* ===== PLACEHOLDER BRACKET MOBILE ===== */
