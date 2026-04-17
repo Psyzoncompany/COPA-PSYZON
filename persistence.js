@@ -27,7 +27,8 @@
   var MODULES = [
     { name: 'config',       fields: ['tournamentName', 'teamCount', 'twoLegged', 'prize', 'singleLegFinal'] },
     { name: 'teams',        fields: ['teams'],         arrayField: 'teams' },
-    { name: 'bracket',      fields: ['bracket', 'champion'] },
+    { name: 'bracket',      fields: ['bracket', 'champion', 'tournamentFormat', 'bracketFromGroups'] },
+    { name: 'groups',       fields: ['groups', 'groupRepechage', 'groupDirectQualified'], arrayField: 'groups' },
     { name: 'stats',        fields: ['playerStats'],   objectField: 'playerStats' },
     { name: 'codes',        fields: ['codes'],         arrayField: 'codes' },
     { name: 'participants', fields: ['participants'],  arrayField: 'participants' }

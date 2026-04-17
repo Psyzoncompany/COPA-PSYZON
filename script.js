@@ -524,12 +524,14 @@
     renderTop3();
     if (state.groups) {
       renderGroupsTab();
-      // Ensure groups tab button is visible and auto-select it
+      // Ensure groups tab button is visible
       const groupsTabBtn = $('#groups-tab-btn');
       if (groupsTabBtn) {
         groupsTabBtn.style.display = '';
-        // Auto-switch to groups tab if bracket doesn't exist yet
-        if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) {
+        // Auto-switch to groups tab:
+        // - Visitors always start on groups tab during group phase
+        // - Admin goes to groups if bracket hasn't been finalized from groups yet
+        if (!admin || !state.bracketFromGroups) {
           groupsTabBtn.click();
         }
       }
@@ -2008,8 +2010,15 @@
 
     // Render each group card (compact - standings only)
     state.groups.forEach((group, gIdx) => {
-      const totalMatches = group.matches.length;
-      const finishedMatches = group.matches.filter(m => m.team1.score != null).length;
+      const hasTwoLegged = group.matches.some(m => m.twoLegged);
+      const totalMatches = hasTwoLegged ? group.matches.length * 2 : group.matches.length;
+      const finishedMatches = hasTwoLegged
+        ? group.matches.reduce((count, m) => {
+            if (m.ida && m.ida.score1 != null) count++;
+            if (m.volta && m.volta.score1 != null) count++;
+            return count;
+          }, 0)
+        : group.matches.filter(m => m.team1.score != null).length;
 
       html += `<div class="group-card" data-group-idx="${gIdx}">`;
       html += `<div class="group-header clickable-area" data-action="open-group" data-gidx="${gIdx}">
