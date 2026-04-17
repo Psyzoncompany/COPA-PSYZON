@@ -1873,15 +1873,16 @@
     group.standings = calcGroupStandings(group);
     saveState();
     modal.style.display = 'none';
-    renderGroupsTab();
 
     // Auto-generate repechage when all group matches are finished
     if (!state.groupRepechage && areAllGroupMatchesFinished()) {
       generateBracketFromGroups();
-    } else {
-      // Re-open the group detail modal to show updated results
-      openGroupDetailModal(groupIdx);
+      return;
     }
+
+    renderGroupsTab();
+    // Re-open the group detail modal to show updated results
+    openGroupDetailModal(groupIdx);
   }
 
   /**
@@ -1942,6 +1943,14 @@
 
     saveState();
     modal.style.display = 'none';
+
+    // Auto-finalize when all repechage matches are done
+    const allRepDone = state.groupRepechage.every(m => m.winner);
+    if (allRepDone) {
+      finalizeGroupRepechage();
+      return;
+    }
+
     renderGroupsTab();
   }
 
