@@ -6747,9 +6747,9 @@ body.fs-3col-active {
   border-radius: var(--radius-lg, 16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
-  min-width: 300px;
-  max-width: 420px;
-  flex: 1 1 340px;
+  min-width: 340px;
+  max-width: 520px;
+  flex: 1 1 460px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }

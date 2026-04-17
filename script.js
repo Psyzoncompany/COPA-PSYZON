@@ -1594,15 +1594,39 @@
     });
     group.matches.forEach(m => {
       if (m.team1.score == null || m.team2.score == null) return;
-      const s1 = m.team1.score, s2 = m.team2.score;
       const t1 = stats[m.team1.id], t2 = stats[m.team2.id];
       if (!t1 || !t2) return;
-      t1.played++; t2.played++;
-      t1.goalsFor += s1; t1.goalsAgainst += s2;
-      t2.goalsFor += s2; t2.goalsAgainst += s1;
-      if (s1 > s2) { t1.wins++; t2.losses++; t1.points += 3; }
-      else if (s2 > s1) { t2.wins++; t1.losses++; t2.points += 3; }
-      else { t1.draws++; t2.draws++; t1.points += 1; t2.points += 1; }
+
+      if (m.twoLegged && m.ida && m.volta) {
+        // Count each leg as a separate game
+        // Ida
+        if (m.ida.score1 != null && m.ida.score2 != null) {
+          t1.played++; t2.played++;
+          t1.goalsFor += m.ida.score1; t1.goalsAgainst += m.ida.score2;
+          t2.goalsFor += m.ida.score2; t2.goalsAgainst += m.ida.score1;
+          if (m.ida.score1 > m.ida.score2) { t1.wins++; t2.losses++; t1.points += 3; }
+          else if (m.ida.score2 > m.ida.score1) { t2.wins++; t1.losses++; t2.points += 3; }
+          else { t1.draws++; t2.draws++; t1.points += 1; t2.points += 1; }
+        }
+        // Volta
+        if (m.volta.score1 != null && m.volta.score2 != null) {
+          t1.played++; t2.played++;
+          t1.goalsFor += m.volta.score1; t1.goalsAgainst += m.volta.score2;
+          t2.goalsFor += m.volta.score2; t2.goalsAgainst += m.volta.score1;
+          if (m.volta.score1 > m.volta.score2) { t1.wins++; t2.losses++; t1.points += 3; }
+          else if (m.volta.score2 > m.volta.score1) { t2.wins++; t1.losses++; t2.points += 3; }
+          else { t1.draws++; t2.draws++; t1.points += 1; t2.points += 1; }
+        }
+      } else {
+        // Single match
+        const s1 = m.team1.score, s2 = m.team2.score;
+        t1.played++; t2.played++;
+        t1.goalsFor += s1; t1.goalsAgainst += s2;
+        t2.goalsFor += s2; t2.goalsAgainst += s1;
+        if (s1 > s2) { t1.wins++; t2.losses++; t1.points += 3; }
+        else if (s2 > s1) { t2.wins++; t1.losses++; t2.points += 3; }
+        else { t1.draws++; t2.draws++; t1.points += 1; t2.points += 1; }
+      }
       t1.goalDiff = t1.goalsFor - t1.goalsAgainst;
       t2.goalDiff = t2.goalsFor - t2.goalsAgainst;
     });
@@ -5508,25 +5532,33 @@
       });
     }
 
-    // ── Count group stage goals ──
+    // ── Count group stage goals (ida/volta counted separately) ──
     if (state.groups && state.groups.length > 0) {
       state.groups.forEach(function(group) {
         group.matches.forEach(function(m) {
           if (m.team1.score == null || m.team2.score == null) return;
-          const s1 = m.team1.score, s2 = m.team2.score;
           const t1Id = m.team1.id, t2Id = m.team2.id;
-          if (t1Id) {
-            ensureStats(t1Id);
-            state.playerStats[t1Id].goals += s1;
-            state.playerStats[t1Id].goalsTaken += s2;
-            state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+
+          if (m.twoLegged && m.ida && m.volta) {
+            // Ida
+            if (m.ida.score1 != null && m.ida.score2 != null) {
+              if (t1Id) { ensureStats(t1Id); state.playerStats[t1Id].goals += m.ida.score1; state.playerStats[t1Id].goalsTaken += m.ida.score2; }
+              if (t2Id) { ensureStats(t2Id); state.playerStats[t2Id].goals += m.ida.score2; state.playerStats[t2Id].goalsTaken += m.ida.score1; }
+            }
+            // Volta
+            if (m.volta.score1 != null && m.volta.score2 != null) {
+              if (t1Id) { ensureStats(t1Id); state.playerStats[t1Id].goals += m.volta.score1; state.playerStats[t1Id].goalsTaken += m.volta.score2; }
+              if (t2Id) { ensureStats(t2Id); state.playerStats[t2Id].goals += m.volta.score2; state.playerStats[t2Id].goalsTaken += m.volta.score1; }
+            }
+          } else {
+            const s1 = m.team1.score, s2 = m.team2.score;
+            if (t1Id) { ensureStats(t1Id); state.playerStats[t1Id].goals += s1; state.playerStats[t1Id].goalsTaken += s2; }
+            if (t2Id) { ensureStats(t2Id); state.playerStats[t2Id].goals += s2; state.playerStats[t2Id].goalsTaken += s1; }
           }
-          if (t2Id) {
-            ensureStats(t2Id);
-            state.playerStats[t2Id].goals += s2;
-            state.playerStats[t2Id].goalsTaken += s1;
-            state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
-          }
+
+          // Recalc goalDiff
+          if (t1Id && state.playerStats[t1Id]) state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+          if (t2Id && state.playerStats[t2Id]) state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
         });
       });
     }
