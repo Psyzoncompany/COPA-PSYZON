@@ -1640,6 +1640,257 @@ textarea::placeholder {
   max-width: 200px;
 }
 
+/* ===== RULES BUTTON & MODAL ===== */
+.rules-button-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0 16px 20px;
+}
+
+.btn-rules-highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  font-family: var(--font-headline);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.85), rgba(255, 120, 0, 0.9));
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 140, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-rules-highlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.btn-rules-highlight:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(255, 140, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(255, 175, 20, 0.95), rgba(255, 130, 10, 1));
+}
+
+.btn-rules-highlight:active {
+  transform: translateY(0);
+}
+
+.btn-rules-highlight svg {
+  flex-shrink: 0;
+}
+
+/* Rules Modal */
+.rules-modal-card {
+  max-width: 720px;
+  width: 95%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rules-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rules-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.rules-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.rules-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 5px 10px;
+  flex: 0 1 220px;
+  min-width: 140px;
+  transition: border-color 0.2s;
+}
+
+.rules-search-box:focus-within {
+  border-color: var(--primary);
+}
+
+.rules-search-box svg {
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.rules-search-box input {
+  background: none;
+  border: none;
+  color: var(--on-surface);
+  font-size: 13px;
+  width: 100%;
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.rules-search-box input::placeholder {
+  color: var(--on-surface-variant);
+  opacity: 0.5;
+}
+
+/* Rules Content */
+.rules-content-display {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  line-height: 1.7;
+}
+
+.rules-spacer {
+  height: 12px;
+}
+
+.rules-heading-main {
+  font-family: var(--font-headline);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-top: 20px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 165, 0, 0.15);
+}
+
+.rules-heading-sub {
+  font-family: var(--font-headline);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+
+.rules-line {
+  font-size: 13px;
+  color: var(--on-surface);
+  opacity: 0.9;
+}
+
+.rules-bullet {
+  font-size: 13px;
+  color: var(--on-surface);
+  opacity: 0.9;
+  padding-left: 16px;
+}
+
+.rules-dimmed {
+  opacity: 0.2 !important;
+}
+
+.rules-highlight {
+  background: rgba(255, 165, 0, 0.25);
+  color: #fff;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+/* Rules Edit Area */
+.rules-edit-area {
+  padding: 16px 24px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rules-textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 300px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px;
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.rules-textarea:focus {
+  border-color: var(--primary);
+}
+
+.rules-edit-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.rules-no-results {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .rules-modal-card {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .rules-modal-header {
+    padding: 16px;
+  }
+
+  .rules-search-box {
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .rules-content-display {
+    padding: 16px;
+  }
+
+  .btn-rules-highlight {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+
 /* Compact Mobile Version of the Prize Card */
 @media (max-width: 480px) {
   .prize-display {

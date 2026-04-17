@@ -783,6 +783,281 @@
   }
 
   /* ==========================================================
+     REGRAS GERAIS DO TORNEIO
+     ========================================================== */
+
+  const DEFAULT_RULES = `1. DISPOSIÇÕES GERAIS
+
+A Copa PSYZON é um torneio presencial de FC 26, realizado sob organização da PSYZON.
+
+Ao participar do campeonato, o jogador declara estar de acordo com todas as regras deste regulamento.
+
+A organização tem autoridade para interpretar, aplicar, adaptar e decidir qualquer situação não prevista neste documento, sempre buscando o bom andamento do evento, a justiça competitiva e o respeito entre todos os presentes.
+
+2. HORÁRIO, CHAMADA E PRESENÇA
+
+Os jogos terão início a partir das 14:00.
+Cada partida terá tolerância máxima de 15 minutos após o horário do chamado.
+O jogador que não comparecer dentro desse prazo sofrerá W.O. automático.
+É obrigação do jogador ficar atento aos chamados da organização.
+A organização não é obrigada a ficar procurando participantes pelo local.
+O atraso em uma partida pode comprometer o cronograma geral do torneio, portanto a pontualidade é obrigatória.
+
+3. FORMATO DO TORNEIO
+
+3.1 Modelo principal
+O torneio será disputado em formato de eliminatória simples (mata-mata).
+Haverá também uma repescagem, funcionando como segunda chance para parte dos jogadores derrotados na fase inicial.
+
+3.2 Repescagem
+A repescagem será válida somente para jogadores derrotados na primeira fase, conforme definição da organização.
+Entre os derrotados dessa fase, irão para a repescagem aqueles que tiverem o melhor desempenho entre os eliminados.
+Para definir esse melhor desempenho, a organização poderá usar, nesta ordem:
+• Menor saldo de gols sofrido na derrota
+• Maior número de gols marcados
+• Sorteio, caso continue empatado
+Quem perder na repescagem estará eliminado definitivamente do torneio.
+
+3.3 Penalidades esportivas para jogadores vindos da repescagem
+O jogador que avançar pela repescagem:
+• terá um desconto de 10% sobre eventual premiação em dinheiro;
+• esse valor será destinado ao jogador que o derrotou na primeira fase;
+• carregará durante o campeonato um selo de repescagem, definido pela organização;
+• não poderá disputar a premiação de artilheiro.
+
+4. FORMATO DOS CONFRONTOS
+
+4.1 Duas gerações
+Cada confronto será disputado em duas gerações do jogo, para manter equilíbrio competitivo:
+• 1 partida na geração antiga
+• 1 partida na geração nova
+
+4.2 Critério de desempate
+Caso cada jogador vença uma partida, ou caso a organização entenda que o confronto terminou tecnicamente empatado, haverá uma partida desempate, chamada de "nega".
+Regras da nega:
+• Duração: 3 minutos cada tempo
+• Em caso de empate: haverá prorrogação com gol de ouro
+• Persistindo o empate, a decisão será nos pênaltis
+
+4.3 Prioridade de mando
+Na partida de desempate, a prioridade de escolha de mando será do jogador que tiver sido mandante na partida de volta.
+
+4.4 Vantagens do jogador mandante
+O jogador que atuar como mandante poderá definir: câmera, estádio/campo e clima.
+
+5. CONFIGURAÇÕES OFICIAIS DO JOGO
+
+Todas as partidas deverão seguir o padrão abaixo:
+• Jogo: FC 26
+• Tempo de partida: 6 minutos por tempo
+• Dificuldade: Lendário
+• Velocidade: Normal
+• Câmera: Livre
+• Radar: Permitido
+• Handicap: Desligado
+
+6. ESCOLHA DE TIMES
+
+Será permitido usar times repetidos, inclusive na mesma partida.
+Será permitido usar seleções.
+Será proibido utilizar times ALL-STAR, ICONS ou qualquer equipe considerada apelona ou fora do padrão competitivo do torneio.
+
+7. CONDUTA DOS JOGADORES
+
+7.1 É permitido: comemorar gols, interagir de forma saudável, fazer ajustes rápidos de tática, vibrar e entrar no clima competitivo.
+
+7.2 É proibido: tocar no adversário de forma indevida, empurrar, provocar de forma ofensiva, praticar desrespeito, intimidação ou ameaça, usar falas preconceituosas ou discriminatórias, pausar sem obedecer às regras, prender a bola de forma antidesportiva.
+
+7.3 Penalidades: advertência, perda da partida, eliminação do torneio, retirada do local.
+
+7.4 Preconceito e discriminação: Não será tolerado nenhum tipo. Quem praticar será imediatamente retirado do local.
+
+8. REGRAS DE PAUSA
+
+Só será permitido pausar com a bola fora de jogo.
+Pausas no meio da jogada não são permitidas.
+Caso um jogador pause no meio de um lance de ataque, a posse será entregue ao adversário.
+Pausas sem motivo relevante poderão gerar advertência.
+
+9. PROBLEMAS TÉCNICOS
+
+9.1 Queda ou interrupção: antes dos 10 min → reinício do zero; depois dos 10 min → mantém placar e disputa tempo restante.
+
+9.2 Responsabilidade por danos: o responsável arca com 80% do prejuízo, a organização com 20%. Aplica-se a janelas, mesas, televisores, consoles, controles e estrutura do local.
+
+10. RESET DE PARTIDA
+
+Partidas só poderão ser resetadas com autorização da organização.
+Reset sem motivo válido poderá resultar em derrota automática.
+
+11. AMBIENTE, ALIMENTAÇÃO E CIRCULAÇÃO
+
+Bebidas alcoólicas são proibidas no recinto do evento.
+Circulação restrita ao salão, banheiro e bebedouro.
+
+12. W.O., ABANDONO E DESCLASSIFICAÇÃO
+
+W.O. quando: não comparecer dentro dos 15 min, abandonar sem justificativa, recusar-se a jogar, provocar atraso proposital.
+
+13. PREMIAÇÃO
+
+1º lugar: R$500
+2º lugar: R$200
+3º lugar: R$100
+Artilheiro: R$50
+
+14. CRITÉRIO DE ARTILHARIA
+
+Conta gols de todo o torneio. Jogadores da repescagem não disputam artilheiro. Empate desempatado por sorteio.
+
+15. REGRA DE OURO
+
+A decisão final será sempre da organização PSYZON. Qualquer situação não prevista será resolvida pela organização.
+
+16. PARTIDAS ONLINE
+
+Transmissão obrigatória via Discord com câmera mostrando rosto, mãos e controle.
+Microfone aberto durante toda a partida.
+Queda de chamada: pausar imediatamente e restabelecer.
+Descumprimento: desclassificação imediata.`;
+
+  function getRulesText() {
+    return state.tournamentRules || DEFAULT_RULES;
+  }
+
+  function formatRulesHtml(text, searchTerm) {
+    const lines = text.split('\n');
+    let html = '';
+    const regex = searchTerm ? new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi') : null;
+    let hasMatch = false;
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) { html += '<div class="rules-spacer"></div>'; return; }
+
+      let content = sanitize(trimmed);
+
+      // Check if line matches search
+      let lineMatches = true;
+      if (regex) {
+        lineMatches = regex.test(trimmed);
+        regex.lastIndex = 0;
+        if (lineMatches) {
+          hasMatch = true;
+          content = content.replace(new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark class="rules-highlight">$1</mark>');
+        }
+      }
+
+      // Detect headers (lines starting with number + period)
+      if (/^\d+\.\s/.test(trimmed) || /^\d+\.\d+\s/.test(trimmed)) {
+        const isMain = /^\d+\.\s/.test(trimmed) && !/^\d+\.\d+/.test(trimmed);
+        html += `<div class="rules-heading ${isMain ? 'rules-heading-main' : 'rules-heading-sub'} ${regex && !lineMatches ? 'rules-dimmed' : ''}">${content}</div>`;
+      } else if (trimmed.startsWith('\u2022')) {
+        html += `<div class="rules-bullet ${regex && !lineMatches ? 'rules-dimmed' : ''}">${content}</div>`;
+      } else {
+        html += `<div class="rules-line ${regex && !lineMatches ? 'rules-dimmed' : ''}">${content}</div>`;
+      }
+    });
+
+    return { html, hasMatch: searchTerm ? hasMatch : true };
+  }
+
+  function openRulesModal() {
+    const modal = $('#rules-general-modal');
+    if (!modal) return;
+
+    const editBtn = modal.querySelector('#rules-edit-btn');
+    if (editBtn) editBtn.style.display = isAdmin ? '' : 'none';
+
+    const searchInput = modal.querySelector('#rules-search-input');
+    if (searchInput) searchInput.value = '';
+
+    showRulesContent();
+    modal.querySelector('#rules-edit-area').style.display = 'none';
+    modal.querySelector('#rules-content-display').style.display = '';
+    modal.querySelector('#rules-no-results').style.display = 'none';
+    modal.style.display = 'flex';
+  }
+
+  function showRulesContent(searchTerm) {
+    const display = $('#rules-content-display');
+    const noResults = $('#rules-no-results');
+    if (!display) return;
+
+    const { html, hasMatch } = formatRulesHtml(getRulesText(), searchTerm);
+    display.innerHTML = html;
+
+    if (searchTerm && !hasMatch) {
+      display.style.display = 'none';
+      if (noResults) noResults.style.display = '';
+    } else {
+      display.style.display = '';
+      if (noResults) noResults.style.display = 'none';
+    }
+  }
+
+  function initRulesBindings() {
+    const btnOpen = $('#btn-open-rules');
+    if (btnOpen) btnOpen.addEventListener('click', openRulesModal);
+
+    const modal = $('#rules-general-modal');
+    if (!modal) return;
+
+    // Close
+    const closeBtn = modal.querySelector('#rules-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    const backdrop = modal.querySelector('.modal-backdrop');
+    if (backdrop) backdrop.addEventListener('click', () => { modal.style.display = 'none'; });
+
+    // Search
+    const searchInput = modal.querySelector('#rules-search-input');
+    if (searchInput) {
+      let debounce = null;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+          showRulesContent(searchInput.value.trim());
+        }, 250);
+      });
+    }
+
+    // Edit
+    const editBtn = modal.querySelector('#rules-edit-btn');
+    const editArea = modal.querySelector('#rules-edit-area');
+    const contentDisplay = modal.querySelector('#rules-content-display');
+    const textarea = modal.querySelector('#rules-textarea');
+    const saveBtn = modal.querySelector('#rules-save-btn');
+    const cancelBtn = modal.querySelector('#rules-cancel-btn');
+
+    if (editBtn) editBtn.addEventListener('click', () => {
+      textarea.value = getRulesText();
+      editArea.style.display = '';
+      contentDisplay.style.display = 'none';
+      editBtn.style.display = 'none';
+      if (searchInput) searchInput.closest('.rules-search-box').style.display = 'none';
+    });
+
+    if (saveBtn) saveBtn.addEventListener('click', () => {
+      state.tournamentRules = textarea.value;
+      saveState();
+      editArea.style.display = 'none';
+      contentDisplay.style.display = '';
+      if (editBtn) editBtn.style.display = '';
+      if (searchInput) searchInput.closest('.rules-search-box').style.display = '';
+      searchInput.value = '';
+      showRulesContent();
+      showToast('Regras salvas com sucesso!', 'success');
+    });
+
+    if (cancelBtn) cancelBtn.addEventListener('click', () => {
+      editArea.style.display = 'none';
+      contentDisplay.style.display = '';
+      if (editBtn) editBtn.style.display = '';
+      if (searchInput) searchInput.closest('.rules-search-box').style.display = '';
+    });
+  }
+
+  /* ==========================================================
      10. TEAM / PLAYER CRUD
      ========================================================== */
 
@@ -7471,6 +7746,9 @@
     if (btnSavePrize) {
       btnSavePrize.addEventListener('click', handleSavePrize);
     }
+
+    // Rules modal bindings
+    initRulesBindings();
 
     // Generate bracket
     const btnGenerate = $('#btn-generate');

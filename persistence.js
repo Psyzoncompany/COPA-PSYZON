@@ -25,7 +25,7 @@
 
   /* ---------- module definitions ---------- */
   var MODULES = [
-    { name: 'config',       fields: ['tournamentName', 'teamCount', 'twoLegged', 'prize', 'singleLegFinal'] },
+    { name: 'config',       fields: ['tournamentName', 'teamCount', 'twoLegged', 'prize', 'singleLegFinal', 'tournamentRules'] },
     { name: 'teams',        fields: ['teams'],         arrayField: 'teams' },
     { name: 'bracket',      fields: ['bracket', 'champion', 'tournamentFormat', 'bracketFromGroups'] },
     { name: 'groups',       fields: ['groups', 'groupRepechage', 'groupDirectQualified'], arrayField: 'groups' },
