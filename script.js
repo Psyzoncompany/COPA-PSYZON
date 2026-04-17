@@ -2020,9 +2020,11 @@
           }, 0)
         : group.matches.filter(m => m.team1.score != null).length;
 
-      html += `<div class="group-card" data-group-idx="${gIdx}">`;
+      const groupFinished = group.matches.every(m => m.team1.score != null && m.team2.score != null);
+
+      html += `<div class="group-card ${groupFinished ? 'group-card-finished' : ''}" data-group-idx="${gIdx}">`;
       html += `<div class="group-header clickable-area" data-action="open-group" data-gidx="${gIdx}">
-        <h3>${sanitize(group.name)}</h3>
+        <h3>${sanitize(group.name)} ${groupFinished ? '<span class="group-done-badge">' + SVG.checkCircle + ' Finalizado</span>' : ''}</h3>
         <span class="group-progress">${finishedMatches}/${totalMatches} jogos</span>
       </div>`;
 
@@ -2043,9 +2045,17 @@
 
       group.standings.forEach((s, pos) => {
         let rowClass = '';
-        if (pos === 0) rowClass = 'group-qualified';
-        else if (pos === 1) rowClass = 'group-repechage';
-        else if (pos === 2) rowClass = 'group-third';
+        let badge = '';
+        if (pos === 0) {
+          rowClass = 'group-qualified';
+          if (groupFinished) badge = '<span class="gt-badge gt-badge-qualified">Classificado</span>';
+        } else if (pos === 1) {
+          rowClass = 'group-repechage';
+          if (groupFinished) badge = '<span class="gt-badge gt-badge-repechage">Repescagem</span>';
+        } else if (pos === 2) {
+          rowClass = 'group-third';
+          if (groupFinished) badge = '<span class="gt-badge gt-badge-third">Possível 3º</span>';
+        }
 
         const ini = initials(s.playerName || s.teamName);
         const avatar = s.photo
@@ -2054,7 +2064,7 @@
 
         html += `<tr class="${rowClass} gt-player-row" data-team-id="${sanitize(s.id)}" title="Ver perfil">
           <td class="gt-pos">${pos + 1}º</td>
-          <td class="gt-team">${avatar} <span>${sanitize(s.teamName || s.playerName)}</span></td>
+          <td class="gt-team">${avatar} <span>${sanitize(s.teamName || s.playerName)}</span>${badge}</td>
           <td class="gt-stat">${s.played}</td>
           <td class="gt-stat">${s.wins}</td>
           <td class="gt-stat">${s.draws}</td>
@@ -2373,15 +2383,38 @@
     if (!group) return;
 
     group.matches.forEach(m => {
-      if (m.team1.score != null) return; // already finished
-      const s1 = Math.floor(Math.random() * 6);
-      const s2 = Math.floor(Math.random() * 6);
-      m.team1.score = s1;
-      m.team2.score = s2;
-      if (s1 > s2) m.winner = 1;
-      else if (s2 > s1) m.winner = 2;
-      else m.winner = 0;
-      m.status = 'finished';
+      if (m.twoLegged) {
+        // Simulate ida if not done
+        if (!m.ida) m.ida = { score1: null, score2: null };
+        if (!m.volta) m.volta = { score1: null, score2: null };
+        if (m.ida.score1 == null) {
+          m.ida.score1 = Math.floor(Math.random() * 6);
+          m.ida.score2 = Math.floor(Math.random() * 6);
+        }
+        if (m.volta.score1 == null) {
+          m.volta.score1 = Math.floor(Math.random() * 6);
+          m.volta.score2 = Math.floor(Math.random() * 6);
+        }
+        // Compute aggregate
+        const agg1 = m.ida.score1 + m.volta.score1;
+        const agg2 = m.ida.score2 + m.volta.score2;
+        m.team1.score = agg1;
+        m.team2.score = agg2;
+        if (agg1 > agg2) m.winner = 1;
+        else if (agg2 > agg1) m.winner = 2;
+        else m.winner = 0;
+        m.status = 'finished';
+      } else {
+        if (m.team1.score != null) return; // already finished
+        const s1 = Math.floor(Math.random() * 6);
+        const s2 = Math.floor(Math.random() * 6);
+        m.team1.score = s1;
+        m.team2.score = s2;
+        if (s1 > s2) m.winner = 1;
+        else if (s2 > s1) m.winner = 2;
+        else m.winner = 0;
+        m.status = 'finished';
+      }
     });
 
     group.standings = calcGroupStandings(group);
@@ -2400,6 +2433,31 @@
     showToast(`Jogos do ${group.name} simulados!`, 'success');
   }
 
+  /**
+   * Reset all match results in a group (undo simulation).
+   */
+  function resetGroupMatches(gIdx) {
+    const group = state.groups[gIdx];
+    if (!group) return;
+
+    group.matches.forEach(m => {
+      m.team1.score = null;
+      m.team2.score = null;
+      m.winner = null;
+      m.status = 'not_started';
+      if (m.twoLegged) {
+        m.ida = { score1: null, score2: null };
+        m.volta = { score1: null, score2: null };
+      }
+    });
+
+    group.standings = calcGroupStandings(group);
+    saveState();
+    renderGroupsTab();
+    openGroupDetailModal(gIdx);
+    showToast(`Resultados do ${group.name} resetados.`, 'success');
+  }
+
   function openGroupDetailModal(gIdx) {
     const group = state.groups[gIdx];
     if (!group) return;
@@ -2410,10 +2468,12 @@
     recalcAllGroupStandings();
 
     const hasUnfinished = group.matches.some(m => m.team1.score == null);
+    const hasFinished = group.matches.some(m => m.team1.score != null);
 
     let html = `<div class="gd-header">
       <h2>${sanitize(group.name)}</h2>
       <div class="gd-header-actions">
+        ${isAdmin && hasFinished ? `<button type="button" class="btn btn-xs btn-outline gd-reset-btn" id="gd-reset-btn" data-gidx="${gIdx}" title="Resetar todos os resultados">✕ Resetar</button>` : ''}
         ${isAdmin && hasUnfinished ? `<button type="button" class="btn btn-xs btn-outline gd-simulate-btn" id="gd-simulate-btn" data-gidx="${gIdx}" title="Simular todos os jogos pendentes">${SVG.refresh} Simular Todos</button>` : ''}
         <button type="button" class="gd-close-btn" id="gd-close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
       </div>
@@ -2492,6 +2552,15 @@
       simBtn.addEventListener('click', () => {
         const gi = parseInt(simBtn.dataset.gidx, 10);
         simulateGroupMatches(gi);
+      });
+    }
+
+    // Bind reset button
+    const resetBtn = modal.querySelector('#gd-reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        const gi = parseInt(resetBtn.dataset.gidx, 10);
+        resetGroupMatches(gi);
       });
     }
 
