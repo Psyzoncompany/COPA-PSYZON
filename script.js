@@ -75,6 +75,9 @@
       tournamentName: '',
       teamCount: 8,
       twoLegged: false,
+      tournamentFormat: 'knockout',
+      groupCount: 5,
+      groups: null,
       teams: [],
       prize: '',
       bracket: null,
@@ -227,7 +230,7 @@
     }
 
     const count = state.teamCount || 8;
-    const existingTeams = [...(state.teams || [])];
+    const existingTeams = [...(state.teams || [])].filter(t => t != null);
 
     state.bracket = buildBracketStructure(existingTeams, count);
     state.champion = null;
@@ -339,7 +342,13 @@
     success: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
     error: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
     info: '<svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-yellow, #ffcc00)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
-    clock: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+    clock: '<svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+    clipboard: '<svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
+    refresh: '<svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>',
+    swords: '<svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M14.5 6.5L18 3h3v3l-3.5 3.5"/><path d="M5 14l4 4"/><path d="M7 17l-3 3"/></svg>',
+    crown: '<svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-9-4 9-6-7z"/><path d="M5 16h14v4H5z"/></svg>',
+    check: '<svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    chevronRight: '<svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'
   };
 
 
@@ -508,6 +517,18 @@
     renderTournamentTitle();
     renderBracket();
     renderTop3();
+    if (state.groups) {
+      renderGroupsTab();
+      // Ensure groups tab button is visible and auto-select it
+      const groupsTabBtn = $('#groups-tab-btn');
+      if (groupsTabBtn) {
+        groupsTabBtn.style.display = '';
+        // Auto-switch to groups tab if bracket doesn't exist yet
+        if (!state.bracket || !state.bracket.rounds || state.bracket.rounds.length === 0) {
+          groupsTabBtn.click();
+        }
+      }
+    }
     if (admin) {
       populateClientSelect();
       renderCodesList();
@@ -682,6 +703,15 @@
 
     const twoLeggedCheck = $('#two-legged-tournament');
     if (twoLeggedCheck) twoLeggedCheck.checked = !!state.twoLegged;
+
+    const formatSelect = $('#tournament-format');
+    if (formatSelect) {
+      formatSelect.value = state.tournamentFormat || 'knockout';
+      toggleGroupsConfig();
+    }
+
+    const groupCountInput = $('#group-count');
+    if (groupCountInput) groupCountInput.value = String(state.groupCount || 5);
 
     updateTeamCountInfo();
   }
@@ -928,6 +958,7 @@
 
   /** Build a team slot data object from a team record */
   function makeTeamSlotData(t) {
+    if (!t) return { id: null, teamName: 'TBD', playerName: 'TBD', score: null };
     const slot = { id: t.id, teamName: t.teamName, playerName: t.playerName, score: null };
     if (t.photo) slot.photo = t.photo;
     // Do NOT copy isRepescagem / isThirdChance here.
@@ -1451,6 +1482,725 @@
     infoEl.style.color = 'var(--on-surface-variant)';
   }
 
+  /** Toggle group config visibility and update UI labels based on format selection */
+  function toggleGroupsConfig() {
+    const formatSelect = $('#tournament-format');
+    const groupsConfig = $('#groups-config');
+    const groupsTabBtn = $('#groups-tab-btn');
+    const bracketTabBtn = $('#bracket-tab-btn');
+    const shuffleLabel = $('#btn-shuffle-label');
+    const generateLabel = $('#btn-generate-label');
+    if (!formatSelect) return;
+    const isGroups = formatSelect.value === 'groups';
+    if (groupsConfig) groupsConfig.style.display = isGroups ? '' : 'none';
+    if (groupsTabBtn) groupsTabBtn.style.display = (isGroups && state.groups) ? '' : 'none';
+    if (bracketTabBtn) bracketTabBtn.textContent = isGroups ? 'Mata-Mata' : 'Chaveamento';
+    if (shuffleLabel) shuffleLabel.textContent = isGroups ? 'Embaralhar Grupos' : 'Embaralhar Chaveamento';
+    if (generateLabel) generateLabel.textContent = isGroups ? 'Gerar Fase de Grupos' : 'Gerar Chaveamento';
+  }
+
+  /* ==========================================================
+     11c. GROUP STAGE SYSTEM
+     ========================================================== */
+
+  /**
+   * Build group stage structure.
+   * Distributes teams across N groups in snake-draft order.
+   */
+  function buildGroupStage(teams, numGroups) {
+    const shuffled = shuffleArray([...teams]);
+    const groups = [];
+    for (let g = 0; g < numGroups; g++) {
+      groups.push({
+        id: `group-${g}`,
+        name: `Grupo ${String.fromCharCode(65 + g)}`,
+        teams: [],
+        matches: [],
+        standings: []
+      });
+    }
+    // Snake-draft distribution
+    shuffled.forEach((team, i) => {
+      const cycle = Math.floor(i / numGroups);
+      const pos = i % numGroups;
+      const gIdx = cycle % 2 === 0 ? pos : numGroups - 1 - pos;
+      groups[gIdx].teams.push({ ...team });
+    });
+    // Generate round-robin matches for each group
+    groups.forEach(group => {
+      group.matches = generateRoundRobin(group.teams);
+      group.standings = calcGroupStandings(group);
+    });
+    return groups;
+  }
+
+  /**
+   * Generate round-robin matches for a list of teams.
+   * If twoLegged is enabled, each match has ida/volta scores.
+   * Returns array of match objects.
+   */
+  function generateRoundRobin(teams) {
+    const matches = [];
+    const useTwoLegged = !!state.twoLegged;
+    for (let i = 0; i < teams.length; i++) {
+      for (let j = i + 1; j < teams.length; j++) {
+        const m = {
+          id: generateId(),
+          team1: { id: teams[i].id, teamName: teams[i].teamName, playerName: teams[i].playerName, photo: teams[i].photo || null, score: null },
+          team2: { id: teams[j].id, teamName: teams[j].teamName, playerName: teams[j].playerName, photo: teams[j].photo || null, score: null },
+          winner: null,
+          status: 'not_started',
+          penalties: null,
+          dateTime: null,
+          twoLegged: useTwoLegged
+        };
+        if (useTwoLegged) {
+          m.ida = { score1: null, score2: null };
+          m.volta = { score1: null, score2: null };
+        }
+        matches.push(m);
+      }
+    }
+    return matches;
+  }
+
+  /**
+   * Calculate standings for a group from its match results.
+   * Criteria: Points > Goal Diff > Goals Scored > Head-to-head
+   */
+  function calcGroupStandings(group) {
+    const stats = {};
+    group.teams.forEach(t => {
+      stats[t.id] = {
+        id: t.id, teamName: t.teamName, playerName: t.playerName, photo: t.photo || null,
+        played: 0, wins: 0, draws: 0, losses: 0,
+        goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0
+      };
+    });
+    group.matches.forEach(m => {
+      if (m.team1.score == null || m.team2.score == null) return;
+      const s1 = m.team1.score, s2 = m.team2.score;
+      const t1 = stats[m.team1.id], t2 = stats[m.team2.id];
+      if (!t1 || !t2) return;
+      t1.played++; t2.played++;
+      t1.goalsFor += s1; t1.goalsAgainst += s2;
+      t2.goalsFor += s2; t2.goalsAgainst += s1;
+      if (s1 > s2) { t1.wins++; t2.losses++; t1.points += 3; }
+      else if (s2 > s1) { t2.wins++; t1.losses++; t2.points += 3; }
+      else { t1.draws++; t2.draws++; t1.points += 1; t2.points += 1; }
+      t1.goalDiff = t1.goalsFor - t1.goalsAgainst;
+      t2.goalDiff = t2.goalsFor - t2.goalsAgainst;
+    });
+    const arr = Object.values(stats);
+    arr.sort((a, b) => {
+      if (a.points !== b.points) return b.points - a.points;
+      if (a.goalDiff !== b.goalDiff) return b.goalDiff - a.goalDiff;
+      if (a.goalsFor !== b.goalsFor) return b.goalsFor - a.goalsFor;
+      return 0;
+    });
+    return arr;
+  }
+
+  /**
+   * Recalculate all group standings from current match results.
+   */
+  function recalcAllGroupStandings() {
+    if (!state.groups) return;
+    state.groups.forEach(group => {
+      group.standings = calcGroupStandings(group);
+    });
+  }
+
+  /**
+   * Get classification result from group stage.
+   * Returns { directQualified, repechagePlayers, bestThird }
+   */
+  function getGroupClassification() {
+    if (!state.groups) return { directQualified: [], repechagePlayers: [], bestThird: null };
+
+    recalcAllGroupStandings();
+
+    const directQualified = [];
+    const secondPlaced = [];
+    const thirdPlaced = [];
+
+    state.groups.forEach(group => {
+      const s = group.standings;
+      if (s.length >= 1) directQualified.push({ ...s[0], groupName: group.name });
+      if (s.length >= 2) secondPlaced.push({ ...s[1], groupName: group.name });
+      if (s.length >= 3) thirdPlaced.push({ ...s[2], groupName: group.name });
+    });
+
+    // Rank 3rd-placed teams to find the best one
+    thirdPlaced.sort((a, b) => {
+      if (a.points !== b.points) return b.points - a.points;
+      if (a.goalDiff !== b.goalDiff) return b.goalDiff - a.goalDiff;
+      if (a.goalsFor !== b.goalsFor) return b.goalsFor - a.goalsFor;
+      return 0;
+    });
+
+    const bestThird = thirdPlaced.length > 0 ? thirdPlaced[0] : null;
+
+    // Repechage: all 2nd place + best 3rd
+    const repechagePlayers = [...secondPlaced];
+    if (bestThird) repechagePlayers.push(bestThird);
+
+    // Rank repechage players for seeding
+    repechagePlayers.sort((a, b) => {
+      if (a.points !== b.points) return b.points - a.points;
+      if (a.goalDiff !== b.goalDiff) return b.goalDiff - a.goalDiff;
+      if (a.goalsFor !== b.goalsFor) return b.goalsFor - a.goalsFor;
+      return 0;
+    });
+
+    return { directQualified, repechagePlayers, bestThird };
+  }
+
+  /**
+   * Check if all group stage matches are finished.
+   */
+  function areAllGroupMatchesFinished() {
+    if (!state.groups) return false;
+    return state.groups.every(g => g.matches.every(m => m.team1.score != null && m.team2.score != null));
+  }
+
+  /**
+   * Generate bracket from group stage results.
+   * 5 direct qualifiers + 3 repechage winners = 8 in quarterfinals.
+   * This creates a repechage mini-bracket, then the main bracket.
+   */
+  function generateBracketFromGroups() {
+    if (!areAllGroupMatchesFinished()) {
+      showToast('Todos os jogos dos grupos precisam ter resultado antes de gerar o mata-mata.', 'error');
+      return;
+    }
+
+    const { directQualified, repechagePlayers } = getGroupClassification();
+
+    // Build repechage bracket: 6 players → 3 matches → 3 winners
+    // Best 2nd vs Best 3rd, 2nd vs 5th, 3rd vs 4th (seeded)
+    const repechageMatches = [];
+    if (repechagePlayers.length >= 6) {
+      // 1st seed (best 2nd) vs 6th seed (best 3rd) 
+      repechageMatches.push({ a: repechagePlayers[0], b: repechagePlayers[5] });
+      // 2nd seed vs 5th seed
+      repechageMatches.push({ a: repechagePlayers[1], b: repechagePlayers[4] });
+      // 3rd seed vs 4th seed
+      repechageMatches.push({ a: repechagePlayers[2], b: repechagePlayers[3] });
+    } else {
+      // Fallback: pair them sequentially
+      for (let i = 0; i < repechagePlayers.length; i += 2) {
+        if (repechagePlayers[i + 1]) {
+          repechageMatches.push({ a: repechagePlayers[i], b: repechagePlayers[i + 1] });
+        } else {
+          directQualified.push(repechagePlayers[i]); // odd one out goes direct
+        }
+      }
+    }
+
+    // Store repechage matches in state
+    state.groupRepechage = repechageMatches.map(pair => ({
+      id: generateId(),
+      team1: { id: pair.a.id, teamName: pair.a.teamName, playerName: pair.a.playerName, photo: pair.a.photo || null, score: null },
+      team2: { id: pair.b.id, teamName: pair.b.teamName, playerName: pair.b.playerName, photo: pair.b.photo || null, score: null },
+      winner: null, status: 'not_started', penalties: null, dateTime: null
+    }));
+    state.groupDirectQualified = directQualified;
+
+    saveState();
+    renderGroupsTab();
+    showToast('Repescagem gerada! Insira os resultados das 3 partidas.', 'success');
+  }
+
+  /**
+   * Finalize repechage: collect winners + direct qualified → build knockout bracket.
+   */
+  function finalizeGroupRepechage() {
+    if (!state.groupRepechage) return;
+
+    const allDone = state.groupRepechage.every(m => m.winner);
+    if (!allDone) {
+      showToast('Todas as partidas da repescagem precisam ter resultado.', 'error');
+      return;
+    }
+
+    const qualified = [...(state.groupDirectQualified || [])];
+    state.groupRepechage.forEach(m => {
+      const winner = m.winner === 1 ? m.team1 : m.team2;
+      qualified.push(winner);
+    });
+
+    // Build main bracket with qualified teams (8 for quarterfinals)
+    state.teamCount = qualified.length;
+    const teamsForBracket = qualified.map(t => ({
+      id: t.id, teamName: t.teamName, playerName: t.playerName, photo: t.photo || null
+    }));
+    const shuffled = shuffleArray(teamsForBracket);
+    state.bracket = buildBracketStructure(shuffled, qualified.length);
+    state.champion = null;
+    saveState();
+
+    // Switch to bracket tab
+    const bracketTabBtn = document.querySelector('[data-tab="bracket-tab"]');
+    if (bracketTabBtn) bracketTabBtn.click();
+
+    renderBracket();
+    showToast(`Mata-mata gerado com ${qualified.length} classificados!`, 'success');
+  }
+
+  /**
+   * Open score modal for a group match.
+   * @param {number} groupIdx
+   * @param {number} matchIdx
+   * @param {string} leg - 'single', 'ida', or 'volta'
+   */
+  function openGroupScoreModal(groupIdx, matchIdx, leg) {
+    const group = state.groups[groupIdx];
+    if (!group) return;
+    const match = group.matches[matchIdx];
+    if (!match) return;
+
+    const modal = $('#group-score-modal');
+    if (!modal) return;
+
+    modal.dataset.groupIdx = groupIdx;
+    modal.dataset.matchIdx = matchIdx;
+    modal.dataset.leg = leg || 'single';
+
+    const t1Name = modal.querySelector('#gm-team1-name');
+    const t2Name = modal.querySelector('#gm-team2-name');
+    const s1Input = modal.querySelector('#gm-team1-score');
+    const s2Input = modal.querySelector('#gm-team2-score');
+    const titleEl = modal.querySelector('#gm-modal-title');
+
+    const name1 = match.team1.teamName || match.team1.playerName;
+    const name2 = match.team2.teamName || match.team2.playerName;
+    if (t1Name) t1Name.textContent = name1;
+    if (t2Name) t2Name.textContent = name2;
+
+    // Set title based on leg
+    if (titleEl) {
+      if (leg === 'ida') titleEl.textContent = 'Resultado - Ida';
+      else if (leg === 'volta') titleEl.textContent = 'Resultado - Volta';
+      else titleEl.textContent = 'Resultado do Jogo';
+    }
+
+    // Pre-fill scores based on leg
+    if (leg === 'ida' && match.ida) {
+      if (s1Input) s1Input.value = match.ida.score1 != null ? match.ida.score1 : '';
+      if (s2Input) s2Input.value = match.ida.score2 != null ? match.ida.score2 : '';
+    } else if (leg === 'volta' && match.volta) {
+      if (s1Input) s1Input.value = match.volta.score1 != null ? match.volta.score1 : '';
+      if (s2Input) s2Input.value = match.volta.score2 != null ? match.volta.score2 : '';
+    } else {
+      if (s1Input) s1Input.value = match.team1.score != null ? match.team1.score : '';
+      if (s2Input) s2Input.value = match.team2.score != null ? match.team2.score : '';
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  /**
+   * Confirm group match score.
+   * Handles single match and two-legged (ida/volta) modes.
+   */
+  function confirmGroupScore() {
+    const modal = $('#group-score-modal');
+    if (!modal) return;
+
+    const groupIdx = parseInt(modal.dataset.groupIdx, 10);
+    const matchIdx = parseInt(modal.dataset.matchIdx, 10);
+    const leg = modal.dataset.leg || 'single';
+    const group = state.groups[groupIdx];
+    if (!group) return;
+    const match = group.matches[matchIdx];
+    if (!match) return;
+
+    const s1 = parseInt(modal.querySelector('#gm-team1-score').value, 10);
+    const s2 = parseInt(modal.querySelector('#gm-team2-score').value, 10);
+
+    if (isNaN(s1) || isNaN(s2) || s1 < 0 || s2 < 0) {
+      showToast('Insira placares válidos.', 'error');
+      return;
+    }
+
+    if (match.twoLegged) {
+      // Two-legged mode
+      if (!match.ida) match.ida = { score1: null, score2: null };
+      if (!match.volta) match.volta = { score1: null, score2: null };
+
+      if (leg === 'ida') {
+        match.ida.score1 = s1;
+        match.ida.score2 = s2;
+      } else if (leg === 'volta') {
+        match.volta.score1 = s1;
+        match.volta.score2 = s2;
+      }
+
+      // Compute aggregate if both legs are done
+      const idaDone = match.ida.score1 !== null && match.ida.score2 !== null;
+      const voltaDone = match.volta.score1 !== null && match.volta.score2 !== null;
+
+      if (idaDone && voltaDone) {
+        const agg1 = match.ida.score1 + match.volta.score1;
+        const agg2 = match.ida.score2 + match.volta.score2;
+        match.team1.score = agg1;
+        match.team2.score = agg2;
+        if (agg1 > agg2) match.winner = 1;
+        else if (agg2 > agg1) match.winner = 2;
+        else match.winner = 0; // draw on aggregate
+        match.status = 'finished';
+      } else {
+        // Keep partial - don't finalize yet
+        match.status = 'in_progress';
+      }
+    } else {
+      // Single match mode
+      match.team1.score = s1;
+      match.team2.score = s2;
+      if (s1 > s2) match.winner = 1;
+      else if (s2 > s1) match.winner = 2;
+      else match.winner = 0;
+      match.status = 'finished';
+    }
+
+    group.standings = calcGroupStandings(group);
+    saveState();
+    modal.style.display = 'none';
+    renderGroupsTab();
+
+    // Re-open the group detail modal to show updated results
+    openGroupDetailModal(groupIdx);
+  }
+
+  /**
+   * Open score modal for a repechage match.
+   */
+  function openRepechageScoreModal(matchIdx) {
+    if (!state.groupRepechage) return;
+    const match = state.groupRepechage[matchIdx];
+    if (!match) return;
+
+    const modal = $('#group-score-modal');
+    if (!modal) return;
+
+    modal.dataset.groupIdx = '-1'; // special marker for repechage
+    modal.dataset.matchIdx = matchIdx;
+
+    const t1Name = modal.querySelector('#gm-team1-name');
+    const t2Name = modal.querySelector('#gm-team2-name');
+    const s1Input = modal.querySelector('#gm-team1-score');
+    const s2Input = modal.querySelector('#gm-team2-score');
+
+    if (t1Name) t1Name.textContent = match.team1.teamName || match.team1.playerName;
+    if (t2Name) t2Name.textContent = match.team2.teamName || match.team2.playerName;
+    if (s1Input) s1Input.value = match.team1.score != null ? match.team1.score : '';
+    if (s2Input) s2Input.value = match.team2.score != null ? match.team2.score : '';
+
+    modal.style.display = 'flex';
+  }
+
+  /**
+   * Confirm repechage match score.
+   */
+  function confirmRepechageScore() {
+    const modal = $('#group-score-modal');
+    if (!modal) return;
+
+    const matchIdx = parseInt(modal.dataset.matchIdx, 10);
+    if (!state.groupRepechage || !state.groupRepechage[matchIdx]) return;
+    const match = state.groupRepechage[matchIdx];
+
+    const s1 = parseInt(modal.querySelector('#gm-team1-score').value, 10);
+    const s2 = parseInt(modal.querySelector('#gm-team2-score').value, 10);
+
+    if (isNaN(s1) || isNaN(s2) || s1 < 0 || s2 < 0) {
+      showToast('Insira placares válidos.', 'error');
+      return;
+    }
+
+    if (s1 === s2) {
+      showToast('Empate não é permitido na repescagem. Defina um vencedor.', 'error');
+      return;
+    }
+
+    match.team1.score = s1;
+    match.team2.score = s2;
+    match.winner = s1 > s2 ? 1 : 2;
+    match.status = 'finished';
+
+    saveState();
+    modal.style.display = 'none';
+    renderGroupsTab();
+  }
+
+  /**
+   * Render the entire Groups tab content.
+   * Group cards show standings only. Click header/empty area → group detail modal.
+   * Click player row → player profile.
+   */
+  function renderGroupsTab() {
+    const container = $('#groups-container');
+    if (!container) return;
+    if (!state.groups || state.groups.length === 0) {
+      container.innerHTML = '<div class="empty-state"><p class="empty-title">Nenhuma fase de grupo gerada</p><p class="empty-subtitle">Gere o chaveamento para criar os grupos.</p></div>';
+      return;
+    }
+
+    recalcAllGroupStandings();
+    let html = '';
+
+    // Render each group card (compact - standings only)
+    state.groups.forEach((group, gIdx) => {
+      const totalMatches = group.matches.length;
+      const finishedMatches = group.matches.filter(m => m.team1.score != null).length;
+
+      html += `<div class="group-card" data-group-idx="${gIdx}">`;
+      html += `<div class="group-header clickable-area" data-action="open-group" data-gidx="${gIdx}">
+        <h3>${sanitize(group.name)}</h3>
+        <span class="group-progress">${finishedMatches}/${totalMatches} jogos</span>
+      </div>`;
+
+      // Standings table
+      html += `<div class="group-table-wrapper"><table class="group-table">
+        <thead><tr>
+          <th class="gt-pos">#</th>
+          <th class="gt-team">Jogador</th>
+          <th class="gt-stat">J</th>
+          <th class="gt-stat">V</th>
+          <th class="gt-stat">E</th>
+          <th class="gt-stat">D</th>
+          <th class="gt-stat">GP</th>
+          <th class="gt-stat">GC</th>
+          <th class="gt-stat">SG</th>
+          <th class="gt-stat gt-pts">PTS</th>
+        </tr></thead><tbody>`;
+
+      group.standings.forEach((s, pos) => {
+        let rowClass = '';
+        if (pos === 0) rowClass = 'group-qualified';
+        else if (pos === 1) rowClass = 'group-repechage';
+        else if (pos === 2) rowClass = 'group-third';
+
+        const ini = initials(s.playerName || s.teamName);
+        const avatar = s.photo
+          ? `<img src="${sanitize(s.photo)}" alt="" class="gt-avatar">`
+          : `<span class="gt-avatar-placeholder">${sanitize(ini)}</span>`;
+
+        html += `<tr class="${rowClass} gt-player-row" data-team-id="${sanitize(s.id)}" title="Ver perfil">
+          <td class="gt-pos">${pos + 1}º</td>
+          <td class="gt-team">${avatar} <span>${sanitize(s.teamName || s.playerName)}</span></td>
+          <td class="gt-stat">${s.played}</td>
+          <td class="gt-stat">${s.wins}</td>
+          <td class="gt-stat">${s.draws}</td>
+          <td class="gt-stat">${s.losses}</td>
+          <td class="gt-stat">${s.goalsFor}</td>
+          <td class="gt-stat">${s.goalsAgainst}</td>
+          <td class="gt-stat">${s.goalDiff > 0 ? '+' : ''}${s.goalDiff}</td>
+          <td class="gt-stat gt-pts">${s.points}</td>
+        </tr>`;
+      });
+
+      html += `</tbody></table></div>`;
+
+      // Clickable footer to view matches
+      html += `<div class="group-card-footer clickable-area" data-action="open-group" data-gidx="${gIdx}">
+        <span>${SVG.clipboard} Ver jogos do grupo</span>
+        <span class="arrow-icon">${SVG.chevronRight}</span>
+      </div>`;
+
+      html += `</div>`;
+    });
+
+    // Legend
+    html += `<div class="group-legend">
+      <span class="legend-item"><span class="legend-dot qualified"></span> 1º - Classificado direto</span>
+      <span class="legend-item"><span class="legend-dot repechage"></span> 2º - Repescagem</span>
+      <span class="legend-item"><span class="legend-dot third"></span> 3º - Melhor 3º</span>
+    </div>`;
+
+    // "Generate Repechage" button (admin only, when all matches done)
+    if (isAdmin && areAllGroupMatchesFinished() && !state.groupRepechage) {
+      html += `<div class="group-actions">
+        <button type="button" class="btn btn-primary btn-block" id="btn-generate-repechage">${SVG.swords} Gerar Repescagem dos Grupos</button>
+      </div>`;
+    }
+
+    // Repechage section
+    if (state.groupRepechage) {
+      html += `<div class="repechage-section">
+        <h3 class="repechage-title">${SVG.refresh} Repescagem</h3>
+        <div class="repechage-matches">`;
+
+      state.groupRepechage.forEach((m, mIdx) => {
+        const t1 = m.team1.teamName || m.team1.playerName;
+        const t2 = m.team2.teamName || m.team2.playerName;
+        const s1 = m.team1.score != null ? m.team1.score : '-';
+        const s2 = m.team2.score != null ? m.team2.score : '-';
+        const finished = m.winner;
+        html += `<div class="group-match repechage-match ${finished ? 'gm-finished' : ''}" data-repechage="${mIdx}">
+          <span class="gm-team gm-team1 ${m.winner === 1 ? 'gm-winner' : ''}">${sanitize(t1)}</span>
+          <span class="gm-score">${s1} × ${s2}</span>
+          <span class="gm-team gm-team2 ${m.winner === 2 ? 'gm-winner' : ''}">${sanitize(t2)}</span>
+          ${isAdmin && !finished ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" onclick="window._openRepechageScore(${mIdx})">${SVG.pencil}</button>` : ''}
+        </div>`;
+      });
+
+      html += `</div>`;
+
+      // Direct qualified list
+      if (state.groupDirectQualified && state.groupDirectQualified.length > 0) {
+        html += `<div class="direct-qualified-list"><h4>${SVG.checkCircle} Classificados Diretos (1º de cada grupo)</h4><div class="qualified-chips">`;
+        state.groupDirectQualified.forEach(t => {
+          html += `<span class="qualified-chip">${sanitize(t.teamName || t.playerName)} <small>(${sanitize(t.groupName || '')})</small></span>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // "Generate Bracket" button
+      const allRepDone = state.groupRepechage.every(m => m.winner);
+      if (isAdmin && allRepDone) {
+        html += `<div class="group-actions">
+          <button type="button" class="btn btn-primary btn-block" id="btn-finalize-groups">${SVG.crown} Gerar Mata-Mata com Classificados</button>
+        </div>`;
+      }
+
+      html += `</div>`;
+    }
+
+    container.innerHTML = html;
+
+    // Bind buttons
+    const btnRep = container.querySelector('#btn-generate-repechage');
+    if (btnRep) btnRep.addEventListener('click', generateBracketFromGroups);
+
+    const btnFinal = container.querySelector('#btn-finalize-groups');
+    if (btnFinal) btnFinal.addEventListener('click', finalizeGroupRepechage);
+
+    // Bind clickable areas → open group detail modal
+    container.querySelectorAll('[data-action="open-group"]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const gIdx = parseInt(el.dataset.gidx, 10);
+        openGroupDetailModal(gIdx);
+      });
+    });
+
+    // Bind player rows → open player profile
+    container.querySelectorAll('.gt-player-row').forEach(row => {
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const teamId = row.dataset.teamId;
+        if (teamId) openPlayerProfile(teamId);
+      });
+    });
+  }
+
+  /**
+   * Open the group detail modal showing all matches for a specific group.
+   * Admin can edit scores; visitor sees results read-only.
+   */
+  function openGroupDetailModal(gIdx) {
+    const group = state.groups[gIdx];
+    if (!group) return;
+
+    let modal = $('#group-detail-modal');
+    if (!modal) return;
+
+    recalcAllGroupStandings();
+
+    let html = `<div class="gd-header">
+      <h2>${sanitize(group.name)}</h2>
+      <button type="button" class="gd-close-btn" id="gd-close-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>`;
+
+    // Matches list
+    html += `<div class="gd-matches-list">`;
+    group.matches.forEach((m, mIdx) => {
+      const t1 = m.team1.teamName || m.team1.playerName;
+      const t2 = m.team2.teamName || m.team2.playerName;
+      const isTwoLeg = !!m.twoLegged;
+      const finished = m.team1.score != null;
+
+      html += `<div class="gd-match-card ${finished ? 'gd-finished' : ''}">`;
+      html += `<div class="gd-match-teams">
+        <span class="gd-team gd-team1 ${m.winner === 1 ? 'gd-winner' : ''}">${sanitize(t1)}</span>
+        <span class="gd-vs">VS</span>
+        <span class="gd-team gd-team2 ${m.winner === 2 ? 'gd-winner' : ''}">${sanitize(t2)}</span>
+      </div>`;
+
+      if (isTwoLeg) {
+        const ida = m.ida || { score1: null, score2: null };
+        const volta = m.volta || { score1: null, score2: null };
+        const idaFinished = ida.score1 != null;
+        const voltaFinished = volta.score1 != null;
+
+        html += `<div class="gd-legs">`;
+        // Ida
+        html += `<div class="gd-leg">
+          <span class="gd-leg-label">Ida</span>
+          <span class="gd-leg-score">${idaFinished ? `${ida.score1} × ${ida.score2}` : '- × -'}</span>
+          ${isAdmin ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" data-leg="ida" data-gidx="${gIdx}" data-midx="${mIdx}">${SVG.pencil}</button>` : ''}
+        </div>`;
+        // Volta
+        html += `<div class="gd-leg">
+          <span class="gd-leg-label">Volta</span>
+          <span class="gd-leg-score">${voltaFinished ? `${volta.score1} × ${volta.score2}` : '- × -'}</span>
+          ${isAdmin ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" data-leg="volta" data-gidx="${gIdx}" data-midx="${mIdx}">${SVG.pencil}</button>` : ''}
+        </div>`;
+        // Aggregate
+        if (idaFinished && voltaFinished) {
+          const agg1 = ida.score1 + volta.score1;
+          const agg2 = ida.score2 + volta.score2;
+          html += `<div class="gd-aggregate">
+            <span class="gd-leg-label">Agregado</span>
+            <span class="gd-agg-score">${agg1} × ${agg2}</span>
+          </div>`;
+        }
+        html += `</div>`;
+      } else {
+        // Single match
+        const s1 = m.team1.score != null ? m.team1.score : '-';
+        const s2 = m.team2.score != null ? m.team2.score : '-';
+        html += `<div class="gd-single-score">
+          <span class="gd-score-display">${s1} × ${s2}</span>
+          ${isAdmin ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" data-leg="single" data-gidx="${gIdx}" data-midx="${mIdx}">${SVG.pencil}</button>` : ''}
+        </div>`;
+      }
+
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    const content = modal.querySelector('.gd-content');
+    if (content) content.innerHTML = html;
+
+    modal.style.display = 'flex';
+
+    // Bind close
+    const closeBtn = modal.querySelector('#gd-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+
+    // Bind edit buttons
+    modal.querySelectorAll('.gm-edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const leg = btn.dataset.leg;
+        const gi = parseInt(btn.dataset.gidx, 10);
+        const mi = parseInt(btn.dataset.midx, 10);
+        openGroupScoreModal(gi, mi, leg);
+      });
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    }, { once: true });
+  }
+
+  // Global handlers for inline onclick
+  window._openGroupScore = function(gIdx, mIdx) { openGroupScoreModal(gIdx, mIdx, 'single'); };
+  window._openRepechageScore = function(mIdx) { openRepechageScoreModal(mIdx); };
+
   /** Generate bracket from registered teams */
   function handleGenerate() {
     // Sync team count from input
@@ -1467,13 +2217,47 @@
     }
 
     state.teamCount = requiredCount;
-
-    // Sync tournament name
     syncTournamentName();
 
-    // Shuffle already registered teams
+    // Check tournament format
+    const formatSelect = $('#tournament-format');
+    state.tournamentFormat = formatSelect ? formatSelect.value : 'knockout';
+
+    if (state.tournamentFormat === 'groups') {
+      const gcInput = $('#group-count');
+      const numGroups = parseInt(gcInput ? gcInput.value : state.groupCount, 10) || 5;
+      state.groupCount = numGroups;
+
+      if (state.teams.length < numGroups * 2) {
+        showToast(`Precisa de pelo menos ${numGroups * 2} times para ${numGroups} grupos.`, 'error');
+        return;
+      }
+
+      state.groups = buildGroupStage(state.teams, numGroups);
+      state.groupRepechage = null;
+      state.groupDirectQualified = null;
+      state.bracket = null;
+      state.champion = null;
+      saveState();
+
+      // Update UI labels and show groups tab
+      toggleGroupsConfig();
+      const groupsTabBtn = $('#groups-tab-btn');
+      if (groupsTabBtn) {
+        groupsTabBtn.style.display = '';
+        groupsTabBtn.click();
+      }
+      renderGroupsTab();
+      showToast(`Fase de grupos gerada! ${numGroups} grupos criados.`, 'success');
+      return;
+    }
+
+    // Standard knockout
     const shuffled = shuffleArray([...state.teams]);
 
+    state.groups = null;
+    state.groupRepechage = null;
+    state.groupDirectQualified = null;
     state.bracket = buildBracketStructure(shuffled, requiredCount);
     state.champion = null;
     saveState();
@@ -4674,6 +5458,32 @@
     if (!team) return;
 
     const stats = (state.playerStats && state.playerStats[teamId]) || {};
+
+    // Compute live group stage stats for this player
+    let groupGoals = 0, groupGoalsTaken = 0, groupMatches = 0, groupWins = 0, groupDraws = 0, groupLosses = 0;
+    if (state.groups) {
+      state.groups.forEach(group => {
+        group.matches.forEach(m => {
+          if (m.team1.score == null || m.team2.score == null) return;
+          if (m.team1.id === teamId) {
+            groupMatches++;
+            groupGoals += m.team1.score;
+            groupGoalsTaken += m.team2.score;
+            if (m.team1.score > m.team2.score) groupWins++;
+            else if (m.team1.score < m.team2.score) groupLosses++;
+            else groupDraws++;
+          } else if (m.team2.id === teamId) {
+            groupMatches++;
+            groupGoals += m.team2.score;
+            groupGoalsTaken += m.team1.score;
+            if (m.team2.score > m.team1.score) groupWins++;
+            else if (m.team2.score < m.team1.score) groupLosses++;
+            else groupDraws++;
+          }
+        });
+      });
+    }
+
     const modal = $('#player-profile-modal');
     if (!modal) return;
 
@@ -4707,7 +5517,11 @@
       }
     }
 
-    // Stats
+    // Stats — combine saved stats with live group data
+    const totalGoals = (stats.goals || 0) + groupGoals;
+    const totalGoalsTaken = (stats.goalsTaken || 0) + groupGoalsTaken;
+    const totalGoalDiff = totalGoals - totalGoalsTaken;
+
     const trEl = $('#profile-trophies');
     const fiEl = $('#profile-finals');
     const sfEl = $('#profile-semifinals');
@@ -4718,9 +5532,33 @@
     if (trEl) trEl.textContent = stats.trophies || 0;
     if (fiEl) fiEl.textContent = stats.finals || 0;
     if (sfEl) sfEl.textContent = stats.semifinals || 0;
-    if (glEl) glEl.textContent = stats.goals || 0;
-    if (gTakenEl) gTakenEl.textContent = stats.goalsTaken || 0;
-    if (gDiffEl) gDiffEl.textContent = stats.goalDiff || 0;
+    if (glEl) glEl.textContent = totalGoals;
+    if (gTakenEl) gTakenEl.textContent = totalGoalsTaken;
+    if (gDiffEl) gDiffEl.textContent = totalGoalDiff;
+
+    // Group stage section
+    let groupSection = modal.querySelector('.profile-group-stats');
+    if (groupMatches > 0) {
+      if (!groupSection) {
+        groupSection = document.createElement('div');
+        groupSection.className = 'profile-group-stats';
+        const statsGrid = modal.querySelector('.profile-stats');
+        if (statsGrid) statsGrid.parentNode.insertBefore(groupSection, statsGrid.nextSibling);
+      }
+      groupSection.innerHTML = `
+        <h4 class="profile-section-title">Fase de Grupos</h4>
+        <div class="profile-group-grid">
+          <div class="pg-stat"><span class="pg-value">${groupMatches}</span><span class="pg-label">Jogos</span></div>
+          <div class="pg-stat"><span class="pg-value">${groupWins}</span><span class="pg-label">Vitórias</span></div>
+          <div class="pg-stat"><span class="pg-value">${groupDraws}</span><span class="pg-label">Empates</span></div>
+          <div class="pg-stat"><span class="pg-value">${groupLosses}</span><span class="pg-label">Derrotas</span></div>
+          <div class="pg-stat"><span class="pg-value">${groupGoals}</span><span class="pg-label">Gols</span></div>
+          <div class="pg-stat"><span class="pg-value">${groupGoalsTaken}</span><span class="pg-label">Sofridos</span></div>
+        </div>`;
+      groupSection.style.display = '';
+    } else if (groupSection) {
+      groupSection.style.display = 'none';
+    }
 
     modal.style.display = 'flex';
   }
@@ -5544,6 +6382,59 @@
       return;
     }
 
+    // Sync format from selector
+    const formatSelect = $('#tournament-format');
+    const currentFormat = formatSelect ? formatSelect.value : (state.tournamentFormat || 'knockout');
+    state.tournamentFormat = currentFormat;
+
+    // --- GROUP FORMAT ---
+    if (currentFormat === 'groups') {
+      // Sync team count
+      const countInput = $('#team-count');
+      const requiredCount = parseInt(countInput ? countInput.value : state.teamCount, 10);
+      if (isNaN(requiredCount) || requiredCount < 2) {
+        showToast('Quantidade inválida. Mínimo de 2 participantes.', 'error');
+        return;
+      }
+      state.teamCount = requiredCount;
+      syncTournamentName();
+
+      const gcInput = $('#group-count');
+      const numGroups = parseInt(gcInput ? gcInput.value : state.groupCount, 10) || 5;
+      state.groupCount = numGroups;
+
+      if (state.teams.length < numGroups * 2) {
+        showToast(`Precisa de pelo menos ${numGroups * 2} times para ${numGroups} grupos.`, 'error');
+        return;
+      }
+
+      // If groups already exist, ask confirmation to reshuffle
+      if (state.groups && state.groups.length > 0) {
+        if (!confirm('Isso irá redistribuir os jogadores nos grupos e resetar todos os resultados. Deseja continuar?')) {
+          return;
+        }
+      }
+
+      state.groups = buildGroupStage(state.teams, numGroups);
+      state.groupRepechage = null;
+      state.groupDirectQualified = null;
+      state.bracket = null;
+      state.champion = null;
+      saveState();
+
+      // Update UI and switch to groups tab
+      toggleGroupsConfig();
+      const groupsTabBtn = $('#groups-tab-btn');
+      if (groupsTabBtn) {
+        groupsTabBtn.style.display = '';
+        groupsTabBtn.click();
+      }
+      renderGroupsTab();
+      showToast(state.groups ? 'Grupos embaralhados!' : 'Fase de grupos gerada!', 'success');
+      return;
+    }
+
+    // --- KNOCKOUT FORMAT ---
     if (state.bracket && state.bracket.rounds && state.bracket.rounds.length > 0) {
       if (!confirm('Este processo irá resetar partidas em andamento e recriar o chaveamento. Deseja continuar?')) {
         return;
@@ -5585,10 +6476,16 @@
       shuffled = shuffleArray([...state.teams]);
     }
 
+    // Clear any group data when using knockout
+    state.groups = null;
+    state.groupRepechage = null;
+    state.groupDirectQualified = null;
+
     state.bracket = buildBracketStructure(shuffled, requiredCount);
     state.champion = null;
 
     saveState();
+    toggleGroupsConfig();
     renderBracket();
     updateTeamCountInfo();
     showToast('Chaveamento embaralhado!', 'success');
@@ -5854,6 +6751,24 @@
       btnConfirm.addEventListener('click', handleConfirmScore);
     }
 
+    // Group score modal
+    const gmBtnConfirm = $('#gm-btn-confirm');
+    if (gmBtnConfirm) {
+      gmBtnConfirm.addEventListener('click', () => {
+        const modal = $('#group-score-modal');
+        const gIdx = parseInt(modal.dataset.groupIdx, 10);
+        if (gIdx === -1) confirmRepechageScore();
+        else confirmGroupScore();
+      });
+    }
+    const gmBtnCancel = $('#gm-btn-cancel');
+    if (gmBtnCancel) {
+      gmBtnCancel.addEventListener('click', () => {
+        const modal = $('#group-score-modal');
+        if (modal) modal.style.display = 'none';
+      });
+    }
+
     // Score modal: cancel
     const btnCancel = $('#btn-cancel-modal');
     if (btnCancel) {
@@ -6022,6 +6937,8 @@
           renderHistory();
         } else if (targetId === 'bracket-tab') {
           renderBracket();
+        } else if (targetId === 'groups-tab') {
+          renderGroupsTab();
           // Trigger scroll hint no chaveamento
           const bracketWrap = $('#bracket-container');
           const hintWrap = target.querySelector('.scroll-hint-wrapper');
@@ -6182,6 +7099,26 @@
         saveState();
         showToast(`Sistema de ida/volta ${state.twoLegged ? 'ativado' : 'desativado'}`, 'info');
         renderBracket();
+      });
+    }
+
+    const formatSelect = $('#tournament-format');
+    if (formatSelect) {
+      formatSelect.addEventListener('change', () => {
+        state.tournamentFormat = formatSelect.value;
+        toggleGroupsConfig();
+        saveState();
+      });
+    }
+
+    const groupCountInput = $('#group-count');
+    if (groupCountInput) {
+      groupCountInput.addEventListener('input', () => {
+        const v = parseInt(groupCountInput.value, 10);
+        if (!isNaN(v) && v >= 2 && v <= 16) {
+          state.groupCount = v;
+          saveState();
+        }
       });
     }
 

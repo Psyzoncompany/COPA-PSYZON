@@ -489,6 +489,22 @@
               <span id="team-count-info" class="team-count-info"></span>
             </div>
           </div>
+          <div class="form-group">
+            <label for="tournament-format">Formato do Torneio</label>
+            <select id="tournament-format">
+              <option value="knockout">Mata-Mata (Eliminatória)</option>
+              <option value="groups">Fase de Grupos + Mata-Mata</option>
+            </select>
+          </div>
+          <div id="groups-config" style="display:none; margin-top: 8px;">
+            <div class="form-group">
+              <label for="group-count">Número de Grupos</label>
+              <input type="number" id="group-count" min="2" max="16" value="5" placeholder="Ex: 5">
+            </div>
+            <p style="font-size: 11px; color: var(--text-tertiary); line-height: 1.4; margin-top: 4px;">
+              1º de cada grupo classifica direto. 2º vai à repescagem + melhor 3º colocado.
+            </p>
+          </div>
           <div class="form-group" style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
             <input type="checkbox" id="two-legged-tournament" style="width: 18px; height: 18px; cursor: pointer;">
             <label for="two-legged-tournament"
@@ -689,7 +705,7 @@
             <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
-            </svg> Embaralhar Chaveamento
+            </svg> <span id="btn-shuffle-label">Embaralhar Chaveamento</span>
           </button>
           <button type="button" id="btn-generate" class="btn btn-primary btn-block" style="display:none;">
             <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -699,7 +715,7 @@
               <path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2" />
               <path d="M20 18h-3.9c-1.3 0-2.5-.6-3.3-1.7l-.5-.8" />
               <path d="m18 14 4 4-4 4" />
-            </svg> Gerar Chaveamento
+            </svg> <span id="btn-generate-label">Gerar Chaveamento</span>
           </button>
           <button type="button" id="btn-finish-tournament" class="btn btn-success btn-block" style="display:none;"
             title="Salva os dados no modo Histórico e limpa para um torneio novo">
@@ -766,12 +782,18 @@
 
         <!-- Main Tabs -->
         <div id="main-tabs" class="tabs-container" style="display:none;">
-          <button type="button" class="tab-btn active" data-tab="bracket-tab">Chaveamento</button>
+          <button type="button" class="tab-btn" data-tab="groups-tab" id="groups-tab-btn" style="display:none;">Fase de Grupos</button>
+          <button type="button" class="tab-btn active" data-tab="bracket-tab" id="bracket-tab-btn">Chaveamento</button>
           <button type="button" class="tab-btn" data-tab="ranking-tab">Tabela de Ranking</button>
           <button type="button" class="tab-btn" data-tab="history-tab">Histórico</button>
         </div>
 
         <!-- Tab Contents -->
+        <div id="groups-tab" class="tab-content" style="display:none;">
+          <div id="groups-container" class="groups-container"></div>
+          <div id="groups-classification" class="groups-classification" style="display:none;"></div>
+        </div>
+
         <div id="bracket-tab" class="tab-content active">
 
           <!-- Display Mode Selector (Added) -->
@@ -1017,6 +1039,41 @@
       </div>
       <div class="modal-actions" style="justify-content:center;">
         <button type="button" id="btn-close-profile" class="btn btn-outline btn-sm">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       3a. GROUP DETAIL MODAL
+       ============================================ -->
+  <div id="group-detail-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card gd-modal-card">
+      <div class="gd-content"></div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       3b. GROUP SCORE MODAL
+       ============================================ -->
+  <div id="group-score-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card" style="max-width: 400px;">
+      <h3 id="gm-modal-title" style="text-align:center; margin-bottom: 16px; color: var(--on-surface);">Resultado do Jogo</h3>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
+        <div style="display:flex; align-items:center; gap: 16px; width:100%; justify-content:center;">
+          <div style="text-align:center; flex:1;">
+            <div id="gm-team1-name" style="font-weight:700; color:var(--on-surface); margin-bottom:8px;">Time A</div>
+            <input type="number" id="gm-team1-score" class="score-input" min="0" value="0" placeholder="0" style="width:64px; text-align:center;">
+          </div>
+          <span style="font-size:20px; font-weight:800; color:var(--on-surface-variant);">×</span>
+          <div style="text-align:center; flex:1;">
+            <div id="gm-team2-name" style="font-weight:700; color:var(--on-surface); margin-bottom:8px;">Time B</div>
+            <input type="number" id="gm-team2-score" class="score-input" min="0" value="0" placeholder="0" style="width:64px; text-align:center;">
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button type="button" id="gm-btn-confirm" class="btn btn-primary btn-sm">Confirmar</button>
+          <button type="button" id="gm-btn-cancel" class="btn btn-outline btn-sm">Cancelar</button>
+        </div>
       </div>
     </div>
   </div>
