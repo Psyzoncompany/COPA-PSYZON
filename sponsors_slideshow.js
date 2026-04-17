@@ -178,7 +178,8 @@ const sponsorsConfig = [
     images: [
       'SLIDES/Ledulcis/foto1.jpeg',
       'SLIDES/Ledulcis/foto2.png',
-      'SLIDES/Ledulcis/foto3.png'
+      'SLIDES/Ledulcis/foto3.png',
+      'SLIDES/Ledulcis/foto4.png'
     ],
     linkFile: 'SLIDES/Ledulcis/Link.txt'
   },
@@ -209,8 +210,55 @@ const sponsorsConfig = [
     name: 'Rogério Relógio',
     logo: 'PATROCINADORES/banner%20rogerio%20relogio.png',
     images: [
-      {type: 'video', src: 'SLIDES/Rogerio-Relogio/video1.mp4'}
+      {type: 'video', src: 'SLIDES/Rogerio-Relogio/video1.mp4'},
+      'SLIDES/Rogerio-Relogio/WhatsApp%20Image%202026-04-03%20at%2017.05.34.jpeg'
     ],
+    linkFile: null
+  },
+  {
+    id: 'bf-distribuidora',
+    name: 'BF Distribuidora',
+    logo: 'PATROCINADORES/BF%20DISTRIBUIDORA.png',
+    images: [
+      'SLIDES/BF-DISTRIBUIDORA/FOTO1.png',
+      'SLIDES/BF-DISTRIBUIDORA/FOTO2.png',
+      'SLIDES/BF-DISTRIBUIDORA/FOTO3.png'
+    ],
+    linkFile: null
+  },
+  {
+    id: 'ws-bar',
+    name: 'WS Bar',
+    logo: 'PATROCINADORES/WS%20BAR.png',
+    images: [],
+    linkFile: null
+  },
+  {
+    id: 'henry-iphones',
+    name: 'Henry iPhones',
+    logo: 'PATROCINADORES/henry%20iphones.png',
+    images: [],
+    linkFile: null
+  },
+  {
+    id: 'maiqvox',
+    name: 'Maiqvox',
+    logo: 'PATROCINADORES/maiqvox.png',
+    images: [],
+    linkFile: null
+  },
+  {
+    id: 'super-esquinao',
+    name: 'Super Esquinão',
+    logo: 'PATROCINADORES/SUPER%20ESQUIN%C3%83O.png',
+    images: [],
+    linkFile: null
+  },
+  {
+    id: 'ancore',
+    name: 'Ancore Seguradora',
+    logo: 'PATROCINADORES/ANCORE.png',
+    images: [],
     linkFile: null
   }
 ];
