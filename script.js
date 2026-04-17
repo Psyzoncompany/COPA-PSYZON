@@ -927,53 +927,121 @@ Descumprimento: desclassificação imediata.`;
 
   function formatRulesHtml(text, searchTerm) {
     const lines = text.split('\n');
-    let html = '';
     const escaped = searchTerm ? searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
     const regex = escaped ? new RegExp(escaped, 'gi') : null;
     let matchCount = 0;
     let currentSection = '';
 
+    // First pass: group lines into sections
+    const sections = [];
+    let currentSec = null;
+
     lines.forEach(line => {
       const trimmed = line.trim();
-      if (!trimmed) { html += '<div class="rules-spacer"></div>'; return; }
+      const isMainHeader = trimmed && /^\d+\.\s/.test(trimmed) && !/^\d+\.\d+/.test(trimmed);
 
-      let content = sanitize(trimmed);
-
-      // Track current section for context
-      const isMainHeader = /^\d+\.\s/.test(trimmed) && !/^\d+\.\d+/.test(trimmed);
-      const isSubHeader = /^\d+\.\d+\s/.test(trimmed);
-      if (isMainHeader) currentSection = trimmed;
-
-      // Search matching
-      let lineMatches = false;
-      if (regex) {
-        lineMatches = regex.test(trimmed);
-        regex.lastIndex = 0;
-        if (lineMatches) {
-          // Count individual matches in this line
-          let m;
-          const countRegex = new RegExp(escaped, 'gi');
-          while ((m = countRegex.exec(trimmed)) !== null) matchCount++;
-          // Wrap each match with a data-match-idx for navigation
-          let idx = matchCount - (trimmed.match(new RegExp(escaped, 'gi')) || []).length;
-          content = content.replace(new RegExp('(' + escaped + ')', 'gi'), (match) => {
-            idx++;
-            return `<mark class="rules-highlight" data-match-idx="${idx}" data-section="${sanitize(currentSection)}">${match}</mark>`;
-          });
-        }
-      }
-
-      // Build element with classes
-      const dimClass = regex && !lineMatches ? 'rules-dimmed' : '';
-      const matchClass = regex && lineMatches ? 'rules-match-line' : '';
-
-      if (isMainHeader || isSubHeader) {
-        const hClass = isMainHeader ? 'rules-heading-main' : 'rules-heading-sub';
-        html += `<div class="${hClass} ${dimClass} ${matchClass}">${content}</div>`;
-      } else if (trimmed.startsWith('\u2022')) {
-        html += `<div class="rules-bullet ${dimClass} ${matchClass}">${content}</div>`;
+      if (isMainHeader) {
+        if (currentSec) sections.push(currentSec);
+        currentSec = { header: trimmed, lines: [] };
       } else {
-        html += `<div class="rules-line ${dimClass} ${matchClass}">${content}</div>`;
+        if (!currentSec) currentSec = { header: '', lines: [] };
+        currentSec.lines.push(trimmed);
+      }
+    });
+    if (currentSec) sections.push(currentSec);
+
+    // Second pass: build HTML with collapsible sections
+    let html = '';
+    sections.forEach((sec, secIdx) => {
+      const sectionLines = [];
+      let sectionHasMatch = false;
+
+      // Process header
+      if (sec.header) {
+        currentSection = sec.header;
+        let headerContent = sanitize(sec.header);
+        if (regex) {
+          const hm = regex.test(sec.header);
+          regex.lastIndex = 0;
+          if (hm) {
+            sectionHasMatch = true;
+            let m;
+            const countRegex = new RegExp(escaped, 'gi');
+            while ((m = countRegex.exec(sec.header)) !== null) matchCount++;
+            let idx = matchCount - (sec.header.match(new RegExp(escaped, 'gi')) || []).length;
+            headerContent = headerContent.replace(new RegExp('(' + escaped + ')', 'gi'), (match) => {
+              idx++;
+              return `<mark class="rules-highlight" data-match-idx="${idx}" data-section="${sanitize(currentSection)}">${match}</mark>`;
+            });
+          }
+        }
+
+        // Process body lines
+        sec.lines.forEach(trimmed => {
+          if (!trimmed) { sectionLines.push('<div class="rules-spacer"></div>'); return; }
+          let content = sanitize(trimmed);
+          const isSubHeader = /^\d+\.\d+\s/.test(trimmed);
+          let lineMatches = false;
+
+          if (regex) {
+            lineMatches = regex.test(trimmed);
+            regex.lastIndex = 0;
+            if (lineMatches) {
+              sectionHasMatch = true;
+              let m;
+              const countRegex = new RegExp(escaped, 'gi');
+              while ((m = countRegex.exec(trimmed)) !== null) matchCount++;
+              let idx = matchCount - (trimmed.match(new RegExp(escaped, 'gi')) || []).length;
+              content = content.replace(new RegExp('(' + escaped + ')', 'gi'), (match) => {
+                idx++;
+                return `<mark class="rules-highlight" data-match-idx="${idx}" data-section="${sanitize(currentSection)}">${match}</mark>`;
+              });
+            }
+          }
+
+          const matchClass = lineMatches ? 'rules-match-line' : '';
+          if (isSubHeader) {
+            sectionLines.push(`<div class="rules-heading-sub ${matchClass}">${content}</div>`);
+          } else if (trimmed.startsWith('\u2022')) {
+            sectionLines.push(`<div class="rules-bullet ${matchClass}">${content}</div>`);
+          } else {
+            sectionLines.push(`<div class="rules-line ${matchClass}">${content}</div>`);
+          }
+        });
+
+        const isOpen = searchTerm ? sectionHasMatch : false;
+        const matchBadge = searchTerm && sectionHasMatch ? `<span class="rules-section-match-badge">contém resultado</span>` : '';
+        html += `<div class="rules-section${isOpen ? ' rules-section-open' : ''}" data-sec-idx="${secIdx}">
+          <div class="rules-section-header" onclick="this.parentElement.classList.toggle('rules-section-open')">
+            <svg class="rules-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <span class="rules-heading-main">${headerContent}</span>
+            ${matchBadge}
+          </div>
+          <div class="rules-section-body">${sectionLines.join('')}</div>
+        </div>`;
+      } else {
+        // Lines before first section (no header)
+        sec.lines.forEach(trimmed => {
+          if (!trimmed) { html += '<div class="rules-spacer"></div>'; return; }
+          let content = sanitize(trimmed);
+          let lineMatches = false;
+          if (regex) {
+            lineMatches = regex.test(trimmed);
+            regex.lastIndex = 0;
+            if (lineMatches) {
+              let m;
+              const countRegex = new RegExp(escaped, 'gi');
+              while ((m = countRegex.exec(trimmed)) !== null) matchCount++;
+              let idx = matchCount - (trimmed.match(new RegExp(escaped, 'gi')) || []).length;
+              content = content.replace(new RegExp('(' + escaped + ')', 'gi'), (match) => {
+                idx++;
+                return `<mark class="rules-highlight" data-match-idx="${idx}" data-section="">${match}</mark>`;
+              });
+            }
+          }
+          const matchClass = lineMatches ? 'rules-match-line' : '';
+          html += `<div class="rules-line ${matchClass}">${content}</div>`;
+        });
       }
     });
 
@@ -1208,6 +1276,11 @@ Descumprimento: desclassificação imediata.`;
     // Activate current
     const target = display.querySelector(`[data-match-idx="${idx}"]`);
     if (target) {
+      // Auto-open parent section if collapsed
+      const parentSection = target.closest('.rules-section');
+      if (parentSection && !parentSection.classList.contains('rules-section-open')) {
+        parentSection.classList.add('rules-section-open');
+      }
       target.classList.add('rules-highlight-active');
       // Scroll into view
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1226,6 +1299,19 @@ Descumprimento: desclassificação imediata.`;
     if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
     const backdrop = modal.querySelector('.modal-backdrop');
     if (backdrop) backdrop.addEventListener('click', () => { modal.style.display = 'none'; });
+
+    // Toggle all sections
+    const toggleAllBtn = modal.querySelector('#rules-toggle-all');
+    if (toggleAllBtn) toggleAllBtn.addEventListener('click', () => {
+      const display = modal.querySelector('#rules-content-display');
+      if (!display) return;
+      const allSections = display.querySelectorAll('.rules-section');
+      const allOpen = [...allSections].every(s => s.classList.contains('rules-section-open'));
+      allSections.forEach(s => {
+        if (allOpen) s.classList.remove('rules-section-open');
+        else s.classList.add('rules-section-open');
+      });
+    });
 
     // Search
     const searchInput = modal.querySelector('#rules-search-input');

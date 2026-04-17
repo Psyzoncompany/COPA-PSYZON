@@ -1976,6 +1976,77 @@ textarea::placeholder {
   height: 12px;
 }
 
+/* Collapsible Sections */
+.rules-section {
+  border-radius: 10px;
+  margin-bottom: 4px;
+  transition: background 0.2s ease;
+}
+
+.rules-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.rules-section-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rules-section-header .rules-heading-main {
+  margin: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  flex: 1;
+  pointer-events: none;
+}
+
+.rules-section-chevron {
+  flex-shrink: 0;
+  color: var(--on-surface-variant);
+  opacity: 0.5;
+  transition: transform 0.25s ease, opacity 0.2s;
+  transform: rotate(-90deg);
+}
+
+.rules-section-open .rules-section-chevron {
+  transform: rotate(0deg);
+  opacity: 0.8;
+  color: var(--primary);
+}
+
+.rules-section-body {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 8px 0 32px;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+
+.rules-section-open .rules-section-body {
+  max-height: 3000px;
+  padding: 4px 8px 12px 32px;
+  opacity: 1;
+}
+
+.rules-section-match-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 165, 0, 0.12);
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .rules-heading-main {
   font-family: var(--font-headline);
   font-size: 16px;
@@ -2007,11 +2078,6 @@ textarea::placeholder {
   color: var(--on-surface);
   opacity: 0.9;
   padding-left: 16px;
-}
-
-.rules-dimmed {
-  opacity: 0.15 !important;
-  transition: opacity 0.3s ease;
 }
 
 .rules-match-line {
