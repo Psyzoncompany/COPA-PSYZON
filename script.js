@@ -982,6 +982,140 @@ Descumprimento: desclassificação imediata.`;
 
   // ── Search state ──
   let rulesSearchState = { total: 0, current: 0 };
+  let rulesSuggestionsCache = null;
+  let rulesSearchHistory = [];
+  let rulesSuggestionIdx = -1;
+
+  function extractRulesKeywords() {
+    const text = getRulesText();
+    const lines = text.split('\n');
+    const suggestions = [];
+    const seenWords = new Set();
+    const stopWords = new Set(['para','como','cada','será','caso','pode','pela','pelo','este','esta','esse','essa','todo','toda','mais','menos','entre','após','antes','sobre','numa','neste','desta','deste','mesmo','quem','onde','qual','seus','suas','tipo','forma','modo','terá','será','podem','poderá','deverão','qualquer','durante','sempre','também','dentro','quanto','desde','outro','outra','outros']);
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const isMainHeader = /^\d+\.\s/.test(trimmed) && !/^\d+\.\d+/.test(trimmed);
+      const isSubHeader = /^\d+\.\d+\s/.test(trimmed);
+      if (isMainHeader || isSubHeader) {
+        suggestions.push({
+          text: trimmed,
+          searchTerm: trimmed.replace(/^\d+\.?\d*\s*/, '').trim(),
+          type: isMainHeader ? 'section' : 'subsection',
+          priority: isMainHeader ? 10 : 8
+        });
+      }
+      const words = trimmed.replace(/[^\wÀ-ú]/g, ' ').split(/\s+/);
+      words.forEach(w => {
+        const lower = w.toLowerCase();
+        if (w.length >= 4 && !stopWords.has(lower) && !seenWords.has(lower) && !/^\d+$/.test(w)) {
+          seenWords.add(lower);
+          suggestions.push({ text: w, searchTerm: w, type: 'keyword', priority: 1 });
+        }
+      });
+    });
+    return suggestions;
+  }
+
+  function getRulesSuggestions() {
+    if (!rulesSuggestionsCache) rulesSuggestionsCache = extractRulesKeywords();
+    return rulesSuggestionsCache;
+  }
+
+  function renderRulesSuggestions(query) {
+    const container = $('#rules-suggestions');
+    if (!container) return;
+    if (!query || query.length < 2) {
+      // Show recent searches when focused and empty or short query
+      if (rulesSearchHistory.length > 0 && query.length === 0) {
+        showRecentSearches();
+        return;
+      }
+      container.style.display = 'none';
+      return;
+    }
+    const suggestions = getRulesSuggestions();
+    const lower = query.toLowerCase();
+    const matches = suggestions
+      .filter(s => s.searchTerm.toLowerCase().includes(lower) || s.text.toLowerCase().includes(lower))
+      .sort((a, b) => {
+        const aStarts = a.searchTerm.toLowerCase().startsWith(lower) || a.text.toLowerCase().startsWith(lower);
+        const bStarts = b.searchTerm.toLowerCase().startsWith(lower) || b.text.toLowerCase().startsWith(lower);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return b.priority - a.priority;
+      })
+      .slice(0, 8);
+    if (matches.length === 0) { container.style.display = 'none'; return; }
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    container.innerHTML = matches.map((m, i) => {
+      const icon = m.type === 'section' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>'
+        : m.type === 'subsection' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+      const badge = m.type === 'section' ? 'Seção' : m.type === 'subsection' ? 'Subseção' : '';
+      const highlighted = sanitize(m.text).replace(new RegExp('(' + escaped + ')', 'gi'), '<strong>$1</strong>');
+      return `<div class="rules-suggestion-item${i === 0 ? ' rules-suggestion-active' : ''}" data-idx="${i}" data-search="${sanitize(m.searchTerm)}">
+        <span class="rules-suggestion-icon">${icon}</span>
+        <span class="rules-suggestion-text">${highlighted}</span>
+        ${badge ? `<span class="rules-suggestion-badge">${badge}</span>` : ''}
+      </div>`;
+    }).join('');
+    rulesSuggestionIdx = 0;
+    container.style.display = '';
+  }
+
+  function showRecentSearches() {
+    const container = $('#rules-suggestions');
+    if (!container || rulesSearchHistory.length === 0) { if (container) container.style.display = 'none'; return; }
+    container.innerHTML = '<div class="rules-suggestions-label">Pesquisas recentes</div>' +
+      rulesSearchHistory.map((term, i) => {
+        return `<div class="rules-suggestion-item rules-suggestion-recent" data-idx="${i}" data-search="${sanitize(term)}">
+          <span class="rules-suggestion-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span>
+          <span class="rules-suggestion-text">${sanitize(term)}</span>
+        </div>`;
+      }).join('');
+    rulesSuggestionIdx = -1;
+    container.style.display = '';
+  }
+
+  function addToSearchHistory(term) {
+    if (!term || term.length < 2) return;
+    rulesSearchHistory = rulesSearchHistory.filter(t => t.toLowerCase() !== term.toLowerCase());
+    rulesSearchHistory.unshift(term);
+    if (rulesSearchHistory.length > 5) rulesSearchHistory.pop();
+  }
+
+  function navigateRulesSuggestions(dir) {
+    const container = $('#rules-suggestions');
+    if (!container || container.style.display === 'none') return false;
+    const items = container.querySelectorAll('.rules-suggestion-item');
+    if (items.length === 0) return false;
+    if (rulesSuggestionIdx >= 0) items[rulesSuggestionIdx]?.classList.remove('rules-suggestion-active');
+    rulesSuggestionIdx = (rulesSuggestionIdx + dir + items.length) % items.length;
+    items[rulesSuggestionIdx]?.classList.add('rules-suggestion-active');
+    items[rulesSuggestionIdx]?.scrollIntoView({ block: 'nearest' });
+    return true;
+  }
+
+  function selectRulesSuggestion() {
+    const container = $('#rules-suggestions');
+    if (!container || container.style.display === 'none') return false;
+    const active = container.querySelector('.rules-suggestion-active');
+    if (!active) return false;
+    const searchTerm = active.dataset.search;
+    const searchInput = $('#rules-search-input');
+    if (searchInput) searchInput.value = searchTerm;
+    container.style.display = 'none';
+    addToSearchHistory(searchTerm);
+    showRulesContent(searchTerm);
+    return true;
+  }
+
+  function hideRulesSuggestions() {
+    const container = $('#rules-suggestions');
+    if (container) container.style.display = 'none';
+  }
 
   function openRulesModal() {
     const modal = $('#rules-general-modal');
@@ -1101,33 +1235,87 @@ Descumprimento: desclassificação imediata.`;
 
     if (searchInput) {
       let debounce = null;
+      let suggestDebounce = null;
       searchInput.addEventListener('input', () => {
         clearTimeout(debounce);
+        clearTimeout(suggestDebounce);
+        const val = searchInput.value.trim();
+        // Show suggestions quickly
+        suggestDebounce = setTimeout(() => renderRulesSuggestions(val), 100);
+        // Perform actual search with slightly longer debounce
         debounce = setTimeout(() => {
-          showRulesContent(searchInput.value.trim());
-        }, 200);
+          showRulesContent(val);
+          if (val.length >= 2) addToSearchHistory(val);
+        }, 350);
+      });
+
+      searchInput.addEventListener('focus', () => {
+        if (!searchInput.value.trim()) showRecentSearches();
       });
 
       // Keyboard navigation
       searchInput.addEventListener('keydown', (e) => {
+        const sugContainer = $('#rules-suggestions');
+        const sugVisible = sugContainer && sugContainer.style.display !== 'none';
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (sugVisible) navigateRulesSuggestions(1);
+          else renderRulesSuggestions(searchInput.value.trim());
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (sugVisible) navigateRulesSuggestions(-1);
+          return;
+        }
         if (e.key === 'Enter') {
           e.preventDefault();
-          if (e.shiftKey) {
+          if (sugVisible && rulesSuggestionIdx >= 0) {
+            selectRulesSuggestion();
+          } else if (e.shiftKey) {
             navigateToRulesMatch(rulesSearchState.current - 1);
           } else {
             navigateToRulesMatch(rulesSearchState.current + 1);
           }
+          return;
         }
         if (e.key === 'Escape') {
+          if (sugVisible) { hideRulesSuggestions(); return; }
           searchInput.value = '';
           showRulesContent();
         }
+        if (e.key === 'Tab' && sugVisible) {
+          e.preventDefault();
+          selectRulesSuggestion();
+        }
+      });
+
+      // Close suggestions on click outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.rules-search-wrapper')) hideRulesSuggestions();
+      });
+    }
+
+    // Suggestion item clicks (delegated)
+    const suggestionsContainer = modal.querySelector('#rules-suggestions');
+    if (suggestionsContainer) {
+      suggestionsContainer.addEventListener('mousedown', (e) => {
+        const item = e.target.closest('.rules-suggestion-item');
+        if (!item) return;
+        e.preventDefault();
+        const searchTerm = item.dataset.search;
+        if (searchInput) searchInput.value = searchTerm;
+        hideRulesSuggestions();
+        addToSearchHistory(searchTerm);
+        showRulesContent(searchTerm);
       });
     }
 
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+        hideRulesSuggestions();
         showRulesContent();
       });
     }
@@ -1154,6 +1342,7 @@ Descumprimento: desclassificação imediata.`;
 
     if (saveBtn) saveBtn.addEventListener('click', () => {
       state.tournamentRules = textarea.value;
+      rulesSuggestionsCache = null;
       saveState();
       editArea.style.display = 'none';
       contentDisplay.style.display = '';
