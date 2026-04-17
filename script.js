@@ -928,8 +928,10 @@ Descumprimento: desclassificação imediata.`;
   function formatRulesHtml(text, searchTerm) {
     const lines = text.split('\n');
     let html = '';
-    const regex = searchTerm ? new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi') : null;
-    let hasMatch = false;
+    const escaped = searchTerm ? searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
+    const regex = escaped ? new RegExp(escaped, 'gi') : null;
+    let matchCount = 0;
+    let currentSection = '';
 
     lines.forEach(line => {
       const trimmed = line.trim();
@@ -937,30 +939,49 @@ Descumprimento: desclassificação imediata.`;
 
       let content = sanitize(trimmed);
 
-      // Check if line matches search
-      let lineMatches = true;
+      // Track current section for context
+      const isMainHeader = /^\d+\.\s/.test(trimmed) && !/^\d+\.\d+/.test(trimmed);
+      const isSubHeader = /^\d+\.\d+\s/.test(trimmed);
+      if (isMainHeader) currentSection = trimmed;
+
+      // Search matching
+      let lineMatches = false;
       if (regex) {
         lineMatches = regex.test(trimmed);
         regex.lastIndex = 0;
         if (lineMatches) {
-          hasMatch = true;
-          content = content.replace(new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark class="rules-highlight">$1</mark>');
+          // Count individual matches in this line
+          let m;
+          const countRegex = new RegExp(escaped, 'gi');
+          while ((m = countRegex.exec(trimmed)) !== null) matchCount++;
+          // Wrap each match with a data-match-idx for navigation
+          let idx = matchCount - (trimmed.match(new RegExp(escaped, 'gi')) || []).length;
+          content = content.replace(new RegExp('(' + escaped + ')', 'gi'), (match) => {
+            idx++;
+            return `<mark class="rules-highlight" data-match-idx="${idx}" data-section="${sanitize(currentSection)}">${match}</mark>`;
+          });
         }
       }
 
-      // Detect headers (lines starting with number + period)
-      if (/^\d+\.\s/.test(trimmed) || /^\d+\.\d+\s/.test(trimmed)) {
-        const isMain = /^\d+\.\s/.test(trimmed) && !/^\d+\.\d+/.test(trimmed);
-        html += `<div class="rules-heading ${isMain ? 'rules-heading-main' : 'rules-heading-sub'} ${regex && !lineMatches ? 'rules-dimmed' : ''}">${content}</div>`;
+      // Build element with classes
+      const dimClass = regex && !lineMatches ? 'rules-dimmed' : '';
+      const matchClass = regex && lineMatches ? 'rules-match-line' : '';
+
+      if (isMainHeader || isSubHeader) {
+        const hClass = isMainHeader ? 'rules-heading-main' : 'rules-heading-sub';
+        html += `<div class="${hClass} ${dimClass} ${matchClass}">${content}</div>`;
       } else if (trimmed.startsWith('\u2022')) {
-        html += `<div class="rules-bullet ${regex && !lineMatches ? 'rules-dimmed' : ''}">${content}</div>`;
+        html += `<div class="rules-bullet ${dimClass} ${matchClass}">${content}</div>`;
       } else {
-        html += `<div class="rules-line ${regex && !lineMatches ? 'rules-dimmed' : ''}">${content}</div>`;
+        html += `<div class="rules-line ${dimClass} ${matchClass}">${content}</div>`;
       }
     });
 
-    return { html, hasMatch: searchTerm ? hasMatch : true };
+    return { html, hasMatch: searchTerm ? matchCount > 0 : true, matchCount };
   }
+
+  // ── Search state ──
+  let rulesSearchState = { total: 0, current: 0 };
 
   function openRulesModal() {
     const modal = $('#rules-general-modal');
@@ -972,11 +993,16 @@ Descumprimento: desclassificação imediata.`;
     const searchInput = modal.querySelector('#rules-search-input');
     if (searchInput) searchInput.value = '';
 
+    rulesSearchState = { total: 0, current: 0 };
+    updateRulesSearchUI();
     showRulesContent();
     modal.querySelector('#rules-edit-area').style.display = 'none';
     modal.querySelector('#rules-content-display').style.display = '';
     modal.querySelector('#rules-no-results').style.display = 'none';
     modal.style.display = 'flex';
+
+    // Focus search input
+    setTimeout(() => { if (searchInput) searchInput.focus(); }, 100);
   }
 
   function showRulesContent(searchTerm) {
@@ -984,8 +1010,11 @@ Descumprimento: desclassificação imediata.`;
     const noResults = $('#rules-no-results');
     if (!display) return;
 
-    const { html, hasMatch } = formatRulesHtml(getRulesText(), searchTerm);
+    const { html, hasMatch, matchCount } = formatRulesHtml(getRulesText(), searchTerm);
     display.innerHTML = html;
+
+    rulesSearchState.total = matchCount;
+    rulesSearchState.current = matchCount > 0 ? 1 : 0;
 
     if (searchTerm && !hasMatch) {
       display.style.display = 'none';
@@ -993,6 +1022,61 @@ Descumprimento: desclassificação imediata.`;
     } else {
       display.style.display = '';
       if (noResults) noResults.style.display = 'none';
+    }
+
+    updateRulesSearchUI();
+
+    // Scroll to first match
+    if (matchCount > 0) {
+      navigateToRulesMatch(1);
+    }
+  }
+
+  function updateRulesSearchUI() {
+    const statusEl = $('#rules-search-status');
+    const countEl = $('#rules-search-count');
+    const clearBtn = $('#rules-search-clear');
+    const searchInput = $('#rules-search-input');
+    const hasSearch = searchInput && searchInput.value.trim().length > 0;
+
+    if (clearBtn) clearBtn.style.display = hasSearch ? '' : 'none';
+
+    if (statusEl && countEl) {
+      if (rulesSearchState.total > 0) {
+        statusEl.style.display = '';
+        countEl.textContent = `${rulesSearchState.current} de ${rulesSearchState.total}`;
+        countEl.classList.remove('rules-search-no-match');
+      } else if (hasSearch) {
+        statusEl.style.display = '';
+        countEl.textContent = 'Sem resultados';
+        countEl.classList.add('rules-search-no-match');
+      } else {
+        statusEl.style.display = 'none';
+      }
+    }
+  }
+
+  function navigateToRulesMatch(idx) {
+    const display = $('#rules-content-display');
+    if (!display || rulesSearchState.total === 0) return;
+
+    // Wrap around
+    if (idx < 1) idx = rulesSearchState.total;
+    if (idx > rulesSearchState.total) idx = 1;
+    rulesSearchState.current = idx;
+    updateRulesSearchUI();
+
+    // Remove previous active
+    display.querySelectorAll('.rules-highlight-active').forEach(el => {
+      el.classList.remove('rules-highlight-active');
+    });
+
+    // Activate current
+    const target = display.querySelector(`[data-match-idx="${idx}"]`);
+    if (target) {
+      target.classList.add('rules-highlight-active');
+      // Scroll into view
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
@@ -1011,15 +1095,45 @@ Descumprimento: desclassificação imediata.`;
 
     // Search
     const searchInput = modal.querySelector('#rules-search-input');
+    const clearBtn = modal.querySelector('#rules-search-clear');
+    const prevBtn = modal.querySelector('#rules-search-prev');
+    const nextBtn = modal.querySelector('#rules-search-next');
+
     if (searchInput) {
       let debounce = null;
       searchInput.addEventListener('input', () => {
         clearTimeout(debounce);
         debounce = setTimeout(() => {
           showRulesContent(searchInput.value.trim());
-        }, 250);
+        }, 200);
+      });
+
+      // Keyboard navigation
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            navigateToRulesMatch(rulesSearchState.current - 1);
+          } else {
+            navigateToRulesMatch(rulesSearchState.current + 1);
+          }
+        }
+        if (e.key === 'Escape') {
+          searchInput.value = '';
+          showRulesContent();
+        }
       });
     }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+        showRulesContent();
+      });
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', () => navigateToRulesMatch(rulesSearchState.current - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => navigateToRulesMatch(rulesSearchState.current + 1));
 
     // Edit
     const editBtn = modal.querySelector('#rules-edit-btn');
@@ -1028,13 +1142,14 @@ Descumprimento: desclassificação imediata.`;
     const textarea = modal.querySelector('#rules-textarea');
     const saveBtn = modal.querySelector('#rules-save-btn');
     const cancelBtn = modal.querySelector('#rules-cancel-btn');
+    const searchWrapper = modal.querySelector('.rules-search-wrapper');
 
     if (editBtn) editBtn.addEventListener('click', () => {
       textarea.value = getRulesText();
       editArea.style.display = '';
       contentDisplay.style.display = 'none';
       editBtn.style.display = 'none';
-      if (searchInput) searchInput.closest('.rules-search-box').style.display = 'none';
+      if (searchWrapper) searchWrapper.style.display = 'none';
     });
 
     if (saveBtn) saveBtn.addEventListener('click', () => {
@@ -1043,8 +1158,8 @@ Descumprimento: desclassificação imediata.`;
       editArea.style.display = 'none';
       contentDisplay.style.display = '';
       if (editBtn) editBtn.style.display = '';
-      if (searchInput) searchInput.closest('.rules-search-box').style.display = '';
-      searchInput.value = '';
+      if (searchWrapper) searchWrapper.style.display = '';
+      if (searchInput) { searchInput.value = ''; }
       showRulesContent();
       showToast('Regras salvas com sucesso!', 'success');
     });
@@ -1053,7 +1168,7 @@ Descumprimento: desclassificação imediata.`;
       editArea.style.display = 'none';
       contentDisplay.style.display = '';
       if (editBtn) editBtn.style.display = '';
-      if (searchInput) searchInput.closest('.rules-search-box').style.display = '';
+      if (searchWrapper) searchWrapper.style.display = '';
     });
   }
 
