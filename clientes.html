@@ -378,6 +378,11 @@
 
         <div id="detail-fields" class="profile-detail-fields"></div>
 
+        <div id="admin-edit-actions" style="display:none; margin-top:12px;">
+          <button type="button" id="btn-edit-client" class="btn btn-primary btn-sm">Editar</button>
+          <button type="button" id="btn-save-client" class="btn btn-success btn-sm" style="display:none;">Salvar</button>
+          <button type="button" id="btn-cancel-edit" class="btn btn-outline btn-sm" style="display:none;">Cancelar</button>
+        </div>
         <button type="button" id="btn-close-detail" class="btn btn-outline btn-sm" style="margin-top:8px;">Fechar</button>
       </div>
     </div>
@@ -490,8 +495,10 @@
         });
       }
 
+      let editingClient = null;
       function openDetail(p) {
         if (!p) return;
+        editingClient = null;
         const overlay = $('#profile-detail-overlay');
         if (!overlay) return;
 
@@ -526,38 +533,43 @@
         if (fieldsEl) {
           let fieldsHtml = '';
 
-          fieldsHtml += `<div class="profile-field">
-            <div class="profile-field-label">CPF</div>
-            <div class="profile-field-value">${formatCPFMasked(p.cpf)}</div>
+          fieldsHtml += `<div class=\"profile-field\">
+            <div class=\"profile-field-label\">CPF</div>
+            <div class=\"profile-field-value\">${formatCPFMasked(p.cpf)}</div>
           </div>`;
 
-          if (p.instagram) {
-            const handle = p.instagram.replace(/^@/, '');
-            fieldsHtml += `<div class="profile-field">
-              <div class="profile-field-label">Instagram</div>
-              <div class="profile-field-value"><a href="https://instagram.com/${encodeURIComponent(handle)}" target="_blank" rel="noopener">@${sanitize(handle)}</a></div>
-            </div>`;
-          }
+          fieldsHtml += `<div class=\"profile-field\">
+            <div class=\"profile-field-label\">Nome</div>
+            <div class=\"profile-field-value\" id=\"edit-field-name\">${sanitize(p.name)}</div>
+          </div>`;
 
-          if (p.whatsapp) {
-            fieldsHtml += `<div class="profile-field">
-              <div class="profile-field-label">WhatsApp</div>
-              <div class="profile-field-value">${sanitize(p.whatsapp)}</div>
-            </div>`;
-          }
+          fieldsHtml += `<div class=\"profile-field\">
+            <div class=\"profile-field-label\">Apelido</div>
+            <div class=\"profile-field-value\" id=\"edit-field-nick\">${sanitize(p.nick)}</div>
+          </div>`;
 
-          fieldsHtml += `<div class="profile-field">
-            <div class="profile-field-label">Código Utilizado</div>
-            <div class="profile-field-value">${sanitize(p.code)}</div>
+          fieldsHtml += `<div class=\"profile-field\">
+            <div class=\"profile-field-label\">Instagram</div>
+            <div class=\"profile-field-value\" id=\"edit-field-instagram\">${p.instagram ? `@${sanitize(p.instagram.replace(/^@/,''))}` : ''}</div>
+          </div>`;
+
+          fieldsHtml += `<div class=\"profile-field\">
+            <div class=\"profile-field-label\">WhatsApp</div>
+            <div class=\"profile-field-value\" id=\"edit-field-whatsapp\">${sanitize(p.whatsapp || '')}</div>
+          </div>`;
+
+          fieldsHtml += `<div class=\"profile-field\">
+            <div class=\"profile-field-label\">Código Utilizado</div>
+            <div class=\"profile-field-value\">${sanitize(p.code)}</div>
           </div>`;
 
           if (p.registeredAt) {
             try {
               const d = new Date(p.registeredAt);
               const formatted = d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-              fieldsHtml += `<div class="profile-field">
-                <div class="profile-field-label">Data de Cadastro</div>
-                <div class="profile-field-value">${formatted}</div>
+              fieldsHtml += `<div class=\"profile-field\">
+                <div class=\"profile-field-label\">Data de Cadastro</div>
+                <div class=\"profile-field-value\">${formatted}</div>
               </div>`;
             } catch (_) { }
           }
@@ -565,8 +577,86 @@
           fieldsEl.innerHTML = fieldsHtml;
         }
 
+        // Mostrar botões de edição só para admin
+        const editActions = $('#admin-edit-actions');
+        if (editActions) {
+          editActions.style.display = 'none';
+          if (auth && auth.currentUser) {
+            // Usuário logado = admin
+            editActions.style.display = '';
+            $('#btn-edit-client').style.display = '';
+            $('#btn-save-client').style.display = 'none';
+            $('#btn-cancel-edit').style.display = 'none';
+          }
+        }
+
         overlay.classList.add('active');
+        editingClient = p;
       }
+
+      function enableEditClient() {
+        if (!editingClient) return;
+        // Troca campos para inputs
+        function inputHtml(id, val, type='text') {
+          return `<input type=\"${type}\" id=\"input-${id}\" value=\"${sanitize(val||'')}\" class=\"form-control\" style=\"width:100%;max-width:300px\">`;
+        }
+        $('#edit-field-name').innerHTML = inputHtml('name', editingClient.name);
+        $('#edit-field-nick').innerHTML = inputHtml('nick', editingClient.nick);
+        $('#edit-field-instagram').innerHTML = inputHtml('instagram', editingClient.instagram||'');
+        $('#edit-field-whatsapp').innerHTML = inputHtml('whatsapp', editingClient.whatsapp||'');
+        // Botões
+        $('#btn-edit-client').style.display = 'none';
+        $('#btn-save-client').style.display = '';
+        $('#btn-cancel-edit').style.display = '';
+      }
+
+      function cancelEditClient() {
+        if (!editingClient) return;
+        openDetail(editingClient);
+      }
+
+      async function saveEditClient() {
+        if (!editingClient) return;
+        // Coleta valores
+        const name = $('#input-name').value.trim();
+        const nick = $('#input-nick').value.trim();
+        let instagram = $('#input-instagram').value.trim();
+        if (instagram && !instagram.startsWith('@')) instagram = '@'+instagram;
+        const whatsapp = $('#input-whatsapp').value.trim();
+        // Atualiza local
+        editingClient.name = name;
+        editingClient.nick = nick;
+        editingClient.instagram = instagram;
+        editingClient.whatsapp = whatsapp;
+        // Atualiza no Firestore
+        try {
+          const docRef = db.collection('tournaments').doc('main');
+          const docSnap = await docRef.get();
+          if (docSnap.exists) {
+            const data = docSnap.data();
+            const participants = data.participants || [];
+            const idx = participants.findIndex(x => x.id === editingClient.id);
+            if (idx !== -1) {
+              participants[idx] = { ...participants[idx], name, nick, instagram, whatsapp };
+              await docRef.update({ participants });
+              showToast('Cadastro atualizado!', 'success');
+              openDetail(participants[idx]);
+            }
+          }
+        } catch (e) {
+          showToast('Erro ao salvar: ' + e, 'error');
+        }
+      }
+
+      // Bind botões de edição
+      setTimeout(() => {
+        const btnEdit = $('#btn-edit-client');
+        const btnSave = $('#btn-save-client');
+        const btnCancel = $('#btn-cancel-edit');
+        if (btnEdit) btnEdit.onclick = enableEditClient;
+        if (btnSave) btnSave.onclick = saveEditClient;
+        if (btnCancel) btnCancel.onclick = cancelEditClient;
+      }, 500);
 
       function closeDetail() {
         const overlay = $('#profile-detail-overlay');

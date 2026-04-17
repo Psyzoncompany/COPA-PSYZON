@@ -2824,6 +2824,11 @@ Descumprimento: desclassificação imediata.`;
     }
 
     // Repechage section
+
+
+    // (Removido: cards de classificados diretos e repescagem)
+
+    // Só mostra os confrontos da repescagem se já tiver sido gerada
     if (state.groupRepechage) {
       html += `<div class="repechage-section">
         <h3 class="repechage-title">${SVG.refresh} Repescagem</h3>
@@ -2844,17 +2849,6 @@ Descumprimento: desclassificação imediata.`;
       });
 
       html += `</div>`;
-
-      // Direct qualified list (auto-scrolling carousel)
-      if (state.groupDirectQualified && state.groupDirectQualified.length > 0) {
-        html += `<div class="direct-qualified-list"><h4>${SVG.checkCircle} Classificados Diretos (1º de cada grupo)</h4><div class="qualified-carousel"><div class="qualified-carousel-track">`;
-        // Duplicate items for seamless loop
-        const qualChips = state.groupDirectQualified.map(t =>
-          `<span class="qualified-chip">${sanitize(t.teamName || t.playerName)} <small>(${sanitize(t.groupName || '')})</small></span>`
-        ).join('');
-        html += qualChips + qualChips;
-        html += `</div></div></div>`;
-      }
 
       // "Generate Bracket" button
       const allRepDone = state.groupRepechage.every(m => m.winner);
@@ -3180,6 +3174,27 @@ Descumprimento: desclassificação imediata.`;
     });
 
     group.standings = calcGroupStandings(group);
+
+    // Clear repechage, direct qualified, and bracket generated from groups
+    // since they depend on all group results being complete
+    if (state.groupRepechage) {
+      // Revert bracket match stats before clearing
+      if (state.bracket && state.bracket.rounds) {
+        state.bracket.rounds.forEach(round => {
+          round.matches.forEach(m => {
+            if (m.statsApplied && typeof revertMatchStats === 'function') {
+              revertMatchStats(m);
+            }
+          });
+        });
+      }
+      state.groupRepechage = null;
+      state.groupDirectQualified = null;
+      state.bracket = null;
+      state.bracketFromGroups = false;
+      state.champion = null;
+    }
+
     saveState();
     renderGroupsTab();
     openGroupDetailModal(gIdx);
@@ -6536,10 +6551,32 @@ Descumprimento: desclassificação imediata.`;
 
     state.bracket = null;
     state.champion = null;
+    state.groupRepechage = null;
+    state.groupDirectQualified = null;
+    state.bracketFromGroups = false;
+
+    // Reset all group match results if groups exist
+    if (state.groups) {
+      state.groups.forEach(group => {
+        group.matches.forEach(m => {
+          m.team1.score = null;
+          m.team2.score = null;
+          m.winner = null;
+          m.status = 'not_started';
+          if (m.twoLegged) {
+            m.ida = { score1: null, score2: null };
+            m.volta = { score1: null, score2: null };
+          }
+        });
+        group.standings = calcGroupStandings(group);
+      });
+    }
+
     saveState();
 
     closeChampionBanner();
     renderBracket();
+    renderGroupsTab();
     renderTeamList();
     showToast('Torneio resetado com sucesso.', 'info');
   }

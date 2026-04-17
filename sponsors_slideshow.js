@@ -60,9 +60,9 @@ const sponsorsConfig = [
     name: 'Bruno Leite Assessoria Contábil',
     logo: 'PATROCINADORES/BRUNO%20LEITE.png',
     images: [
-      'SLIDES/Bruno-Leite/slide%201.jpeg',
-      'SLIDES/Bruno-Leite/slide%202.jpeg',
-      'SLIDES/Bruno-Leite/slide%203.jpeg'
+      'SLIDES/Brunos-Leite/slide%201.jpeg',
+      'SLIDES/Brunos-Leite/slide%202.jpeg',
+      'SLIDES/Brunos-Leite/slide%203.jpeg'
     ],
     link: 'https://www.instagram.com/brunoleite.contador',
     linkFile: null
@@ -367,9 +367,9 @@ async function initSponsorsShowcase() {
   container.appendChild(sponsorNav);
 
   // ─── Estado global do slideshow ───
-  var SLIDE_INTERVAL_FULL = 5000;
-  var SLIDE_INTERVAL_LOGO = 5000;
-  var VIDEO_MAX_DURATION = 30; // segundos
+  var SLIDE_INTERVAL_FULL = 7000;
+  var SLIDE_INTERVAL_LOGO = 7000;
+  var VIDEO_MAX_DURATION = 45; // segundos
   var currentSponsor = 0;
   var currentSlide = 0;
   var timer = null;
