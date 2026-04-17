@@ -528,10 +528,18 @@
       const groupsTabBtn = $('#groups-tab-btn');
       if (groupsTabBtn) {
         groupsTabBtn.style.display = '';
-        // Auto-switch to groups tab:
-        // - Visitors always start on groups tab during group phase
-        // - Admin goes to groups if bracket hasn't been finalized from groups yet
-        if (!admin || !state.bracketFromGroups) {
+
+        // Auto-generate repechage if all groups finished but not yet generated
+        if (!state.groupRepechage && areAllGroupMatchesFinished()) {
+          generateBracketFromGroups();
+        }
+        // Decide initial tab:
+        // If bracket was finalized OR repechage is in progress → bracket tab
+        // Otherwise → groups tab
+        else if (state.bracketFromGroups || state.groupRepechage) {
+          const bracketTabBtn = document.querySelector('[data-tab="bracket-tab"]');
+          if (bracketTabBtn) bracketTabBtn.click();
+        } else {
           groupsTabBtn.click();
         }
       }
