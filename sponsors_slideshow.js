@@ -16,7 +16,8 @@ const sponsorsConfig = [
       'SLIDES/acai-ramos/foto2.png',
       'SLIDES/acai-ramos/foto3.png'
     ],
-    linkFile: 'SLIDES/acai-ramos/Link.txt'
+    link: 'https://www.instagram.com/ramos_acai_',
+    linkFile: null
   },
   {
     id: 'virtu',
@@ -27,7 +28,8 @@ const sponsorsConfig = [
       'SLIDES/Barbearia-virtu/IMG_6324.JPG.jpeg',
       {type: 'video', src: 'SLIDES/Barbearia-virtu/video.mp4.mp4'}
     ],
-    linkFile: 'SLIDES/Barbearia-virtu/Link.txt'
+    link: 'https://www.instagram.com/barbeariavirtu',
+    linkFile: null
   },
   {
     id: 'biel-motos',
@@ -38,6 +40,7 @@ const sponsorsConfig = [
       'SLIDES/Biel-Motos/IMG_20260413_145346.jpg.jpeg',
       'SLIDES/Biel-Motos/IMG_20260413_151307.jpg.jpeg'
     ],
+    link: 'https://www.instagram.com/bielmotos33',
     linkFile: null
   },
   {
@@ -49,7 +52,8 @@ const sponsorsConfig = [
       'SLIDES/Bizuca-Health-%26-Academy/slide2.jpg',
       'SLIDES/Bizuca-Health-%26-Academy/slide3.jpg.jpeg'
     ],
-    linkFile: 'SLIDES/Bizuca-Health-%26-Academy/Link.txt'
+    link: 'https://www.instagram.com/bizucahealthacademy',
+    linkFile: null
   },
   {
     id: 'bruno-leite',
@@ -60,7 +64,8 @@ const sponsorsConfig = [
       'SLIDES/Bruno-Leite/slide%202.jpeg',
       'SLIDES/Bruno-Leite/slide%203.jpeg'
     ],
-    linkFile: 'SLIDES/Bruno-Leite/Link.txt'
+    link: 'https://www.instagram.com/brunoleite.contador',
+    linkFile: null
   },
   {
     id: 'carol-home',
@@ -71,6 +76,7 @@ const sponsorsConfig = [
       'SLIDES/Carol-Home/IMG_20260413_153236.jpg.jpeg',
       'SLIDES/Carol-Home/IMG_20260413_153456.jpg.jpeg'
     ],
+    link: 'https://www.instagram.com/carolrochahomeeessence',
     linkFile: null
   },
   {
@@ -78,6 +84,7 @@ const sponsorsConfig = [
     name: 'Central de Bebidas',
     logo: 'PATROCINADORES/CENTRAL%20ATACADISTA.png',
     images: [],
+    link: 'https://www.instagram.com/gerson.rios01',
     linkFile: null
   },
   {
@@ -89,13 +96,15 @@ const sponsorsConfig = [
       'SLIDES/Clinica-Revitalize/FOTO2.png',
       'SLIDES/Clinica-Revitalize/FOTO3.png'
     ],
-    linkFile: 'SLIDES/Clinica-Revitalize/Link.txt'
+    link: 'https://www.instagram.com/clinica_revitalize_itarantim',
+    linkFile: null
   },
   {
     id: 'daby-gourmet',
     name: 'Daby Gourmet',
     logo: 'PATROCINADORES/daby%20gourmet.png',
     images: [],
+    link: 'https://www.instagram.com/dabygourmet',
     linkFile: null
   },
   {
@@ -107,7 +116,8 @@ const sponsorsConfig = [
       'SLIDES/E-Burger/foto2.jpeg',
       {type: 'video', src: 'SLIDES/E-Burger/video1.mp4'}
     ],
-    linkFile: 'SLIDES/E-Burger/Link.txt'
+    link: 'https://www.instagram.com/e.burguer_',
+    linkFile: null
   },
   {
     id: 'fagundes',
@@ -118,7 +128,8 @@ const sponsorsConfig = [
       'SLIDES/FagundesDistribuidora/foto2.jpeg',
       'SLIDES/FagundesDistribuidora/foto3.jpeg'
     ],
-    linkFile: 'SLIDES/FagundesDistribuidora/Link.txt'
+    link: 'https://www.instagram.com/fagundes_distribuidora',
+    linkFile: null
   },
   {
     id: 'giselle',
@@ -129,7 +140,8 @@ const sponsorsConfig = [
       'SLIDES/Giselle-Fest/foto2.png',
       'SLIDES/Giselle-Fest/foto3.png'
     ],
-    linkFile: 'SLIDES/Giselle-Fest/Link.txt'
+    link: 'https://www.instagram.com/chef_giselle_oliveira',
+    linkFile: null
   },
   {
     id: 'gusmao-modas',
@@ -138,6 +150,7 @@ const sponsorsConfig = [
     images: [
       {type: 'video', src: 'SLIDES/Gusmao-Modas/video1.mp4'}
     ],
+    link: 'https://www.instagram.com/gusmao.modas',
     linkFile: null
   },
   {
@@ -147,6 +160,7 @@ const sponsorsConfig = [
     images: [
       {type: 'video', src: 'SLIDES/ImperiosMRS/foto2.mp4'}
     ],
+    link: 'https://www.instagram.com/imperiomrs',
     linkFile: null
   },
   {
@@ -158,7 +172,8 @@ const sponsorsConfig = [
       'SLIDES/JaneJoias/foto2.png',
       'SLIDES/JaneJoias/foto3.png'
     ],
-    linkFile: 'SLIDES/JaneJoias/Link.txt'
+    link: 'https://www.instagram.com/jane_joiasoficial',
+    linkFile: null
   },
   {
     id: 'lavajato-tg',
@@ -169,7 +184,8 @@ const sponsorsConfig = [
       'SLIDES/LavaJato/foto2.jpeg',
       'SLIDES/LavaJato/foto3.jpeg'
     ],
-    linkFile: 'SLIDES/LavaJato/Link.txt'
+    link: 'https://www.instagram.com/tg_lava_jato',
+    linkFile: null
   },
   {
     id: 'ledulcis',
@@ -181,7 +197,8 @@ const sponsorsConfig = [
       'SLIDES/Ledulcis/foto3.png',
       'SLIDES/Ledulcis/foto4.png'
     ],
-    linkFile: 'SLIDES/Ledulcis/Link.txt'
+    link: 'https://www.instagram.com/ledulcis.brigadeiria',
+    linkFile: null
   },
   {
     id: 'nachapa',
@@ -192,7 +209,8 @@ const sponsorsConfig = [
       'SLIDES/NaChapa/foto2.png',
       'SLIDES/NaChapa/foto3.png'
     ],
-    linkFile: 'SLIDES/NaChapa/Link.txt'
+    link: 'https://www.instagram.com/trailer_nachapa',
+    linkFile: null
   },
   {
     id: 'presencial-tecnologia',
@@ -203,7 +221,8 @@ const sponsorsConfig = [
       'SLIDES/Presencial-Tecnologia/foto2.png',
       'SLIDES/Presencial-Tecnologia/foto3.png'
     ],
-    linkFile: 'SLIDES/Presencial-Tecnologia/Link.txt'
+    link: 'https://www.instagram.com/presencialtecnologia',
+    linkFile: null
   },
   {
     id: 'rogeriorelogio',
@@ -213,6 +232,7 @@ const sponsorsConfig = [
       {type: 'video', src: 'SLIDES/Rogerio-Relogio/video1.mp4'},
       'SLIDES/Rogerio-Relogio/WhatsApp%20Image%202026-04-03%20at%2017.05.34.jpeg'
     ],
+    link: 'https://www.instagram.com/rogerio_relogio03',
     linkFile: null
   },
   {
@@ -224,6 +244,7 @@ const sponsorsConfig = [
       'SLIDES/BF-DISTRIBUIDORA/FOTO2.png',
       'SLIDES/BF-DISTRIBUIDORA/FOTO3.png'
     ],
+    link: 'https://www.instagram.com/matheus_sobrinhoo',
     linkFile: null
   },
   {
@@ -231,6 +252,7 @@ const sponsorsConfig = [
     name: 'WS Bar',
     logo: 'PATROCINADORES/WS%20BAR.png',
     images: [],
+    link: 'https://www.instagram.com/ws_bar_12',
     linkFile: null
   },
   {
@@ -238,6 +260,7 @@ const sponsorsConfig = [
     name: 'Henry iPhones',
     logo: 'PATROCINADORES/henry%20iphones.png',
     images: [],
+    link: 'https://www.instagram.com/henry.iphones',
     linkFile: null
   },
   {
@@ -245,6 +268,7 @@ const sponsorsConfig = [
     name: 'Maiqvox',
     logo: 'PATROCINADORES/maiqvox.png',
     images: [],
+    link: 'https://www.instagram.com/maiqvox',
     linkFile: null
   },
   {
@@ -252,6 +276,7 @@ const sponsorsConfig = [
     name: 'Super Esquinão',
     logo: 'PATROCINADORES/SUPER%20ESQUIN%C3%83O.png',
     images: [],
+    link: 'https://www.instagram.com/superesquinao',
     linkFile: null
   },
   {
@@ -259,6 +284,7 @@ const sponsorsConfig = [
     name: 'Ancore Seguradora',
     logo: 'PATROCINADORES/ANCORE.png',
     images: [],
+    link: null,
     linkFile: null
   }
 ];
@@ -295,6 +321,7 @@ async function initSponsorsShowcase() {
   // ─── Resolução de links (fetch todos em paralelo) ───
   var sponsorLinks = [];
   var linkPromises = sponsorsConfig.map(function (sponsor) {
+    if (sponsor.link) return Promise.resolve(sponsor.link);
     if (!sponsor.linkFile) return Promise.resolve('');
     return fetch(sponsor.linkFile)
       .then(function (r) { return r.ok ? r.text() : ''; })
