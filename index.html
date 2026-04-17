@@ -482,7 +482,7 @@
             <label for="tournament-name">Nome do Torneio</label>
             <input type="text" id="tournament-name" placeholder="Ex: Copa Psyzon 2025" maxlength="60">
           </div>
-          <div class="form-group">
+          <div class="form-group" id="team-count-group">
             <label for="team-count">Quantidade de Participantes</label>
             <div class="team-count-input-wrapper">
               <input type="number" id="team-count" min="2" max="128" value="8" placeholder="Ex: 8">
@@ -706,6 +706,15 @@
               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
             </svg> <span id="btn-shuffle-label">Embaralhar Chaveamento</span>
+          </button>
+          <button type="button" id="btn-refresh-bracket" class="btn btn-info btn-block" style="margin-bottom: 8px;">
+            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M21 21v-5h-5" />
+            </svg> <span id="btn-refresh-label">Atualizar Chaveamento</span>
           </button>
           <button type="button" id="btn-generate" class="btn btn-primary btn-block" style="display:none;">
             <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"

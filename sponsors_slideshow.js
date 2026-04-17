@@ -294,7 +294,7 @@ async function initSponsorsShowcase() {
   // ─── Estado global do slideshow ───
   var SLIDE_INTERVAL_FULL = 5000;
   var SLIDE_INTERVAL_LOGO = 5000;
-  var VIDEO_MAX_DURATION = 15; // segundos
+  var VIDEO_MAX_DURATION = 30; // segundos
   var currentSponsor = 0;
   var currentSlide = 0;
   var timer = null;

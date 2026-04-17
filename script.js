@@ -2170,13 +2170,17 @@ Descumprimento: desclassificação imediata.`;
     const bracketTabBtn = $('#bracket-tab-btn');
     const shuffleLabel = $('#btn-shuffle-label');
     const generateLabel = $('#btn-generate-label');
+    const refreshLabel = $('#btn-refresh-label');
+    const teamCountGroup = $('#team-count-group');
     if (!formatSelect) return;
     const isGroups = formatSelect.value === 'groups';
+    if (teamCountGroup) teamCountGroup.style.display = isGroups ? 'none' : '';
     if (groupsConfig) groupsConfig.style.display = isGroups ? '' : 'none';
     if (groupsTabBtn) groupsTabBtn.style.display = (isGroups && state.groups) ? '' : 'none';
     if (bracketTabBtn) bracketTabBtn.textContent = isGroups ? 'Mata-Mata' : 'Chaveamento';
     if (shuffleLabel) shuffleLabel.textContent = isGroups ? 'Embaralhar Grupos' : 'Embaralhar Chaveamento';
     if (generateLabel) generateLabel.textContent = isGroups ? 'Gerar Fase de Grupos' : 'Gerar Chaveamento';
+    if (refreshLabel) refreshLabel.textContent = isGroups ? 'Atualizar Grupos' : 'Atualizar Chaveamento';
   }
 
   /* ==========================================================
@@ -2705,6 +2709,27 @@ Descumprimento: desclassificação imediata.`;
       </div>
     </div>`;
 
+    // Check for new players not yet assigned to any group
+    const allGroupTeamIds = new Set();
+    state.groups.forEach(g => g.teams.forEach(t => allGroupTeamIds.add(t.id)));
+    const pendingPlayers = state.teams.filter(t => !allGroupTeamIds.has(t.id));
+
+    if (isAdmin && pendingPlayers.length > 0) {
+      const lastPlayer = pendingPlayers[pendingPlayers.length - 1];
+      const playerLabel = sanitize(lastPlayer.teamName || lastPlayer.playerName || 'Último jogador');
+      html += `<div class="group-actions" style="margin-bottom: 16px;">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; text-align: center;">
+          ${SVG.info} <strong>${pendingPlayers.length}</strong> jogador(es) ainda não está(ão) em nenhum grupo.
+        </p>
+        <button type="button" class="btn btn-info btn-block" id="btn-randomize-last-player">
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+          </svg> Sortear "${playerLabel}" em um grupo
+        </button>
+      </div>`;
+    }
+
     // Render each group card (compact - standings only)
     state.groups.forEach((group, gIdx) => {
       const hasTwoLegged = group.matches.some(m => m.twoLegged);
@@ -2857,6 +2882,10 @@ Descumprimento: desclassificação imediata.`;
 
     const btnFinal = container.querySelector('#btn-finalize-groups');
     if (btnFinal) btnFinal.addEventListener('click', finalizeGroupRepechage);
+
+    // Bind "Sortear último jogador" button
+    const btnRandomize = container.querySelector('#btn-randomize-last-player');
+    if (btnRandomize) btnRandomize.addEventListener('click', randomizeLastPlayerIntoGroup);
 
     // Bind clickable areas → open group detail modal
     container.querySelectorAll('[data-action="open-group"]').forEach(el => {
@@ -3286,27 +3315,22 @@ Descumprimento: desclassificação imediata.`;
 
   /** Generate bracket from registered teams */
   function handleGenerate() {
-    // Sync team count from input
-    const countInput = $('#team-count');
-    const requiredCount = parseInt(countInput ? countInput.value : state.teamCount, 10);
-
-    if (isNaN(requiredCount) || requiredCount < 2) {
-      showToast('Quantidade inválida. Mínimo de 2 participantes.', 'error');
-      return;
-    }
-    if (requiredCount > 128) {
-      showToast('Quantidade máxima: 128 participantes.', 'error');
-      return;
-    }
-
-    state.teamCount = requiredCount;
-    syncTournamentName();
-
     // Check tournament format
     const formatSelect = $('#tournament-format');
     state.tournamentFormat = formatSelect ? formatSelect.value : 'knockout';
 
     if (state.tournamentFormat === 'groups') {
+      // In group mode, team count is automatic based on registered players
+      const requiredCount = state.teams.length;
+      if (requiredCount < 2) {
+        showToast('Quantidade inválida. Mínimo de 2 participantes.', 'error');
+        return;
+      }
+      state.teamCount = requiredCount;
+      const countInput = $('#team-count');
+      if (countInput) countInput.value = requiredCount;
+      syncTournamentName();
+
       const gcInput = $('#group-count');
       const numGroups = parseInt(gcInput ? gcInput.value : state.groupCount, 10) || 5;
       state.groupCount = numGroups;
@@ -3326,6 +3350,7 @@ Descumprimento: desclassificação imediata.`;
 
       // Update UI labels and show groups tab
       toggleGroupsConfig();
+      updateTeamCountInfo();
       const groupsTabBtn = $('#groups-tab-btn');
       if (groupsTabBtn) {
         groupsTabBtn.style.display = '';
@@ -3337,6 +3362,21 @@ Descumprimento: desclassificação imediata.`;
     }
 
     // Standard knockout
+    const countInput = $('#team-count');
+    const requiredCount = parseInt(countInput ? countInput.value : state.teamCount, 10);
+
+    if (isNaN(requiredCount) || requiredCount < 2) {
+      showToast('Quantidade inválida. Mínimo de 2 participantes.', 'error');
+      return;
+    }
+    if (requiredCount > 128) {
+      showToast('Quantidade máxima: 128 participantes.', 'error');
+      return;
+    }
+
+    state.teamCount = requiredCount;
+    syncTournamentName();
+
     const shuffled = shuffleArray([...state.teams]);
 
     state.groups = null;
@@ -7817,14 +7857,15 @@ Descumprimento: desclassificação imediata.`;
 
     // --- GROUP FORMAT ---
     if (currentFormat === 'groups') {
-      // Sync team count
-      const countInput = $('#team-count');
-      const requiredCount = parseInt(countInput ? countInput.value : state.teamCount, 10);
-      if (isNaN(requiredCount) || requiredCount < 2) {
+      // In group mode, team count is automatic based on registered players
+      const requiredCount = state.teams.length;
+      if (requiredCount < 2) {
         showToast('Quantidade inválida. Mínimo de 2 participantes.', 'error');
         return;
       }
       state.teamCount = requiredCount;
+      const countInput = $('#team-count');
+      if (countInput) countInput.value = requiredCount;
       syncTournamentName();
 
       const gcInput = $('#group-count');
@@ -7918,6 +7959,140 @@ Descumprimento: desclassificação imediata.`;
     renderBracket();
     updateTeamCountInfo();
     showToast('Chaveamento embaralhado!', 'success');
+  }
+
+  /**
+   * Refresh/update the groups or bracket display without changing
+   * how players are organized. Recalculates standings and re-renders.
+   */
+  function refreshBracket() {
+    if (currentViewingBracketId) {
+      showToast('Não é possível atualizar um torneio do histórico.', 'error');
+      return;
+    }
+
+    const currentFormat = state.tournamentFormat || 'knockout';
+
+    if (currentFormat === 'groups' && state.groups && state.groups.length > 0) {
+      // Find players registered in state.teams but not in any group
+      const allGroupTeamIds = new Set();
+      state.groups.forEach(g => g.teams.forEach(t => allGroupTeamIds.add(t.id)));
+
+      const newPlayers = state.teams.filter(t => !allGroupTeamIds.has(t.id));
+
+      if (newPlayers.length > 0) {
+        // Assign each new player to a random group
+        const useTwoLegged = !!state.twoLegged;
+        newPlayers.forEach(player => {
+          // Pick a random group
+          const randomGroupIdx = Math.floor(Math.random() * state.groups.length);
+          const group = state.groups[randomGroupIdx];
+
+          // Generate new round-robin matches between the new player and existing group members
+          group.teams.forEach(existingTeam => {
+            const m = {
+              id: generateId(),
+              team1: { id: existingTeam.id, teamName: existingTeam.teamName, playerName: existingTeam.playerName, photo: existingTeam.photo || null, score: null },
+              team2: { id: player.id, teamName: player.teamName, playerName: player.playerName, photo: player.photo || null, score: null },
+              winner: null,
+              status: 'not_started',
+              penalties: null,
+              dateTime: null,
+              twoLegged: useTwoLegged
+            };
+            if (useTwoLegged) {
+              m.ida = { score1: null, score2: null };
+              m.volta = { score1: null, score2: null };
+            }
+            group.matches.push(m);
+          });
+
+          // Add player to the group's team list
+          group.teams.push({ ...player });
+        });
+
+        showToast(`${newPlayers.length} jogador(es) adicionado(s) aos grupos!`, 'success');
+      }
+
+      // Recalculate all group standings and re-render
+      recalcAllGroupStandings();
+      saveState();
+      renderGroupsTab();
+      if (newPlayers.length === 0) {
+        showToast('Grupos atualizados com sucesso!', 'success');
+      }
+      return;
+    }
+
+    if (state.bracket && state.bracket.rounds && state.bracket.rounds.length > 0) {
+      // Re-render bracket without changing anything
+      saveState();
+      renderBracket();
+      updateTeamCountInfo();
+      showToast('Chaveamento atualizado com sucesso!', 'success');
+      return;
+    }
+
+    showToast('Nenhum chaveamento ou grupo para atualizar.', 'error');
+  }
+
+  /**
+   * Randomly assign the last unassigned player into a random group.
+   * Creates round-robin matches against all existing members of that group.
+   */
+  function randomizeLastPlayerIntoGroup() {
+    if (!state.groups || state.groups.length === 0) {
+      showToast('Nenhuma fase de grupos ativa.', 'error');
+      return;
+    }
+
+    // Find players not in any group
+    const allGroupTeamIds = new Set();
+    state.groups.forEach(g => g.teams.forEach(t => allGroupTeamIds.add(t.id)));
+    const pendingPlayers = state.teams.filter(t => !allGroupTeamIds.has(t.id));
+
+    if (pendingPlayers.length === 0) {
+      showToast('Todos os jogadores já estão em um grupo.', 'info');
+      return;
+    }
+
+    // Take the last pending player
+    const player = pendingPlayers[pendingPlayers.length - 1];
+
+    // Pick a random group
+    const randomGroupIdx = Math.floor(Math.random() * state.groups.length);
+    const group = state.groups[randomGroupIdx];
+    const useTwoLegged = !!state.twoLegged;
+
+    // Generate round-robin matches against existing group members
+    group.teams.forEach(existingTeam => {
+      const m = {
+        id: generateId(),
+        team1: { id: existingTeam.id, teamName: existingTeam.teamName, playerName: existingTeam.playerName, photo: existingTeam.photo || null, score: null },
+        team2: { id: player.id, teamName: player.teamName, playerName: player.playerName, photo: player.photo || null, score: null },
+        winner: null,
+        status: 'not_started',
+        penalties: null,
+        dateTime: null,
+        twoLegged: useTwoLegged
+      };
+      if (useTwoLegged) {
+        m.ida = { score1: null, score2: null };
+        m.volta = { score1: null, score2: null };
+      }
+      group.matches.push(m);
+    });
+
+    // Add player to the group
+    group.teams.push({ ...player });
+
+    // Recalculate and re-render
+    recalcAllGroupStandings();
+    saveState();
+    renderGroupsTab();
+
+    const playerName = player.teamName || player.playerName;
+    showToast(`"${playerName}" foi sorteado para o ${group.name}!`, 'success');
   }
 
   /** Swap two teams in the bracket */
@@ -8097,6 +8272,12 @@ Descumprimento: desclassificação imediata.`;
     const btnShuffleBracket = $('#btn-shuffle-bracket');
     if (btnShuffleBracket) {
       btnShuffleBracket.addEventListener('click', shuffleBracket);
+    }
+
+    // Refresh bracket button (update without changing player distribution)
+    const btnRefreshBracket = $('#btn-refresh-bracket');
+    if (btnRefreshBracket) {
+      btnRefreshBracket.addEventListener('click', refreshBracket);
     }
 
     // Visitor button

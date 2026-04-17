@@ -493,6 +493,17 @@ img {
   transform: translateY(-2px);
 }
 
+.btn-info {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.25);
+}
+
+.btn-info:hover {
+  box-shadow: 0 8px 24px rgba(23, 162, 184, 0.4);
+  transform: translateY(-2px);
+}
+
 .btn-danger {
   background: linear-gradient(135deg, var(--accent-red), #e02020);
   color: #fff;
