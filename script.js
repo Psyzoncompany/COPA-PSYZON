@@ -2558,8 +2558,8 @@ Descumprimento: desclassificação imediata.`;
     const s2Input = modal.querySelector('#gm-team2-score');
     const titleEl = modal.querySelector('#gm-modal-title');
 
-    const name1 = match.team1.teamName || match.team1.playerName;
-    const name2 = match.team2.teamName || match.team2.playerName;
+    const name1 = formatShortName(match.team1.playerName || match.team1.teamName);
+    const name2 = formatShortName(match.team2.playerName || match.team2.teamName);
     if (t1Name) t1Name.textContent = name1;
     if (t2Name) t2Name.textContent = name2;
 
@@ -2683,8 +2683,8 @@ Descumprimento: desclassificação imediata.`;
     const s1Input = modal.querySelector('#gm-team1-score');
     const s2Input = modal.querySelector('#gm-team2-score');
 
-    if (t1Name) t1Name.textContent = match.team1.teamName || match.team1.playerName;
-    if (t2Name) t2Name.textContent = match.team2.teamName || match.team2.playerName;
+    if (t1Name) t1Name.textContent = formatShortName(match.team1.playerName || match.team1.teamName);
+    if (t2Name) t2Name.textContent = formatShortName(match.team2.playerName || match.team2.teamName);
     if (s1Input) s1Input.value = match.team1.score != null ? match.team1.score : '';
     if (s2Input) s2Input.value = match.team2.score != null ? match.team2.score : '';
 
@@ -2907,8 +2907,8 @@ Descumprimento: desclassificação imediata.`;
         <div class="repechage-matches">`;
 
       state.groupRepechage.forEach((m, mIdx) => {
-        const t1 = m.team1.teamName || m.team1.playerName;
-        const t2 = m.team2.teamName || m.team2.playerName;
+        const t1 = formatShortName(m.team1.playerName || m.team1.teamName);
+        const t2 = formatShortName(m.team2.playerName || m.team2.teamName);
         const s1 = m.team1.score != null ? m.team1.score : '-';
         const s2 = m.team2.score != null ? m.team2.score : '-';
         const finished = m.winner;
@@ -3300,8 +3300,8 @@ Descumprimento: desclassificação imediata.`;
     // Matches list
     html += `<div class="gd-matches-list">`;
     group.matches.forEach((m, mIdx) => {
-      const t1 = m.team1.teamName || m.team1.playerName;
-      const t2 = m.team2.teamName || m.team2.playerName;
+      const t1 = formatShortName(m.team1.playerName || m.team1.teamName);
+      const t2 = formatShortName(m.team2.playerName || m.team2.teamName);
       const isTwoLeg = !!m.twoLegged;
       const finished = m.team1.score != null;
 
@@ -3611,8 +3611,8 @@ Descumprimento: desclassificação imediata.`;
 
       html += `<div class="ph-repechage-grid">`;
       state.groupRepechage.forEach((m, mIdx) => {
-        const t1Name = m.team1.teamName || m.team1.playerName;
-        const t2Name = m.team2.teamName || m.team2.playerName;
+        const t1Name = formatShortName(m.team1.playerName || m.team1.teamName);
+        const t2Name = formatShortName(m.team2.playerName || m.team2.teamName);
         const t1Photo = getTeamPhoto(m.team1);
         const t2Photo = getTeamPhoto(m.team2);
         const s1 = m.team1.score != null ? m.team1.score : '–';
@@ -4152,8 +4152,8 @@ Descumprimento: desclassificação imediata.`;
 
           nameHtml = `
               <div style="display:flex; flex-direction:column; align-items: center; line-height: 1.1; text-align: center;">
-                <span class="nickname-bold" style="font-weight:700; font-size:14px; color:#ffffff;">${sanitize(teamData.teamName || teamData.playerName)}</span>
-                ${fullName ? `<span class="fullname-small" style="font-size:9px; color:rgba(255, 255, 255, 0.6); margin-top:2px;">${sanitize(fullName)}</span>` : ''}
+                <span class="nickname-bold" style="font-weight:700; font-size:14px; color:#ffffff;">${sanitize(formatShortName(teamData.playerName || teamData.teamName))}</span>
+                <span class="fullname-small" style="font-size:9px; color:rgba(255, 255, 255, 0.6); margin-top:2px;">${sanitize(teamData.teamName)}</span>
               </div>
             `;
 
@@ -4672,8 +4672,8 @@ Descumprimento: desclassificação imediata.`;
       scoreControls.className = 'live-score-controls';
       scoreControls.addEventListener('click', e => e.stopPropagation());
 
-      const t1Name = (match.team1.teamName || match.team1.playerName || '').substring(0, 6);
-      const t2Name = (match.team2.teamName || match.team2.playerName || '').substring(0, 6);
+      const t1Name = formatShortName(match.team1.playerName || match.team1.teamName).substring(0, 10);
+      const t2Name = formatShortName(match.team2.playerName || match.team2.teamName).substring(0, 10);
 
       scoreControls.innerHTML = `
         <div class="live-score-team">
@@ -4953,8 +4953,8 @@ Descumprimento: desclassificação imediata.`;
 
     const t1 = match.team1;
     const t2 = match.team2;
-    const t1Name = t1 ? (t1.teamName || t1.playerName || '?') : 'A definir';
-    const t2Name = t2 ? (t2.teamName || t2.playerName || '?') : 'A definir';
+    const t1Name = t1 ? formatShortName(t1.playerName || t1.teamName || '?') : 'A definir';
+    const t2Name = t2 ? formatShortName(t2.playerName || t2.teamName || '?') : 'A definir';
     const s1 = t1 ? (t1.score || 0) : 0;
     const s2 = t2 ? (t2.score || 0) : 0;
 
@@ -5213,25 +5213,20 @@ Descumprimento: desclassificação imediata.`;
     nameSpan.className = 'team-name-bracket';
     nameSpan.style.fontWeight = '700'; // Nickname in BOLD
     nameSpan.style.color = '#ffffff'; // White color for nickname
-    nameSpan.textContent = team.teamName || team.playerName;
-    nameSpan.title = `${team.teamName} — ${team.playerName}`;
+    nameSpan.textContent = formatShortName(team.playerName || team.teamName);
+    nameSpan.title = `${team.playerName} — ${team.teamName}`;
     nameWrapper.appendChild(nameSpan);
 
-    // Full name in small text if available
-    const participant = state.participants ? state.participants.find(p => (p.id === team.id) || (p.name === team.playerName)) : null;
-    const fullNameText = participant ? participant.name : (team.playerName !== team.teamName ? team.playerName : '');
-
-    if (fullNameText) {
-      const fullNameSpan = document.createElement('span');
-      fullNameSpan.style.fontSize = '9px';
-      fullNameSpan.style.color = 'var(--text-tertiary)';
-      fullNameSpan.style.marginTop = '-2px';
-      fullNameSpan.style.whiteSpace = 'nowrap';
-      fullNameSpan.style.overflow = 'hidden';
-      fullNameSpan.style.textOverflow = 'ellipsis';
-      fullNameSpan.textContent = fullNameText;
-      nameWrapper.appendChild(fullNameSpan);
-    }
+    // Nick in small text
+    const fullNameSpan = document.createElement('span');
+    fullNameSpan.style.fontSize = '9px';
+    fullNameSpan.style.color = 'var(--text-tertiary)';
+    fullNameSpan.style.marginTop = '-2px';
+    fullNameSpan.style.whiteSpace = 'nowrap';
+    fullNameSpan.style.overflow = 'hidden';
+    fullNameSpan.style.textOverflow = 'ellipsis';
+    fullNameSpan.textContent = team.teamName || '';
+    nameWrapper.appendChild(fullNameSpan);
 
     // Make player name clickable to show profile
     const teamRecord = state.teams.find(t => t.id === team.id) || state.teams.find(t => t.playerName === team.playerName && t.teamName === team.teamName);
