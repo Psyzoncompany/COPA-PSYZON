@@ -2333,7 +2333,8 @@ Descumprimento: desclassificação imediata.`;
       };
     });
     group.matches.forEach(m => {
-      if (m.team1.score == null || m.team2.score == null) return;
+      // For single leg, skip if no score. For two legs, allow partial processing
+      if (!m.twoLegged && (m.team1.score == null || m.team2.score == null)) return;
       const t1 = stats[m.team1.id], t2 = stats[m.team2.id];
       if (!t1 || !t2) return;
 
@@ -2856,9 +2857,11 @@ Descumprimento: desclassificação imediata.`;
           ? `<img src="${sanitize(sPhoto)}" alt="" class="gt-avatar">`
           : `<span class="gt-avatar-placeholder">${sanitize(ini)}</span>`;
 
+        const isPresent = state.attendance && state.attendance[s.id];
+        const nameColor = isPresent ? 'color: var(--accent-green);' : '';
         html += `<tr class="${rowClass} gt-player-row" data-team-id="${sanitize(s.id)}" title="Ver perfil">
           <td class="gt-pos">${pos + 1}º</td>
-          <td class="gt-team">${avatar} <span>${sanitize(formatShortName(s.playerName || s.teamName))}</span>${badge}</td>
+          <td class="gt-team">${avatar} <span class="gt-player-name" style="${nameColor}">${sanitize(formatShortName(s.playerName || s.teamName))}</span>${badge}</td>
           <td class="gt-stat">${s.played}</td>
           <td class="gt-stat">${s.wins}</td>
           <td class="gt-stat">${s.draws}</td>
@@ -8938,6 +8941,12 @@ Descumprimento: desclassificação imediata.`;
         item.classList.toggle('present', cb.checked);
         const newCount = Object.values(state.attendance).filter(v => v).length;
         $('#attendance-count').textContent = newCount;
+
+        // Dynamically update groups table if visible
+        const rowNameSpan = document.querySelector(`.gt-player-row[data-team-id="${pid}"] .gt-player-name`);
+        if (rowNameSpan) {
+          rowNameSpan.style.color = cb.checked ? 'var(--accent-green)' : '';
+        }
       });
     });
   }
