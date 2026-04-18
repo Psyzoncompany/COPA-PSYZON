@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   /* Surfaces - The No-Line Rule: Layout boundaries via bg color shifts, not borders */
   --surface: #0b1323;
   --surface-container-lowest: #060e1e;
@@ -4641,34 +4641,40 @@ textarea::placeholder {
 
 /* ---------- 32. Top 3 Card ---------- */
 .top3-card {
-  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95) 0%, rgba(254, 243, 199, 0.95) 100%);
-  border: 1px solid rgba(246, 216, 96, 0.6);
+  background: linear-gradient(135deg, rgba(30, 26, 12, 0.85) 0%, rgba(20, 18, 10, 0.95) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-md);
-  padding: 20px 24px;
+  padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 16px rgba(175, 138, 46, 0.12);
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   animation: fadeInUp 0.5s ease 0.05s both;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
 }
 
 .top3-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(175, 138, 46, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .top3-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--accent-gold);
-  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFD700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  justify-content: center;
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
 }
 
 .top3-list {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
   list-style: none;
@@ -4680,48 +4686,87 @@ textarea::placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.7);
+  gap: 10px;
+  padding: 16px 20px;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.15);
   border-radius: var(--radius-sm);
-  min-width: 100px;
+  min-width: 120px;
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.top3-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .top3-item:hover {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 6px 20px rgba(175, 138, 46, 0.15);
-  transform: translateY(-4px);
+  background: rgba(255, 215, 0, 0.12);
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
+  transform: translateY(-6px);
+}
+
+.top3-item.champion-glow-border {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  transform: scale(1.05);
+  z-index: 2;
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+}
+
+.top3-item.champion-glow-border:hover {
+  transform: scale(1.08) translateY(-6px);
+  box-shadow: 0 12px 40px rgba(255, 215, 0, 0.3);
 }
 
 .top3-position {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 900;
   line-height: 1;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .top3-position.gold {
   color: #FFD700;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
 }
 
 .top3-position.silver {
-  color: #C0C0C0;
+  color: #E0E0E0;
+  filter: drop-shadow(0 0 8px rgba(224, 224, 224, 0.5));
 }
 
 .top3-position.bronze {
   color: #CD7F32;
+  filter: drop-shadow(0 0 8px rgba(205, 127, 50, 0.5));
 }
 
 .top3-avatar {
-  width: 40px;
-  height: 40px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   overflow: hidden;
-  background: var(--bg-tertiary);
+  background: rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: all 0.3s ease;
+}
+
+.top3-item.champion-glow-border .top3-avatar {
+  width: 68px;
+  height: 68px;
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
 .top3-avatar img {
@@ -4732,20 +4777,30 @@ textarea::placeholder {
 }
 
 .top3-av-placeholder {
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
 }
 
 .top3-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
   text-align: center;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.top3-item.champion-glow-border .top3-name {
+  font-size: 16px;
+  color: #FFD700;
 }
 
 .top3-trophies {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--accent-gold);
+  color: rgba(255,255,255,0.7);
 }
 
 /* ---------- 33. Clickable Player Name in Bracket ---------- */

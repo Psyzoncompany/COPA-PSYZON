@@ -88,8 +88,54 @@
     };
   }
 
+  /** Helper to get team photo safely to avoid duplicating base64 data in state */
+  function getTeamPhoto(team) {
+    if (!team || !team.id) return null;
+    if (state.teams) {
+      const full = state.teams.find(t => t.id === team.id);
+      if (full && full.photo) return full.photo;
+    }
+    return team.photo || null;
+  }
+
+  /** Strip photos from everywhere EXCEPT state.teams/participants to save space */
+  function cleanStateBloat() {
+    if (state.bracket && state.bracket.rounds) {
+      state.bracket.rounds.forEach(r => {
+        if (r.matches) r.matches.forEach(m => {
+          if (m.team1) delete m.team1.photo;
+          if (m.team2) delete m.team2.photo;
+        });
+      });
+    }
+    if (state.groups) {
+      state.groups.forEach(g => {
+        if (g.teams) g.teams.forEach(t => delete t.photo);
+        if (g.matches) g.matches.forEach(m => {
+          if (m.team1) delete m.team1.photo;
+          if (m.team2) delete m.team2.photo;
+        });
+        if (g.standings) g.standings.forEach(s => delete s.photo);
+      });
+    }
+    if (state.groupRepechage) {
+      state.groupRepechage.forEach(m => {
+        if (m.team1) delete m.team1.photo;
+        if (m.team2) delete m.team2.photo;
+      });
+    }
+    if (state.groupDirectQualified) {
+      state.groupDirectQualified.forEach(t => delete t.photo);
+    }
+    if (state.bracket && state.bracket._lastRepescagemResult) {
+      delete state.bracket._lastRepescagemResult; // Recalculate it
+    }
+  }
+
+
   /** Persist current state to Firestore AND offline-first persistence layer */
   function saveState() {
+    cleanStateBloat();
     // --- Offline-first persistence (localStorage modular + Firebase estado/principal) ---
     if (typeof window.Persistence !== 'undefined') {
       try {
@@ -132,8 +178,11 @@
           }
         } else {
           state = defaultState();
+          cleanStateBloat();
           saveState(); // Initialize document with default state
         }
+        
+        cleanStateBloat();
 
         // Auto-generate bracket if it doesn't exist
         ensureBracketExists();
@@ -1640,11 +1689,6 @@ Descumprimento: desclassificação imediata.`;
   function makeTeamSlotData(t) {
     if (!t) return { id: null, teamName: 'TBD', playerName: 'TBD', score: null };
     const slot = { id: t.id, teamName: t.teamName, playerName: t.playerName, score: null };
-    if (t.photo) slot.photo = t.photo;
-    // Do NOT copy isRepescagem / isThirdChance here.
-    // applyRepescagem() sets these flags explicitly for placements.
-    // Copying them on winner advancement causes applyRepescagem() to
-    // mistakenly strip the legitimately advanced winner.
     return slot;
   }
 
@@ -1932,7 +1976,7 @@ Descumprimento: desclassificação imediata.`;
         const goalDiff = goalsScored - goalsConceded;
 
         losers.push({
-          team: { id: loserTeam.id, teamName: loserTeam.teamName, playerName: loserTeam.playerName, photo: loserTeam.photo || null },
+          team: { id: loserTeam.id, teamName: loserTeam.teamName, playerName: loserTeam.playerName },
           goalsScored,
           goalsConceded,
           goalDiff,
@@ -2096,8 +2140,9 @@ Descumprimento: desclassificação imediata.`;
       availablePool.forEach((entry, i) => {
         const t = entry.team;
         const ini = initials(t.playerName || t.teamName);
-        const avatar = t.photo
-          ? `<img src="${sanitize(t.photo)}" alt="" class="repescagem-avatar">`
+        const tPhoto = getTeamPhoto(t);
+        const avatar = tPhoto
+          ? `<img src="${sanitize(tPhoto)}" alt="" class="repescagem-avatar">`
           : `<span class="repescagem-avatar-placeholder">${sanitize(ini)}</span>`;
         html += `
           <div class="repescagem-item">
@@ -2230,8 +2275,8 @@ Descumprimento: desclassificação imediata.`;
       for (let j = i + 1; j < teams.length; j++) {
         const m = {
           id: generateId(),
-          team1: { id: teams[i].id, teamName: teams[i].teamName, playerName: teams[i].playerName, photo: teams[i].photo || null, score: null },
-          team2: { id: teams[j].id, teamName: teams[j].teamName, playerName: teams[j].playerName, photo: teams[j].photo || null, score: null },
+          team1: { id: teams[i].id, teamName: teams[i].teamName, playerName: teams[i].playerName, score: null },
+          team2: { id: teams[j].id, teamName: teams[j].teamName, playerName: teams[j].playerName, score: null },
           winner: null,
           status: 'not_started',
           penalties: null,
@@ -2256,7 +2301,7 @@ Descumprimento: desclassificação imediata.`;
     const stats = {};
     group.teams.forEach(t => {
       stats[t.id] = {
-        id: t.id, teamName: t.teamName, playerName: t.playerName, photo: t.photo || null,
+        id: t.id, teamName: t.teamName, playerName: t.playerName,
         played: 0, wins: 0, draws: 0, losses: 0,
         goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0
       };
@@ -2409,8 +2454,8 @@ Descumprimento: desclassificação imediata.`;
     // Store repechage matches in state
     state.groupRepechage = repechageMatches.map(pair => ({
       id: generateId(),
-      team1: { id: pair.a.id, teamName: pair.a.teamName, playerName: pair.a.playerName, photo: pair.a.photo || null, score: null },
-      team2: { id: pair.b.id, teamName: pair.b.teamName, playerName: pair.b.playerName, photo: pair.b.photo || null, score: null },
+      team1: { id: pair.a.id, teamName: pair.a.teamName, playerName: pair.a.playerName, score: null },
+      team2: { id: pair.b.id, teamName: pair.b.teamName, playerName: pair.b.playerName, score: null },
       winner: null, status: 'not_started', penalties: null, dateTime: null
     }));
     state.groupDirectQualified = directQualified;
@@ -2446,7 +2491,7 @@ Descumprimento: desclassificação imediata.`;
     // Build main bracket with qualified teams (8 for quarterfinals)
     state.teamCount = qualified.length;
     const teamsForBracket = qualified.map(t => ({
-      id: t.id, teamName: t.teamName, playerName: t.playerName, photo: t.photo || null
+      id: t.id, teamName: t.teamName, playerName: t.playerName
     }));
     const shuffled = shuffleArray(teamsForBracket);
     state.bracket = buildBracketStructure(shuffled, qualified.length);
@@ -2780,8 +2825,9 @@ Descumprimento: desclassificação imediata.`;
         }
 
         const ini = initials(s.playerName || s.teamName);
-        const avatar = s.photo
-          ? `<img src="${sanitize(s.photo)}" alt="" class="gt-avatar">`
+        const sPhoto = getTeamPhoto(s);
+        const avatar = sPhoto
+          ? `<img src="${sanitize(sPhoto)}" alt="" class="gt-avatar">`
           : `<span class="gt-avatar-placeholder">${sanitize(ini)}</span>`;
 
         html += `<tr class="${rowClass} gt-player-row" data-team-id="${sanitize(s.id)}" title="Ver perfil">
@@ -3009,8 +3055,9 @@ Descumprimento: desclassificação imediata.`;
 
     directQualified.forEach(p => {
       const ini = initials(p.playerName || p.teamName);
-      const avatar = p.photo
-        ? `<img src="${sanitize(p.photo)}" alt="" class="qualifying-avatar">`
+      const pPhoto = getTeamPhoto(p);
+      const avatar = pPhoto
+        ? `<img src="${sanitize(pPhoto)}" alt="" class="qualifying-avatar">`
         : `<span class="qualifying-avatar-placeholder">${sanitize(ini)}</span>`;
       html += `<div class="qualifying-player direct">
         ${avatar}
@@ -3031,8 +3078,9 @@ Descumprimento: desclassificação imediata.`;
 
     repechagePlayers.forEach((p, i) => {
       const ini = initials(p.playerName || p.teamName);
-      const avatar = p.photo
-        ? `<img src="${sanitize(p.photo)}" alt="" class="qualifying-avatar">`
+      const pPhoto = getTeamPhoto(p);
+      const avatar = pPhoto
+        ? `<img src="${sanitize(pPhoto)}" alt="" class="qualifying-avatar">`
         : `<span class="qualifying-avatar-placeholder">${sanitize(ini)}</span>`;
       const isBestThird = bestThird && p.id === bestThird.id;
       const posLabel = isBestThird ? `Melhor 3º (${sanitize(p.groupName || '')})` : `2º de ${sanitize(p.groupName || '')}`;
@@ -3068,8 +3116,9 @@ Descumprimento: desclassificação imediata.`;
 
       eliminatedPlayers.forEach(p => {
         const ini = initials(p.playerName || p.teamName);
-        const avatar = p.photo
-          ? `<img src="${sanitize(p.photo)}" alt="" class="qualifying-avatar">`
+        const pPhoto = getTeamPhoto(p);
+        const avatar = pPhoto
+          ? `<img src="${sanitize(pPhoto)}" alt="" class="qualifying-avatar">`
           : `<span class="qualifying-avatar-placeholder">${sanitize(ini)}</span>`;
         html += `<div class="qualifying-player eliminated">
           ${avatar}
@@ -3538,8 +3587,8 @@ Descumprimento: desclassificação imediata.`;
       state.groupRepechage.forEach((m, mIdx) => {
         const t1Name = m.team1.teamName || m.team1.playerName;
         const t2Name = m.team2.teamName || m.team2.playerName;
-        const t1Photo = m.team1.photo;
-        const t2Photo = m.team2.photo;
+        const t1Photo = getTeamPhoto(m.team1);
+        const t2Photo = getTeamPhoto(m.team2);
         const s1 = m.team1.score != null ? m.team1.score : '–';
         const s2 = m.team2.score != null ? m.team2.score : '–';
         const finished = !!m.winner;
@@ -4068,7 +4117,8 @@ Descumprimento: desclassificação imediata.`;
 
         if (teamData) {
           const initialsText = initials(teamData.playerName || teamData.teamName);
-          imgHtml = teamData.photo ? `<img src="${sanitize(teamData.photo)}" alt="">` : `<span class="av-placeholder">${sanitize(initialsText)}</span>`;
+          const tPhoto = getTeamPhoto(teamData);
+          imgHtml = tPhoto ? `<img src="${sanitize(tPhoto)}" alt="">` : `<span class="av-placeholder">${sanitize(initialsText)}</span>`;
 
           // Get full name from participants
           const p = state.participants ? state.participants.find(part => part.id === teamData.id) : null;
@@ -5113,9 +5163,10 @@ Descumprimento: desclassificação imediata.`;
     // Avatar
     const avatar = document.createElement('div');
     avatar.className = 'team-avatar';
-    if (team.photo) {
+    const tPhoto = getTeamPhoto(team);
+    if (tPhoto) {
       const avImg = document.createElement('img');
-      avImg.src = team.photo;
+      avImg.src = tPhoto;
       avImg.alt = '';
       avatar.appendChild(avImg);
     } else {
@@ -6757,22 +6808,6 @@ Descumprimento: desclassificação imediata.`;
           participant.photo = `https://flagcdn.com/${newFlagId}.svg`;
         }
       }
-
-      // Sync with bracket slots
-      if (state.bracket && state.bracket.rounds) {
-        state.bracket.rounds.forEach(round => {
-          round.matches.forEach(match => {
-            const team = state.teams.find(t => t.id === teamId);
-            if (!team) return;
-            if (match.team1 && match.team1.id === teamId) {
-              match.team1.photo = team.photo;
-            }
-            if (match.team2 && match.team2.id === teamId) {
-              match.team2.photo = team.photo;
-            }
-          });
-        });
-      }
     }
 
     saveState();
@@ -7027,8 +7062,9 @@ Descumprimento: desclassificação imediata.`;
 
     let html = '';
     ranked.forEach((r, i) => {
-      const avatar = r.team.photo
-        ? '<img src="' + sanitize(r.team.photo) + '" alt="' + sanitize(r.team.playerName) + '">'
+      const rPhoto = getTeamPhoto(r.team);
+      const avatar = rPhoto
+        ? '<img src="' + sanitize(rPhoto) + '" alt="' + sanitize(r.team.playerName) + '">'
         : '<span class="av-placeholder top3-av-placeholder">' + sanitize(initials(r.team.playerName)) + '</span>';
 
       const championClass = i === 0 ? 'champion-glow-border' : '';
@@ -8029,8 +8065,8 @@ Descumprimento: desclassificação imediata.`;
           group.teams.forEach(existingTeam => {
             const m = {
               id: generateId(),
-              team1: { id: existingTeam.id, teamName: existingTeam.teamName, playerName: existingTeam.playerName, photo: existingTeam.photo || null, score: null },
-              team2: { id: player.id, teamName: player.teamName, playerName: player.playerName, photo: player.photo || null, score: null },
+              team1: { id: existingTeam.id, teamName: existingTeam.teamName, playerName: existingTeam.playerName, score: null },
+              team2: { id: player.id, teamName: player.teamName, playerName: player.playerName, score: null },
               winner: null,
               status: 'not_started',
               penalties: null,
@@ -8105,8 +8141,8 @@ Descumprimento: desclassificação imediata.`;
     group.teams.forEach(existingTeam => {
       const m = {
         id: generateId(),
-        team1: { id: existingTeam.id, teamName: existingTeam.teamName, playerName: existingTeam.playerName, photo: existingTeam.photo || null, score: null },
-        team2: { id: player.id, teamName: player.teamName, playerName: player.playerName, photo: player.photo || null, score: null },
+        team1: { id: existingTeam.id, teamName: existingTeam.teamName, playerName: existingTeam.playerName, score: null },
+        team2: { id: player.id, teamName: player.teamName, playerName: player.playerName, score: null },
         winner: null,
         status: 'not_started',
         penalties: null,
