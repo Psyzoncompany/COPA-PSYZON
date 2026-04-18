@@ -8864,6 +8864,99 @@ Descumprimento: desclassificação imediata.`;
     if (playerFlagInput) {
       playerFlagInput.addEventListener('change', () => updateFlagPreview('player-flag-input', 'player-flag-preview'));
     }
+
+    // Attendance buttons
+    const btnAttendance = $('#btn-attendance');
+    if (btnAttendance) btnAttendance.addEventListener('click', toggleAttendanceModal);
+
+    const closeAttendance = $('#btn-close-attendance');
+    if (closeAttendance) closeAttendance.addEventListener('click', toggleAttendanceModal);
+
+    const attBackdrop = $('.modal-backdrop[data-dismiss="attendance-modal"]');
+    if (attBackdrop) attBackdrop.addEventListener('click', toggleAttendanceModal);
+
+    const clearAttBtn = $('#btn-clear-attendance');
+    if (clearAttBtn) clearAttBtn.addEventListener('click', clearAttendance);
+  }
+
+  /* ==========================================================
+     17.5. ATTENDANCE LIST (PRESENÇA)
+     ========================================================== */
+  function renderAttendanceList() {
+    if (!state.attendance) state.attendance = {};
+    const container = $('#attendance-list');
+    const countEl = $('#attendance-count');
+    const totalEl = $('#attendance-total');
+    if (!container) return;
+
+    let players = [];
+    if (state.teams && state.teams.length > 0) {
+      players = state.teams;
+    } else if (state.participants && state.participants.length > 0) {
+      players = state.participants.filter(p => p.verified);
+    }
+
+    totalEl.textContent = players.length;
+    let presentCount = 0;
+    let html = '';
+
+    players.forEach(p => {
+      const pid = p.id;
+      const isPresent = !!state.attendance[pid];
+      if (isPresent) presentCount++;
+      const name = p.name || p.playerName;
+      const nick = p.nick || p.teamName;
+      const displayName = formatShortName(name || nick);
+
+      html += `
+        <div class="attendance-item ${isPresent ? 'present' : ''}" data-id="${pid}">
+          <span class="attendance-name">${sanitize(displayName)}</span>
+          <input type="checkbox" class="attendance-checkbox" ${isPresent ? 'checked' : ''}>
+        </div>
+      `;
+    });
+
+    if (players.length === 0) {
+      html = '<div style="text-align:center; color:var(--text-tertiary); padding:20px;">Nenhum jogador encontrado.</div>';
+    }
+
+    container.innerHTML = html;
+    countEl.textContent = presentCount;
+
+    // Bind clicks
+    container.querySelectorAll('.attendance-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const cb = item.querySelector('.attendance-checkbox');
+        // Toggle only if we didn't click the checkbox directly
+        if (e.target !== cb) {
+          cb.checked = !cb.checked;
+        }
+        const pid = item.dataset.id;
+        state.attendance[pid] = cb.checked;
+        saveState();
+        
+        item.classList.toggle('present', cb.checked);
+        const newCount = Object.values(state.attendance).filter(v => v).length;
+        $('#attendance-count').textContent = newCount;
+      });
+    });
+  }
+
+  function toggleAttendanceModal() {
+    const modal = $('#attendance-modal');
+    if (modal.style.display === 'flex') {
+      modal.style.display = 'none';
+    } else {
+      renderAttendanceList();
+      modal.style.display = 'flex';
+    }
+  }
+
+  function clearAttendance() {
+    if (!confirm('Deseja desmarcar a presença de todos os jogadores?')) return;
+    state.attendance = {};
+    saveState();
+    renderAttendanceList();
   }
 
   /* ==========================================================
