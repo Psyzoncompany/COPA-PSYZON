@@ -91,11 +91,34 @@
   /** Helper to get team photo safely to avoid duplicating base64 data in state */
   function getTeamPhoto(team) {
     if (!team || !team.id) return null;
+    let photo = null;
+    let flagId = null;
+
     if (state.teams) {
       const full = state.teams.find(t => t.id === team.id);
-      if (full && full.photo) return full.photo;
+      if (full) {
+        photo = full.photo;
+        flagId = full.flagId;
+      }
     }
-    return team.photo || null;
+    
+    if (!photo && state.participants) {
+      const p = state.participants.find(p => p.id === team.id);
+      if (p) {
+        photo = photo || p.photo;
+        flagId = flagId || p.flagId || p.flag;
+      }
+    }
+
+    if (!photo && !flagId) {
+      photo = team.photo;
+      flagId = team.flagId || team.flag;
+    }
+
+    if (photo) return photo;
+    if (flagId) return `https://flagcdn.com/${flagId}.svg`;
+
+    return null;
   }
 
   /** Strip photos from everywhere EXCEPT state.teams/participants to save space */
@@ -335,6 +358,14 @@
     const parts = name.trim().split(/\s+/);
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  /** Format name to show only First and Last name */
+  function formatShortName(name) {
+    if (!name) return '';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    return parts[0] + ' ' + parts[parts.length - 1];
   }
 
   /**
@@ -2827,7 +2858,7 @@ Descumprimento: desclassificação imediata.`;
 
         html += `<tr class="${rowClass} gt-player-row" data-team-id="${sanitize(s.id)}" title="Ver perfil">
           <td class="gt-pos">${pos + 1}º</td>
-          <td class="gt-team">${avatar} <span>${sanitize(s.teamName || s.playerName)}</span>${badge}</td>
+          <td class="gt-team">${avatar} <span>${sanitize(formatShortName(s.playerName || s.teamName))}</span>${badge}</td>
           <td class="gt-stat">${s.played}</td>
           <td class="gt-stat">${s.wins}</td>
           <td class="gt-stat">${s.draws}</td>
@@ -3057,7 +3088,7 @@ Descumprimento: desclassificação imediata.`;
       html += `<div class="qualifying-player direct">
         ${avatar}
         <div class="qualifying-player-info">
-          <strong>${sanitize(p.teamName || p.playerName)}</strong>
+          <strong>${sanitize(formatShortName(p.playerName || p.teamName))}</strong>
           <small>1º de ${sanitize(p.groupName || '')}</small>
         </div>
         <span class="qualifying-pts">${p.points} pts</span>
@@ -3082,7 +3113,7 @@ Descumprimento: desclassificação imediata.`;
       html += `<div class="qualifying-player repechage ${isBestThird ? 'best-third' : ''}">
         ${avatar}
         <div class="qualifying-player-info">
-          <strong>${sanitize(p.teamName || p.playerName)}</strong>
+          <strong>${sanitize(formatShortName(p.playerName || p.teamName))}</strong>
           <small>${posLabel}</small>
         </div>
         <span class="qualifying-pts">${p.points} pts</span>
@@ -3118,7 +3149,7 @@ Descumprimento: desclassificação imediata.`;
         html += `<div class="qualifying-player eliminated">
           ${avatar}
           <div class="qualifying-player-info">
-            <strong>${sanitize(p.teamName || p.playerName)}</strong>
+            <strong>${sanitize(formatShortName(p.playerName || p.teamName))}</strong>
             <small>${p.position}º de ${sanitize(p.groupName || '')}</small>
           </div>
           <span class="qualifying-pts">${p.points} pts</span>
