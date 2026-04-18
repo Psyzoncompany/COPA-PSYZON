@@ -177,15 +177,9 @@
       var moduleData = extractModule(modDef, rawState);
       var key = LS_MOD_PREFIX + modDef.name;
 
-      // OVERWRITE PROTECTION: don't save empty over existing good data
-      if (!hasModuleContent(modDef, moduleData)) {
-        var existing = safeParse(localStorage.getItem(key));
-        var existFields = existing && existing.fields ? existing.fields : existing;
-        if (existFields && hasModuleContent(modDef, existFields)) {
-          console.warn('[Persistence] Mod "' + modDef.name + '" vazio -> mantendo dados anteriores.');
-          return true;
-        }
-      }
+      // Removed OVERWRITE PROTECTION because it prevented intentional deletions
+      // (like setting state.groupRepechage = null) from being saved to localStorage,
+      // causing the old data to resurrect on page reload.
 
       var payload = { updatedAt: new Date().toISOString(), fields: cleanForStorage(moduleData) };
       localStorage.setItem(key, JSON.stringify(payload));
@@ -394,7 +388,7 @@
   /* ==========================================================
      MERGE HELPER
      ========================================================== */
-  /** Merge two raw states: fill empty fields in primary with data from secondary */
+  /** Merge two raw states: fill MISSING fields in primary with data from secondary */
   function mergeStates(primary, secondary) {
     if (!primary) return secondary;
     if (!secondary) return primary;
@@ -404,10 +398,13 @@
       var k = allKeys[i];
       var pv = primary[k];
       var sv = secondary[k];
-      if (isFieldEmpty(pv) && !isFieldEmpty(sv)) {
-        result[k] = sv;
+      
+      // If primary explicitly has the key (even if it's null or an empty array),
+      // we MUST respect it. Otherwise, intentional deletions get resurrected.
+      if (pv !== undefined) {
+        result[k] = pv;
       } else {
-        result[k] = pv !== undefined ? pv : sv;
+        result[k] = sv;
       }
     }
     return result;

@@ -163,16 +163,11 @@
       db.collection('tournaments').doc('main').onSnapshot((doc) => {
         if (doc.exists) {
           const incoming = doc.data();
-          // OVERWRITE PROTECTION: merge incoming with current state
-          // If incoming fields are empty but current has data, keep current
+          // Use incoming snapshot as the single source of truth.
+          // Using mergeStates here caused deleted fields (like groupRepechage=null) 
+          // to be resurrected if another client still had them in local state.
           if (incoming && typeof incoming === 'object') {
-            const P = window.Persistence;
-            if (P && typeof P.mergeStates === 'function' && typeof P.isFieldEmpty === 'function') {
-              const merged = P.mergeStates(incoming, state);
-              state = Object.assign(defaultState(), merged);
-            } else {
-              state = Object.assign(defaultState(), incoming);
-            }
+            state = Object.assign(defaultState(), incoming);
           } else {
             state = Object.assign(defaultState(), incoming);
           }
