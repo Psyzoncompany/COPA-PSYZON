@@ -1069,6 +1069,7 @@ async function initSponsorsShowcase() {
         var groupsClone = groupsContainer.cloneNode(true);
         groupsClone.id = 'fs-groups-clone';
         groupsClone.className = 'fs-groups-content';
+        groupsClone.style.display = 'block';
         // Remove interactive elements that don't work in fullscreen
         var btns = groupsClone.querySelectorAll('.classification-info-block, .group-actions, .repechage-section, .group-card-footer');
         btns.forEach(function(el) { el.remove(); });
@@ -1089,6 +1090,7 @@ async function initSponsorsShowcase() {
     if (bracketContainer) {
       var bracketClone = bracketContainer.cloneNode(true);
       bracketClone.id = 'fs-bracket-clone';
+      bracketClone.style.display = 'block';
 
       // Find all rounds in the clone
       var rounds = bracketClone.querySelectorAll('.round:not(.connector-col)');
@@ -1288,6 +1290,7 @@ async function initSponsorsShowcase() {
             var newGroupsClone = groupsContainer2.cloneNode(true);
             newGroupsClone.id = 'fs-groups-clone';
             newGroupsClone.className = 'fs-groups-content';
+            newGroupsClone.style.display = 'block';
             var btnsToRemove = newGroupsClone.querySelectorAll('.classification-info-block, .group-actions, .repechage-section, .group-card-footer');
             btnsToRemove.forEach(function(el) { el.remove(); });
             colBracketUpd.replaceChild(newGroupsClone, oldGroupsClone);
@@ -1343,6 +1346,7 @@ async function initSponsorsShowcase() {
               if (oldClone && scrollAreaUpd) {
                 var newClone = bracketContainer2.cloneNode(true);
                 newClone.id = 'fs-bracket-clone';
+                newClone.style.display = 'block';
                 // Re-apply round visibility
                 var newRounds = newClone.querySelectorAll('.round:not(.connector-col)');
                 var activeIdx = -1;
