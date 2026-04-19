@@ -3680,23 +3680,13 @@ Descumprimento: desclassificação imediata.`;
     const groupCount = state.groups ? state.groups.length : 5;
     const groupNames = state.groups ? state.groups.map(g => g.name) : [];
 
-    // Build the 8 quarterfinal slots
-    const directSlots = [];
-    for (let i = 0; i < groupCount; i++) {
-      directSlots.push({ label: `1º ${groupNames[i] || ('Grupo ' + String.fromCharCode(65 + i))}`, type: 'direct' });
-    }
-    const repSlots = [
-      { label: 'Venc. Repescagem 1', type: 'repechage' },
-      { label: 'Venc. Repescagem 2', type: 'repechage' },
-      { label: 'Venc. Repescagem 3', type: 'repechage' }
-    ];
-
-    const tbd = { label: 'A definir', type: 'tbd' };
+    // Since matchups are manually drawn now, just use generic Sorteio placeholders
+    const sorteioLabel = { label: 'Sorteio', type: 'tbd' };
     const qfMatchups = [
-      { team1: directSlots[0] || tbd, team2: repSlots[2] || tbd },
-      { team1: directSlots[1] || tbd, team2: repSlots[1] || tbd },
-      { team1: directSlots[2] || tbd, team2: repSlots[0] || tbd },
-      { team1: directSlots[3] || tbd, team2: directSlots[4] || tbd }
+      { team1: sorteioLabel, team2: sorteioLabel },
+      { team1: sorteioLabel, team2: sorteioLabel },
+      { team1: sorteioLabel, team2: sorteioLabel },
+      { team1: sorteioLabel, team2: sorteioLabel }
     ];
 
     // Repechage matchups
