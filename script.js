@@ -2481,12 +2481,21 @@ Descumprimento: desclassificação imediata.`;
     }
 
     // Store repechage matches in state
-    state.groupRepechage = repechageMatches.map(pair => ({
-      id: generateId(),
-      team1: { id: pair.a.id, teamName: pair.a.teamName, playerName: pair.a.playerName, score: null },
-      team2: { id: pair.b.id, teamName: pair.b.teamName, playerName: pair.b.playerName, score: null },
-      winner: null, status: 'not_started', penalties: null, dateTime: null
-    }));
+    const useTwoLegged = !!state.twoLegged;
+    state.groupRepechage = repechageMatches.map(pair => {
+      const m = {
+        id: generateId(),
+        team1: { id: pair.a.id, teamName: pair.a.teamName, playerName: pair.a.playerName, score: null },
+        team2: { id: pair.b.id, teamName: pair.b.teamName, playerName: pair.b.playerName, score: null },
+        winner: null, status: 'not_started', penalties: null, dateTime: null,
+        twoLegged: useTwoLegged
+      };
+      if (useTwoLegged) {
+        m.ida = { score1: null, score2: null };
+        m.volta = { score1: null, score2: null };
+      }
+      return m;
+    });
     state.groupDirectQualified = directQualified;
 
     saveState();
@@ -2795,7 +2804,7 @@ Descumprimento: desclassificação imediata.`;
   /**
    * Open score modal for a repechage match.
    */
-  function openRepechageScoreModal(matchIdx) {
+  function openRepechageScoreModal(matchIdx, leg) {
     if (!state.groupRepechage) return;
     const match = state.groupRepechage[matchIdx];
     if (!match) return;
@@ -2805,16 +2814,39 @@ Descumprimento: desclassificação imediata.`;
 
     modal.dataset.groupIdx = '-1'; // special marker for repechage
     modal.dataset.matchIdx = matchIdx;
+    modal.dataset.leg = leg || 'single';
 
     const t1Name = modal.querySelector('#gm-team1-name');
     const t2Name = modal.querySelector('#gm-team2-name');
     const s1Input = modal.querySelector('#gm-team1-score');
     const s2Input = modal.querySelector('#gm-team2-score');
+    const titleEl = modal.querySelector('#gm-modal-title');
 
     if (t1Name) t1Name.textContent = formatShortName(match.team1.playerName || match.team1.teamName);
     if (t2Name) t2Name.textContent = formatShortName(match.team2.playerName || match.team2.teamName);
-    if (s1Input) s1Input.value = match.team1.score != null ? match.team1.score : '';
-    if (s2Input) s2Input.value = match.team2.score != null ? match.team2.score : '';
+
+    if (titleEl) {
+      if (leg === 'ida') titleEl.textContent = 'Repescagem - Ida';
+      else if (leg === 'volta') titleEl.textContent = 'Repescagem - Volta';
+      else titleEl.textContent = 'Resultado da Partida';
+    }
+
+    let s1Val = '', s2Val = '';
+    if (match.twoLegged && match.ida && match.volta) {
+      if (leg === 'ida') {
+        s1Val = match.ida.score1 != null ? match.ida.score1 : '';
+        s2Val = match.ida.score2 != null ? match.ida.score2 : '';
+      } else if (leg === 'volta') {
+        s1Val = match.volta.score1 != null ? match.volta.score1 : '';
+        s2Val = match.volta.score2 != null ? match.volta.score2 : '';
+      }
+    } else {
+      s1Val = match.team1.score != null ? match.team1.score : '';
+      s2Val = match.team2.score != null ? match.team2.score : '';
+    }
+
+    if (s1Input) s1Input.value = s1Val;
+    if (s2Input) s2Input.value = s2Val;
 
     modal.style.display = 'flex';
   }
@@ -2827,6 +2859,7 @@ Descumprimento: desclassificação imediata.`;
     if (!modal) return;
 
     const matchIdx = parseInt(modal.dataset.matchIdx, 10);
+    const leg = modal.dataset.leg || 'single';
     if (!state.groupRepechage || !state.groupRepechage[matchIdx]) return;
     const match = state.groupRepechage[matchIdx];
 
@@ -2838,15 +2871,45 @@ Descumprimento: desclassificação imediata.`;
       return;
     }
 
-    if (s1 === s2) {
-      showToast('Empate não é permitido na repescagem. Defina um vencedor.', 'error');
-      return;
-    }
+    if (match.twoLegged) {
+      if (!match.ida) match.ida = { score1: null, score2: null };
+      if (!match.volta) match.volta = { score1: null, score2: null };
 
-    match.team1.score = s1;
-    match.team2.score = s2;
-    match.winner = s1 > s2 ? 1 : 2;
-    match.status = 'finished';
+      if (leg === 'ida') {
+        match.ida.score1 = s1;
+        match.ida.score2 = s2;
+      } else if (leg === 'volta') {
+        match.volta.score1 = s1;
+        match.volta.score2 = s2;
+      }
+
+      const idaDone = match.ida.score1 !== null && match.ida.score2 !== null;
+      const voltaDone = match.volta.score1 !== null && match.volta.score2 !== null;
+
+      if (idaDone && voltaDone) {
+        const agg1 = match.ida.score1 + match.volta.score1;
+        const agg2 = match.ida.score2 + match.volta.score2;
+        if (agg1 === agg2) {
+          showToast('Empate no agregado não é permitido na repescagem. Altere para definir um vencedor.', 'error');
+          return;
+        }
+        match.team1.score = agg1;
+        match.team2.score = agg2;
+        match.winner = agg1 > agg2 ? 1 : 2;
+        match.status = 'finished';
+      } else {
+        match.status = 'in_progress';
+      }
+    } else {
+      if (s1 === s2) {
+        showToast('Empate não é permitido na repescagem. Defina um vencedor.', 'error');
+        return;
+      }
+      match.team1.score = s1;
+      match.team2.score = s2;
+      match.winner = s1 > s2 ? 1 : 2;
+      match.status = 'finished';
+    }
 
     saveState();
     modal.style.display = 'none';
@@ -3039,15 +3102,52 @@ Descumprimento: desclassificação imediata.`;
       state.groupRepechage.forEach((m, mIdx) => {
         const t1 = formatShortName(m.team1.playerName || m.team1.teamName);
         const t2 = formatShortName(m.team2.playerName || m.team2.teamName);
-        const s1 = m.team1.score != null ? m.team1.score : '-';
-        const s2 = m.team2.score != null ? m.team2.score : '-';
+        const isTwoLeg = !!m.twoLegged;
         const finished = m.winner;
-        html += `<div class="group-match repechage-match ${finished ? 'gm-finished' : ''}" data-repechage="${mIdx}">
-          <span class="gm-team gm-team1 ${m.winner === 1 ? 'gm-winner' : ''}">${sanitize(t1)}</span>
-          <span class="gm-score">${s1} × ${s2}</span>
-          <span class="gm-team gm-team2 ${m.winner === 2 ? 'gm-winner' : ''}">${sanitize(t2)}</span>
-          ${isAdmin && !finished ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" onclick="window._openRepechageScore(${mIdx})">${SVG.pencil}</button>` : ''}
-        </div>`;
+        
+        if (isTwoLeg) {
+            const ida = m.ida || { score1: null, score2: null };
+            const volta = m.volta || { score1: null, score2: null };
+            const idaFinished = ida.score1 != null;
+            const voltaFinished = volta.score1 != null;
+            
+            html += `<div class="gd-match-card ${finished ? 'gd-finished' : ''}" style="margin-bottom:10px;">`;
+            html += `<div class="gd-match-teams">
+              <span class="gd-team gd-team1 ${m.winner === 1 ? 'gd-winner' : ''}">${sanitize(t1)}</span>
+              <span class="gd-vs">VS</span>
+              <span class="gd-team gd-team2 ${m.winner === 2 ? 'gd-winner' : ''}">${sanitize(t2)}</span>
+            </div>`;
+            
+            html += `<div class="gd-legs">`;
+            html += `<div class="gd-leg">
+              <span class="gd-leg-label">Ida</span>
+              <span class="gd-leg-score">${idaFinished ? `${ida.score1} × ${ida.score2}` : '- × -'}</span>
+              ${isAdmin && !finished ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" onclick="window._openRepechageScore(${mIdx}, 'ida')">${SVG.pencil}</button>` : ''}
+            </div>`;
+            html += `<div class="gd-leg">
+              <span class="gd-leg-label">Volta</span>
+              <span class="gd-leg-score">${voltaFinished ? `${volta.score1} × ${volta.score2}` : '- × -'}</span>
+              ${isAdmin && !finished ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" onclick="window._openRepechageScore(${mIdx}, 'volta')">${SVG.pencil}</button>` : ''}
+            </div>`;
+            if (idaFinished && voltaFinished) {
+              const agg1 = ida.score1 + volta.score1;
+              const agg2 = ida.score2 + volta.score2;
+              html += `<div class="gd-aggregate">
+                <span class="gd-leg-label">Agregado</span>
+                <span class="gd-agg-score">${agg1} × ${agg2}</span>
+              </div>`;
+            }
+            html += `</div></div>`;
+        } else {
+            const s1 = m.team1.score != null ? m.team1.score : '-';
+            const s2 = m.team2.score != null ? m.team2.score : '-';
+            html += `<div class="group-match repechage-match ${finished ? 'gm-finished' : ''}" data-repechage="${mIdx}">
+              <span class="gm-team gm-team1 ${m.winner === 1 ? 'gm-winner' : ''}">${sanitize(t1)}</span>
+              <span class="gm-score">${s1} × ${s2}</span>
+              <span class="gm-team gm-team2 ${m.winner === 2 ? 'gm-winner' : ''}">${sanitize(t2)}</span>
+              ${isAdmin && !finished ? `<button type="button" class="btn btn-xs btn-outline gm-edit-btn" onclick="window._openRepechageScore(${mIdx})">${SVG.pencil}</button>` : ''}
+            </div>`;
+        }
       });
 
       html += `</div>`;
@@ -3534,8 +3634,8 @@ Descumprimento: desclassificação imediata.`;
   }
 
   // Global handlers for inline onclick
-  window._openGroupScore = function(gIdx, mIdx) { openGroupScoreModal(gIdx, mIdx, 'single'); };
-  window._openRepechageScore = function(mIdx) { openRepechageScoreModal(mIdx); };
+  window._openGroupScore = function(gIdx, mIdx, leg) { openGroupScoreModal(gIdx, mIdx, leg); };
+  window._openRepechageScore = function(mIdx, leg) { openRepechageScoreModal(mIdx, leg); };
 
   /** Generate bracket from registered teams */
   function handleGenerate() {
