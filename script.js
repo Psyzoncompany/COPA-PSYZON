@@ -2449,7 +2449,9 @@ Descumprimento: desclassificação imediata.`;
    * 5 direct qualifiers + 3 repechage winners = 8 in quarterfinals.
    * This creates a repechage mini-bracket, then the main bracket.
    */
-  function generateBracketFromGroups() {
+  function generateBracketFromGroups(isUpdate = false) {
+    if (isUpdate instanceof Event) isUpdate = false;
+
     if (!areAllGroupMatchesFinished()) {
       showToast('Todos os jogos dos grupos precisam ter resultado antes de gerar o mata-mata.', 'error');
       return;
@@ -2489,12 +2491,16 @@ Descumprimento: desclassificação imediata.`;
 
     saveState();
 
-    // Switch to bracket tab to show repechage matches
-    const bracketTabBtn = document.querySelector('[data-tab="bracket-tab"]');
-    if (bracketTabBtn) bracketTabBtn.click();
-    else renderBracket();
+    if (!isUpdate) {
+      // Switch to bracket tab to show repechage matches
+      const bracketTabBtn = document.querySelector('[data-tab="bracket-tab"]');
+      if (bracketTabBtn) bracketTabBtn.click();
+      else renderBracket();
 
-    showToast('Fase de grupos encerrada! Defina os resultados da repescagem.', 'success');
+      showToast('Fase de grupos encerrada! Defina os resultados da repescagem.', 'success');
+    } else {
+      showToast('Repescagem atualizada em tempo real.', 'info');
+    }
   }
 
   /**
@@ -2654,10 +2660,15 @@ Descumprimento: desclassificação imediata.`;
     saveState();
     modal.style.display = 'none';
 
-    // Auto-generate repechage when all group matches are finished
-    if (!state.groupRepechage && areAllGroupMatchesFinished()) {
-      generateBracketFromGroups();
-      return;
+    // Auto-generate or update repechage when all group matches are finished
+    const allFinished = areAllGroupMatchesFinished();
+    if (allFinished && !state.bracketFromGroups) {
+      const isUpdate = !!state.groupRepechage;
+      generateBracketFromGroups(isUpdate);
+      if (!isUpdate) return;
+    } else if (!allFinished && state.groupRepechage && !state.bracketFromGroups) {
+      state.groupRepechage = null;
+      saveState();
     }
 
     renderGroupsTab();
@@ -3221,11 +3232,15 @@ Descumprimento: desclassificação imediata.`;
     saveState();
 
     // Check if all groups are now finished → auto-generate repechage
-    if (!state.groupRepechage && areAllGroupMatchesFinished()) {
+    const allFinished = areAllGroupMatchesFinished();
+    if (allFinished && !state.bracketFromGroups) {
+      const isUpdate = !!state.groupRepechage;
       const modal = $('#group-detail-modal');
-      if (modal) modal.style.display = 'none';
-      generateBracketFromGroups();
-      return;
+      if (modal && !isUpdate) modal.style.display = 'none';
+      generateBracketFromGroups(isUpdate);
+      if (!isUpdate) return;
+    } else if (!allFinished && state.groupRepechage && !state.bracketFromGroups) {
+      state.groupRepechage = null;
     }
 
     renderGroupsTab();
