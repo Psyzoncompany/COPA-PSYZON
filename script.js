@@ -3661,11 +3661,41 @@ Descumprimento: desclassificação imediata.`;
 
   /** Retorna a chave atualmente sendo visualizada (Atual ou do Histórico) */
   function getCurrentBracket() {
+    let b;
     if (currentViewingBracketId) {
       const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
-      return hist ? hist.bracket : null;
+      b = hist ? hist.bracket : null;
+    } else {
+      b = state.bracket;
     }
-    return state.bracket;
+
+    // Auto-heal third place match if bracket has semifinals
+    if (b && b.rounds && b.rounds.length > 1) {
+      if (!b.thirdPlaceMatch) {
+         b.thirdPlaceMatch = createEmptyMatch(-1, 0);
+      }
+      
+      // Auto-populate third place match from semifinals if they are finished
+      const totalRounds = b.rounds.length;
+      const semiRound = b.rounds[totalRounds - 2];
+      
+      if (semiRound && semiRound.matches.length >= 2) {
+         const m1 = semiRound.matches[0];
+         const m2 = semiRound.matches[1];
+         
+         if (m1 && m1.winner && !b.thirdPlaceMatch.team1) {
+             const loser1 = m1.winner === 1 ? m1.team2 : m1.team1;
+             b.thirdPlaceMatch.team1 = makeTeamSlotData(loser1);
+         }
+         
+         if (m2 && m2.winner && !b.thirdPlaceMatch.team2) {
+             const loser2 = m2.winner === 1 ? m2.team2 : m2.team1;
+             b.thirdPlaceMatch.team2 = makeTeamSlotData(loser2);
+         }
+      }
+    }
+
+    return b;
   }
 
   /** Retorna o nome do torneio que está sendo visualizado */
