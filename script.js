@@ -4567,6 +4567,7 @@ Descumprimento: desclassificação imediata.`;
     rounds.forEach(round => {
       round.querySelectorAll('.match-card-wrapper').forEach(wrapper => {
         wrapper.style.top = '';
+        wrapper.style.marginTop = '';
       });
     });
 
@@ -4605,32 +4606,22 @@ Descumprimento: desclassificação imediata.`;
         const p1 = m * 2;
         const p2 = m * 2 + 1;
         
-        if (p1 >= prevCenters.length || p2 >= prevCenters.length) {
-          // If this is the third place match, apply the same offset as the final match so they don't overlap!
-          if (m === 1 && r === rounds.length - 1 && wrappers[0]) {
-             const prevOffsetStr = wrappers[0].style.top;
-             if (prevOffsetStr) {
-               wrappers[m].style.position = 'relative';
-               wrappers[m].style.top = prevOffsetStr;
-               
-               const thirdTitle = rounds[r].querySelector('.third-place-title');
-               if (thirdTitle) {
-                 thirdTitle.style.position = 'relative';
-                 thirdTitle.style.top = prevOffsetStr;
-               }
-             }
-          }
-          continue;
-        }
+        if (p1 >= prevCenters.length || p2 >= prevCenters.length) continue;
 
         const idealCenter = (prevCenters[p1] + prevCenters[p2]) / 2;
         const actualCenter = roundCenters[r][m];
         const offset = idealCenter - actualCenter;
 
         if (Math.abs(offset) > 0.5) {
-          // Use relative positioning to shift without affecting flex siblings
-          wrappers[m].style.position = 'relative';
-          wrappers[m].style.top = offset + 'px';
+          if (r === rounds.length - 1) {
+            // In the final round, use margin-top so it expands container height
+            // and naturally pushes the 3rd place match down without cutting it off.
+            wrappers[m].style.marginTop = offset + 'px';
+          } else {
+            // Use relative positioning to shift without affecting flex siblings
+            wrappers[m].style.position = 'relative';
+            wrappers[m].style.top = offset + 'px';
+          }
           // Update center for cascading adjustments to later rounds
           roundCenters[r][m] = idealCenter;
         }
