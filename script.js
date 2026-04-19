@@ -4604,7 +4604,24 @@ Descumprimento: desclassificação imediata.`;
       for (let m = 0; m < wrappers.length; m++) {
         const p1 = m * 2;
         const p2 = m * 2 + 1;
-        if (p1 >= prevCenters.length || p2 >= prevCenters.length) continue;
+        
+        if (p1 >= prevCenters.length || p2 >= prevCenters.length) {
+          // If this is the third place match, apply the same offset as the final match so they don't overlap!
+          if (m === 1 && r === rounds.length - 1 && wrappers[0]) {
+             const prevOffsetStr = wrappers[0].style.top;
+             if (prevOffsetStr) {
+               wrappers[m].style.position = 'relative';
+               wrappers[m].style.top = prevOffsetStr;
+               
+               const thirdTitle = rounds[r].querySelector('.third-place-title');
+               if (thirdTitle) {
+                 thirdTitle.style.position = 'relative';
+                 thirdTitle.style.top = prevOffsetStr;
+               }
+             }
+          }
+          continue;
+        }
 
         const idealCenter = (prevCenters[p1] + prevCenters[p2]) / 2;
         const actualCenter = roundCenters[r][m];
