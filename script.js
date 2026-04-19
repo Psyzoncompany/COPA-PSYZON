@@ -2521,13 +2521,16 @@ Descumprimento: desclassificação imediata.`;
       qualified.push(winner);
     });
 
-    // Build main bracket with qualified teams (8 for quarterfinals)
-    state.teamCount = qualified.length;
     const teamsForBracket = qualified.map(t => ({
       id: t.id, teamName: t.teamName, playerName: t.playerName
     }));
-    const shuffled = shuffleArray(teamsForBracket);
-    state.bracket = buildBracketStructure(shuffled, qualified.length);
+
+    openManualDrawModal(teamsForBracket);
+  }
+
+  function executeFinalizeBracket(sortedTeams) {
+    state.teamCount = sortedTeams.length;
+    state.bracket = buildBracketStructure(sortedTeams, sortedTeams.length);
     state.bracketFromGroups = true;
     state.champion = null;
     saveState();
@@ -2537,7 +2540,120 @@ Descumprimento: desclassificação imediata.`;
     if (bracketTabBtn) bracketTabBtn.click();
 
     renderBracket();
-    showToast(`Mata-mata gerado com ${qualified.length} classificados!`, 'success');
+    showToast(`Mata-mata gerado com ${sortedTeams.length} classificados!`, 'success');
+  }
+
+  function openManualDrawModal(teams) {
+    let modal = document.getElementById('manual-draw-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'manual-draw-modal';
+      modal.className = 'modal-overlay';
+      modal.style.zIndex = '10000';
+      document.body.appendChild(modal);
+    }
+    
+    const matchCount = Math.floor(teams.length / 2);
+    let html = `
+      <div class="modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+        <h2 class="modal-title">Sorteio Manual (Mata-Mata)</h2>
+        <p class="modal-subtitle">Defina os confrontos escolhendo os times para cada partida:</p>
+        <div class="manual-draw-form">
+    `;
+    
+    for (let i = 0; i < matchCount; i++) {
+      html += `
+        <div class="manual-match-group" style="margin-bottom:15px; padding:15px; background:var(--surface-bg, #222); border-radius:8px; border:1px solid var(--border-color, #444);">
+          <div style="font-weight:600; margin-bottom:10px; color:var(--text-color, #fff); text-align:center;">Partida ${i+1}</div>
+          <select class="draw-select" style="width:100%; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid var(--border-color, #444); background:var(--bg-color, #111); color:var(--text-color, #fff); font-size:14px;">
+            <option value="">-- Selecione o Time 1 --</option>
+            ${teams.map((t, idx) => `<option value="${idx}">${sanitize(t.playerName || t.teamName)}</option>`).join('')}
+          </select>
+          <div style="text-align:center; font-size:12px; color:var(--text-muted, #aaa); margin-bottom:10px; font-weight:bold;">VS</div>
+          <select class="draw-select" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-color, #444); background:var(--bg-color, #111); color:var(--text-color, #fff); font-size:14px;">
+            <option value="">-- Selecione o Time 2 --</option>
+            ${teams.map((t, idx) => `<option value="${idx}">${sanitize(t.playerName || t.teamName)}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }
+    
+    html += `
+        </div>
+        <div class="modal-actions" style="margin-top:20px; display:flex; gap:10px;">
+          <button type="button" class="btn btn-outline" id="btn-cancel-draw" style="flex:1;">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btn-random-draw" style="flex:1;" title="Sortear Aleatoriamente">Aleatório</button>
+          <button type="button" class="btn btn-primary" id="btn-confirm-draw" style="flex:1; background-color:var(--accent-green, #28a745); border-color:var(--accent-green, #28a745);">Confirmar</button>
+        </div>
+      </div>
+    `;
+    
+    modal.innerHTML = html;
+    modal.style.display = 'flex';
+    
+    const selects = modal.querySelectorAll('.draw-select');
+    
+    const updateSelectOptions = () => {
+      const selectedValues = new Set();
+      selects.forEach(s => {
+        if (s.value !== "") selectedValues.add(s.value);
+      });
+      
+      selects.forEach(s => {
+        const currentValue = s.value;
+        Array.from(s.options).forEach(opt => {
+          if (opt.value === "") return;
+          if (selectedValues.has(opt.value) && opt.value !== currentValue) {
+            opt.style.display = 'none';
+            opt.disabled = true;
+          } else {
+            opt.style.display = '';
+            opt.disabled = false;
+          }
+        });
+      });
+    };
+    
+    selects.forEach(s => s.addEventListener('change', updateSelectOptions));
+    
+    modal.querySelector('#btn-cancel-draw').onclick = () => {
+      modal.style.display = 'none';
+    };
+
+    modal.querySelector('#btn-random-draw').onclick = () => {
+       let indices = teams.map((_, i) => i);
+       indices = shuffleArray(indices);
+       selects.forEach((s, i) => {
+         if (indices[i] !== undefined) s.value = indices[i];
+       });
+       updateSelectOptions();
+    };
+    
+    modal.querySelector('#btn-confirm-draw').onclick = () => {
+      const selects = modal.querySelectorAll('.draw-select');
+      const selectedIndices = [];
+      let valid = true;
+      
+      selects.forEach(s => {
+        if (s.value === "") valid = false;
+        else selectedIndices.push(parseInt(s.value, 10));
+      });
+      
+      if (!valid) {
+        showToast('Por favor, preencha todas as vagas.', 'error');
+        return;
+      }
+      
+      const uniqueSet = new Set(selectedIndices);
+      if (uniqueSet.size !== selects.length) {
+        showToast('Existem jogadores repetidos. Cada jogador deve ocupar apenas uma vaga.', 'error');
+        return;
+      }
+      
+      const sortedTeams = selectedIndices.map(idx => teams[idx]);
+      modal.style.display = 'none';
+      executeFinalizeBracket(sortedTeams);
+    };
   }
 
   /**
