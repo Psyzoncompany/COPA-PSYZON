@@ -2390,8 +2390,9 @@ Descumprimento: desclassificação imediata.`;
    * Recalculate all group standings from current match results.
    */
   function recalcAllGroupStandings() {
-    if (!state.groups) return;
-    state.groups.forEach(group => {
+    const groups = getCurrentGroups();
+    if (!groups) return;
+    groups.forEach(group => {
       group.standings = calcGroupStandings(group);
     });
   }
@@ -2892,7 +2893,8 @@ Descumprimento: desclassificação imediata.`;
   function renderGroupsTab() {
     const container = $('#groups-container');
     if (!container) return;
-    if (!state.groups || state.groups.length === 0) {
+    const groups = getCurrentGroups();
+    if (!groups || groups.length === 0) {
       container.innerHTML = '<div class="empty-state"><p class="empty-title">Nenhuma fase de grupo gerada</p><p class="empty-subtitle">Gere o chaveamento para criar os grupos.</p></div>';
       return;
     }
@@ -2915,8 +2917,10 @@ Descumprimento: desclassificação imediata.`;
 
     // Check for new players not yet assigned to any group
     const allGroupTeamIds = new Set();
-    state.groups.forEach(g => g.teams.forEach(t => allGroupTeamIds.add(t.id)));
-    const pendingPlayers = state.teams.filter(t => !allGroupTeamIds.has(t.id));
+    groups.forEach(g => g.teams.forEach(t => allGroupTeamIds.add(t.id)));
+    
+    // Only show pending players if it's the current tournament
+    const pendingPlayers = currentViewingBracketId ? [] : state.teams.filter(t => !allGroupTeamIds.has(t.id));
 
     if (isAdmin && pendingPlayers.length > 0) {
       const lastPlayer = pendingPlayers[pendingPlayers.length - 1];
@@ -3717,6 +3721,14 @@ Descumprimento: desclassificação imediata.`;
       return hist ? hist.name : 'Torneio Passado';
     }
     return state.tournamentName || 'COPA PSYZON';
+  }
+
+  function getCurrentGroups() {
+    if (currentViewingBracketId) {
+      const hist = state.tournamentsHistory.find(h => h.id === currentViewingBracketId);
+      return hist ? hist.groups : null;
+    }
+    return state.groups;
   }
 
   /**
@@ -6474,177 +6486,128 @@ Descumprimento: desclassificação imediata.`;
   function recalcAllPlayerStats() {
     // Reset all stats to zero
     state.playerStats = {};
-    state.teams.forEach(function (t) {
-      state.playerStats[t.id] = { trophies: 0, finals: 0, thirdPlace: 0, semifinals: 0, goals: 0, goalsTaken: 0, goalDiff: 0 };
+    const allKnownTeams = [...(state.teams || []), ...(state.participants || [])];
+    allKnownTeams.forEach(function (t) {
+      if (!t.id) return;
+      state.playerStats[t.id] = {
+        trophies: 0, finals: 0, thirdPlace: 0, semifinals: 0,
+        goals: 0, goalsTaken: 0, goalDiff: 0,
+        played: 0, wins: 0, draws: 0, losses: 0, pts: 0
+      };
     });
 
-    // Iterate current bracket
-    const bracket = getCurrentBracket();
-    if (!bracket || !bracket.rounds) return;
+    function processMatch(match, isSemi, isFinal, isThirdPlace) {
+      if (!match.winner) return;
+      if (isByeTeam(match.team1) || isByeTeam(match.team2)) return;
 
-    const totalRounds = bracket.rounds.length;
-
-    bracket.rounds.forEach(function (round, rIdx) {
-      const isFinal = rIdx === totalRounds - 1;
-      const isSemi = rIdx === totalRounds - 2;
-
-      round.matches.forEach(function (match) {
-        if (!match.winner) return;
-        if (isByeTeam(match.team1) || isByeTeam(match.team2)) return;
-
-        const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
-        const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
-        const t1Id = getTeamIdGlobal(match.team1);
-        const t2Id = getTeamIdGlobal(match.team2);
-
-        if (t1Id) {
-          ensureStats(t1Id);
-          state.playerStats[t1Id].goals += s1;
-          state.playerStats[t1Id].goalsTaken += s2;
-          state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
-          if (isSemi) state.playerStats[t1Id].semifinals += 1;
-          if (isFinal) state.playerStats[t1Id].finals += 1;
-          if (isFinal && match.winner === 1) state.playerStats[t1Id].trophies += 1;
-        }
-
-        if (t2Id) {
-          ensureStats(t2Id);
-          state.playerStats[t2Id].goals += s2;
-          state.playerStats[t2Id].goalsTaken += s1;
-          state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
-          if (isSemi) state.playerStats[t2Id].semifinals += 1;
-          if (isFinal) state.playerStats[t2Id].finals += 1;
-          if (isFinal && match.winner === 2) state.playerStats[t2Id].trophies += 1;
-        }
-
-        // Update statsApplied to match current state
-        match.statsApplied = {
-          t1Score: s1,
-          t2Score: s2,
-          isSemi: isSemi,
-          isFinal: isFinal,
-          winner: match.winner
-        };
-      });
-    });
-
-    // Count Third Place match
-    if (bracket.thirdPlaceMatch && bracket.thirdPlaceMatch.winner) {
-      const match = bracket.thirdPlaceMatch;
       const t1Id = getTeamIdGlobal(match.team1);
       const t2Id = getTeamIdGlobal(match.team2);
+      if (!t1Id && !t2Id) return;
+
       const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
       const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
 
       if (t1Id) {
         ensureStats(t1Id);
-        state.playerStats[t1Id].goals += s1;
-        state.playerStats[t1Id].goalsTaken += s2;
-        state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
-        if (match.winner === 1) state.playerStats[t1Id].thirdPlace = 1;
+        const ps = state.playerStats[t1Id];
+        ps.goals += s1;
+        ps.goalsTaken += s2;
+        if (isSemi) ps.semifinals++;
+        if (isFinal) ps.finals++;
+        if (isFinal && match.winner === 1) ps.trophies++;
+        if (isThirdPlace && match.winner === 1) ps.thirdPlace++;
       }
       if (t2Id) {
         ensureStats(t2Id);
-        state.playerStats[t2Id].goals += s2;
-        state.playerStats[t2Id].goalsTaken += s1;
-        state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
-        if (match.winner === 2) state.playerStats[t2Id].thirdPlace = 1;
+        const ps = state.playerStats[t2Id];
+        ps.goals += s2;
+        ps.goalsTaken += s1;
+        if (isSemi) ps.semifinals++;
+        if (isFinal) ps.finals++;
+        if (isFinal && match.winner === 2) ps.trophies++;
+        if (isThirdPlace && match.winner === 2) ps.thirdPlace++;
       }
-    }
 
-    // Also iterate history brackets
-    if (state.tournamentsHistory) {
-      state.tournamentsHistory.forEach(function (hist) {
-        if (!hist.bracket || !hist.bracket.rounds) return;
-        const hTotalR = hist.bracket.rounds.length;
-        hist.bracket.rounds.forEach(function (round, rIdx) {
-          const hIsFinal = rIdx === hTotalR - 1;
-          const hIsSemi = rIdx === hTotalR - 2;
-          round.matches.forEach(function (match) {
-            if (!match.winner) return;
-            if (isByeTeam(match.team1) || isByeTeam(match.team2)) return;
-            const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
-            const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
-            const t1Id = getTeamIdGlobal(match.team1);
-            const t2Id = getTeamIdGlobal(match.team2);
-            if (t1Id) {
-              ensureStats(t1Id);
-              state.playerStats[t1Id].goals += s1;
-              state.playerStats[t1Id].goalsTaken += s2;
-              state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
-              if (hIsSemi) state.playerStats[t1Id].semifinals += 1;
-              if (hIsFinal) state.playerStats[t1Id].finals += 1;
-              if (hIsFinal && match.winner === 1) state.playerStats[t1Id].trophies += 1;
-            }
-            if (t2Id) {
-              ensureStats(t2Id);
-              state.playerStats[t2Id].goals += s2;
-              state.playerStats[t2Id].goalsTaken += s1;
-              state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
-              if (hIsSemi) state.playerStats[t2Id].semifinals += 1;
-              if (hIsFinal) state.playerStats[t2Id].finals += 1;
-              if (hIsFinal && match.winner === 2) state.playerStats[t2Id].trophies += 1;
-            }
-          });
-        });
-
-        // History Third Place
-        if (hist.bracket.thirdPlaceMatch && hist.bracket.thirdPlaceMatch.winner) {
-          const match = hist.bracket.thirdPlaceMatch;
-          const t1Id = getTeamIdGlobal(match.team1);
-          const t2Id = getTeamIdGlobal(match.team2);
-          const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
-          const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
+      // Aggregated overall stats (PTS, J, V, E, D)
+      if (match.twoLegged && match.ida && match.volta) {
+        [match.ida, match.volta].forEach(leg => {
+          if (leg.score1 == null || leg.score2 == null) return;
           if (t1Id) {
-            ensureStats(t1Id);
-            state.playerStats[t1Id].goals += s1;
-            state.playerStats[t1Id].goalsTaken += s2;
-            state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
-            if (match.winner === 1) state.playerStats[t1Id].thirdPlace += 1;
+            const ps = state.playerStats[t1Id];
+            ps.played++;
+            if (leg.score1 > leg.score2) { ps.wins++; ps.pts += 3; }
+            else if (leg.score1 < leg.score2) { ps.losses++; }
+            else { ps.draws++; ps.pts += 1; }
           }
           if (t2Id) {
-            ensureStats(t2Id);
-            state.playerStats[t2Id].goals += s2;
-            state.playerStats[t2Id].goalsTaken += s1;
-            state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
-            if (match.winner === 2) state.playerStats[t2Id].thirdPlace += 1;
+            const ps = state.playerStats[t2Id];
+            ps.played++;
+            if (leg.score2 > leg.score1) { ps.wins++; ps.pts += 3; }
+            else if (leg.score2 < leg.score1) { ps.losses++; }
+            else { ps.draws++; ps.pts += 1; }
           }
+        });
+      } else {
+        // Single leg or aggregate winner
+        if (t1Id) {
+          const ps = state.playerStats[t1Id];
+          ps.played++;
+          if (match.winner === 1 && (!match.penalties || s1 > s2)) { ps.wins++; ps.pts += 3; }
+          else if (match.winner === 2 && (!match.penalties || s2 > s1)) { ps.losses++; }
+          else { ps.draws++; ps.pts += 1; }
+        }
+        if (t2Id) {
+          const ps = state.playerStats[t2Id];
+          ps.played++;
+          if (match.winner === 2 && (!match.penalties || s2 > s1)) { ps.wins++; ps.pts += 3; }
+          else if (match.winner === 1 && (!match.penalties || s1 > s2)) { ps.losses++; }
+          else { ps.draws++; ps.pts += 1; }
+        }
+      }
+
+      // Update goalDiff
+      if (t1Id) state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+      if (t2Id) state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+    }
+
+    // Process Current Bracket
+    const bracket = getCurrentBracket();
+    if (bracket && bracket.rounds) {
+      const totalRounds = bracket.rounds.length;
+      bracket.rounds.forEach((round, rIdx) => {
+        const isFinal = rIdx === totalRounds - 1;
+        const isSemi = rIdx === totalRounds - 2;
+        round.matches.forEach(m => processMatch(m, isSemi, isFinal, false));
+      });
+      if (bracket.thirdPlaceMatch) processMatch(bracket.thirdPlaceMatch, false, false, true);
+    }
+
+    // Process Current Groups
+    if (state.groups) {
+      state.groups.forEach(group => {
+        group.matches.forEach(m => processMatch(m, false, false, false));
+      });
+    }
+
+    // Process History
+    if (state.tournamentsHistory) {
+      state.tournamentsHistory.forEach(hist => {
+        if (hist.bracket && hist.bracket.rounds) {
+          const hTotalR = hist.bracket.rounds.length;
+          hist.bracket.rounds.forEach((round, rIdx) => {
+            const hIsFinal = rIdx === hTotalR - 1;
+            const hIsSemi = rIdx === hTotalR - 2;
+            round.matches.forEach(m => processMatch(m, hIsSemi, hIsFinal, false));
+          });
+          if (hist.bracket.thirdPlaceMatch) processMatch(hist.bracket.thirdPlaceMatch, false, false, true);
+        }
+        if (hist.groups) {
+          hist.groups.forEach(group => {
+            group.matches.forEach(m => processMatch(m, false, false, false));
+          });
         }
       });
     }
-
-    // ── Count group stage goals (ida/volta counted separately) ──
-    if (state.groups && state.groups.length > 0) {
-      state.groups.forEach(function (group) {
-        group.matches.forEach(function (m) {
-          if (m.team1.score == null || m.team2.score == null) return;
-          const t1Id = m.team1.id, t2Id = m.team2.id;
-
-          if (m.twoLegged && m.ida && m.volta) {
-            // Ida
-            if (m.ida.score1 != null && m.ida.score2 != null) {
-              if (t1Id) { ensureStats(t1Id); state.playerStats[t1Id].goals += m.ida.score1; state.playerStats[t1Id].goalsTaken += m.ida.score2; }
-              if (t2Id) { ensureStats(t2Id); state.playerStats[t2Id].goals += m.ida.score2; state.playerStats[t2Id].goalsTaken += m.ida.score1; }
-            }
-            // Volta
-            if (m.volta.score1 != null && m.volta.score2 != null) {
-              if (t1Id) { ensureStats(t1Id); state.playerStats[t1Id].goals += m.volta.score1; state.playerStats[t1Id].goalsTaken += m.volta.score2; }
-              if (t2Id) { ensureStats(t2Id); state.playerStats[t2Id].goals += m.volta.score2; state.playerStats[t2Id].goalsTaken += m.volta.score1; }
-            }
-          } else {
-            const s1 = m.team1.score, s2 = m.team2.score;
-            if (t1Id) { ensureStats(t1Id); state.playerStats[t1Id].goals += s1; state.playerStats[t1Id].goalsTaken += s2; }
-            if (t2Id) { ensureStats(t2Id); state.playerStats[t2Id].goals += s2; state.playerStats[t2Id].goalsTaken += s1; }
-          }
-
-          // Recalc goalDiff
-          if (t1Id && state.playerStats[t1Id]) state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
-          if (t2Id && state.playerStats[t2Id]) state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
-        });
-      });
-    }
-
-    // Repechage goals are NOT counted in player stats (GP, GC, saldo)
   }
 
   /** Troca dois times de posição no chaveamento (Drag and Drop) */
@@ -7275,10 +7238,10 @@ Descumprimento: desclassificação imediata.`;
       }
     }
 
-    // Stats — combine saved stats with live group data
-    const totalGoals = (stats.goals || 0) + groupGoals;
-    const totalGoalsTaken = (stats.goalsTaken || 0) + groupGoalsTaken;
-    const totalGoalDiff = totalGoals - totalGoalsTaken;
+    // Stats — use cumulative stats from state.playerStats
+    const totalGoals = stats.goals || 0;
+    const totalGoalsTaken = stats.goalsTaken || 0;
+    const totalGoalDiff = stats.goalDiff || 0;
 
     const trEl = $('#profile-trophies');
     const fiEl = $('#profile-finals');
@@ -7430,9 +7393,12 @@ Descumprimento: desclassificação imediata.`;
       id: generateId(),
       name: tName,
       date: new Date().toISOString(),
+      format: state.tournamentFormat || 'elimination',
       champion: state.champion ? JSON.parse(JSON.stringify(state.champion, (k, v) => v === undefined ? null : v)) : null,
       bracket: JSON.parse(JSON.stringify(state.bracket, (k, v) => v === undefined ? null : v)),
-      teamsCount: state.teamCount || 8
+      groups: state.groups ? JSON.parse(JSON.stringify(state.groups, (k, v) => v === undefined ? null : v)) : null,
+      teams: JSON.parse(JSON.stringify(state.teams, (k, v) => v === undefined ? null : v)),
+      teamsCount: state.teamCount || (state.teams ? state.teams.length : 8)
     };
 
     state.tournamentsHistory.unshift(record);
@@ -7440,6 +7406,11 @@ Descumprimento: desclassificação imediata.`;
     state.bracket = null;
     state.champion = null;
     state.teams = [];
+    state.groups = null;
+    state.groupRepechage = null;
+    state.tournamentFormat = 'elimination';
+    state.tournamentName = '';
+    state.bracketFromGroups = false;
 
     // Reseta os códigos de participação apenas quando o torneio for ENCERRADO
     state.codes = [];
@@ -7573,22 +7544,11 @@ Descumprimento: desclassificação imediata.`;
     const hasGroups = state.tournamentFormat === 'groups' && state.groups && state.groups.length > 0;
 
     // Build group standings lookup
-    const groupStatsMap = {};
+    const groupLookup = {};
     if (hasGroups) {
-      recalcAllGroupStandings();
       state.groups.forEach(group => {
-        group.standings.forEach(s => {
-          groupStatsMap[s.id] = {
-            groupName: group.name,
-            played: s.played,
-            wins: s.wins,
-            draws: s.draws,
-            losses: s.losses,
-            points: s.points,
-            goalsFor: s.goalsFor,
-            goalsAgainst: s.goalsAgainst,
-            goalDiff: s.goalDiff
-          };
+        group.teams.forEach(t => {
+          groupLookup[t.id] = group.name;
         });
       });
     }
@@ -7597,7 +7557,6 @@ Descumprimento: desclassificação imediata.`;
     if (state.participants) {
       state.participants.forEach(p => {
         const stats = state.playerStats[p.id] || {};
-        const gs = groupStatsMap[p.id] || null;
         ranked.push({
           id: p.id,
           name: p.name || 'Sem Nome',
@@ -7607,8 +7566,14 @@ Descumprimento: desclassificação imediata.`;
           finals: stats.finals || 0,
           semifinals: stats.semifinals || 0,
           goals: stats.goals || 0,
+          goalsTaken: stats.goalsTaken || 0,
           goalDiff: stats.goalDiff || 0,
-          gs: gs
+          played: stats.played || 0,
+          wins: stats.wins || 0,
+          draws: stats.draws || 0,
+          losses: stats.losses || 0,
+          points: stats.pts || 0,
+          groupName: groupLookup[p.id] || '-'
         });
       });
     }
@@ -7618,7 +7583,6 @@ Descumprimento: desclassificação imediata.`;
       state.teams.forEach(t => {
         if (!ranked.some(r => r.id === t.id)) {
           const stats = state.playerStats[t.id] || {};
-          const gs = groupStatsMap[t.id] || null;
           ranked.push({
             id: t.id,
             name: t.playerName || 'Sem Nome',
@@ -7628,8 +7592,14 @@ Descumprimento: desclassificação imediata.`;
             finals: stats.finals || 0,
             semifinals: stats.semifinals || 0,
             goals: stats.goals || 0,
+            goalsTaken: stats.goalsTaken || 0,
             goalDiff: stats.goalDiff || 0,
-            gs: gs
+            played: stats.played || 0,
+            wins: stats.wins || 0,
+            draws: stats.draws || 0,
+            losses: stats.losses || 0,
+            points: stats.pts || 0,
+            groupName: groupLookup[t.id] || '-'
           });
         }
       });
@@ -7643,13 +7613,13 @@ Descumprimento: desclassificação imediata.`;
           '<th class="col-pos">POS</th>' +
           '<th class="col-player">JOGADOR</th>' +
           '<th class="col-stats rk-group-col" title="Grupo">GRP</th>' +
-          '<th class="col-stats rk-group-col" title="Jogos na Fase de Grupos">J</th>' +
-          '<th class="col-stats rk-group-col" title="Vitórias na Fase de Grupos">V</th>' +
-          '<th class="col-stats rk-group-col" title="Empates na Fase de Grupos">E</th>' +
-          '<th class="col-stats rk-group-col" title="Derrotas na Fase de Grupos">D</th>' +
-          '<th class="col-stats rk-group-col rk-pts-col" title="Pontos na Fase de Grupos">PTS</th>' +
-          '<th class="col-stats" title="Gols Marcados (Total)">GP</th>' +
-          '<th class="col-stats" title="Saldo de Gols (Total)">SG</th>';
+          '<th class="col-stats rk-group-col" title="Total de Jogos (Geral)">J</th>' +
+          '<th class="col-stats rk-group-col" title="Total de Vitórias (Geral)">V</th>' +
+          '<th class="col-stats rk-group-col" title="Total de Empates (Geral)">E</th>' +
+          '<th class="col-stats rk-group-col" title="Total de Derrotas (Geral)">D</th>' +
+          '<th class="col-stats rk-group-col rk-pts-col" title="Total de Pontos (Geral)">PTS</th>' +
+          '<th class="col-stats" title="Gols Marcados (Total Geral)">GP</th>' +
+          '<th class="col-stats" title="Saldo de Gols (Total Geral)">SG</th>';
       } else {
         thead.innerHTML =
           '<th class="col-pos">POS</th>' +
@@ -7672,12 +7642,9 @@ Descumprimento: desclassificação imediata.`;
     // Sorting: groups mode → Points > GoalDiff > Goals; else → Trophies > Finals > etc.
     if (hasGroups) {
       ranked.sort((a, b) => {
-        const aPts = a.gs ? a.gs.points : 0;
-        const bPts = b.gs ? b.gs.points : 0;
-        if (bPts !== aPts) return bPts - aPts;
-        const aGd = a.gs ? a.gs.goalDiff : 0;
-        const bGd = b.gs ? b.gs.goalDiff : 0;
-        if (bGd !== aGd) return bGd - aGd;
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.wins !== a.wins) return b.wins - a.wins; // Wins as first tie-breaker
+        if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
         if (b.goals !== a.goals) return b.goals - a.goals;
         return String(a.name).localeCompare(String(b.name));
       });
@@ -7700,8 +7667,7 @@ Descumprimento: desclassificação imediata.`;
         : '<span class="av-placeholder" style="font-size:12px;">' + sanitize(initials(r.name)) + '</span>';
 
       if (hasGroups) {
-        const gs = r.gs || {};
-        const grpName = gs.groupName ? sanitize(gs.groupName).replace('Grupo ', '') : '–';
+        const grpName = r.groupName ? sanitize(r.groupName).replace('Grupo ', '') : '–';
         html += '<tr class="' + posClass + '" data-team-id="' + sanitize(r.id) + '" style="cursor:pointer;">' +
           '<td class="col-pos">' + (i + 1) + 'º</td>' +
           '<td class="col-player">' +
@@ -7709,11 +7675,11 @@ Descumprimento: desclassificação imediata.`;
           '<div><div class="player-name-val">' + sanitize(r.name) + '</div><div class="player-team-val">' + sanitize(r.nick) + '</div></div>' +
           '</td>' +
           '<td class="col-stats rk-group-col">' + grpName + '</td>' +
-          '<td class="col-stats rk-group-col">' + (gs.played || 0) + '</td>' +
-          '<td class="col-stats rk-group-col">' + (gs.wins || 0) + '</td>' +
-          '<td class="col-stats rk-group-col">' + (gs.draws || 0) + '</td>' +
-          '<td class="col-stats rk-group-col">' + (gs.losses || 0) + '</td>' +
-          '<td class="col-stats rk-group-col rk-pts-col">' + (gs.points || 0) + '</td>' +
+          '<td class="col-stats rk-group-col">' + r.played + '</td>' +
+          '<td class="col-stats rk-group-col">' + r.wins + '</td>' +
+          '<td class="col-stats rk-group-col">' + r.draws + '</td>' +
+          '<td class="col-stats rk-group-col">' + r.losses + '</td>' +
+          '<td class="col-stats rk-group-col rk-pts-col">' + r.points + '</td>' +
           '<td class="col-stats">' + r.goals + '</td>' +
           '<td class="col-stats">' + r.goalDiff + '</td>' +
           '</tr>';
