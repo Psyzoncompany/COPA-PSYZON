@@ -3698,6 +3698,18 @@ Descumprimento: desclassificação imediata.`;
     return b;
   }
 
+  /**
+   * Helper seguro para obter um objeto de partida (match) dados rIdx e mIdx.
+   * Trata o caso rIdx = -2 como sendo a disputa de terceiro lugar.
+   */
+  function getMatch(rIdx, mIdx) {
+    const bracket = getCurrentBracket();
+    if (!bracket) return null;
+    if (rIdx === -2) return bracket.thirdPlaceMatch;
+    if (rIdx < 0 || !bracket.rounds || !bracket.rounds[rIdx]) return null;
+    return bracket.rounds[rIdx].matches[mIdx];
+  }
+
   /** Retorna o nome do torneio que está sendo visualizado */
   function getCurrentBracketName() {
     if (currentViewingBracketId) {
@@ -4932,7 +4944,7 @@ Descumprimento: desclassificação imediata.`;
           legSelect.addEventListener('change', () => {
             const bracket = getCurrentBracket();
             if (!bracket) return;
-            const m = bracket.rounds[rIdx].matches[mIdx];
+            const m = getMatch(rIdx, mIdx);
             if (m) { m.currentLeg = legSelect.value; saveState(); }
           });
           controls.appendChild(legSelect);
@@ -5514,7 +5526,7 @@ Descumprimento: desclassificação imediata.`;
   function startLiveMatch(rIdx, mIdx) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match || !match.team1 || !match.team2) return;
 
     ensureLiveFields(match);
@@ -5541,7 +5553,7 @@ Descumprimento: desclassificação imediata.`;
   function pauseLiveMatch(rIdx, mIdx) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match) return;
 
     ensureLiveFields(match);
@@ -5564,7 +5576,7 @@ Descumprimento: desclassificação imediata.`;
   function resumeLiveMatch(rIdx, mIdx) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match) return;
 
     ensureLiveFields(match);
@@ -5582,7 +5594,7 @@ Descumprimento: desclassificação imediata.`;
   function cancelLiveMatch(rIdx, mIdx) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match) return;
 
     ensureLiveFields(match);
@@ -5612,7 +5624,7 @@ Descumprimento: desclassificação imediata.`;
   function updateLiveScore(rIdx, mIdx, teamNum, delta) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match) return;
 
     ensureLiveFields(match);
@@ -5689,7 +5701,7 @@ Descumprimento: desclassificação imediata.`;
   function finalizeIdaLeg(rIdx, mIdx) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match) return;
 
     ensureLiveFields(match);
@@ -5729,7 +5741,7 @@ Descumprimento: desclassificação imediata.`;
   function showFinalizeConfirm(rIdx, mIdx) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match) return;
 
     ensureLiveFields(match);
@@ -5800,7 +5812,7 @@ Descumprimento: desclassificação imediata.`;
   function finalizeLiveMatch(rIdx, mIdx) {
     const bracket = getCurrentBracket();
     if (!bracket) return;
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match || !match.team1 || !match.team2) return;
 
     ensureLiveFields(match);
@@ -5959,7 +5971,7 @@ Descumprimento: desclassificação imediata.`;
     const bracket = getCurrentBracket();
     if (!bracket) return;
 
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match || !match.team1 || !match.team2) return;
 
     modalMatch = { roundIdx: rIdx, matchIdx: mIdx };
@@ -6086,13 +6098,7 @@ Descumprimento: desclassificação imediata.`;
     const bracket = getCurrentBracket();
     if (!bracket) return;
 
-    let match;
-    if (rIdx === -2) {
-      match = bracket.thirdPlaceMatch;
-    } else {
-      if (rIdx < 0) return;
-      match = bracket.rounds[rIdx].matches[mIdx];
-    }
+    let match = getMatch(rIdx, mIdx);
     
     if (!match) return;
 
@@ -6256,7 +6262,7 @@ Descumprimento: desclassificação imediata.`;
     const bracket = getCurrentBracket();
     if (!bracket) return;
 
-    const match = bracket.rounds[rIdx].matches[mIdx];
+    const match = getMatch(rIdx, mIdx);
     if (!match) return;
 
     // Only ask password/confirm if match has a result
@@ -6327,7 +6333,7 @@ Descumprimento: desclassificação imediata.`;
    */
   function cascadeClearAdvancement(bracket, rIdx, mIdx) {
     const totalRounds = bracket.rounds.length;
-    if (rIdx >= totalRounds - 1) return;
+    if (rIdx < 0 || rIdx >= totalRounds - 1) return;
 
     const nextMatchIdx = Math.floor(mIdx / 2);
     const slot = mIdx % 2 === 0 ? 'team1' : 'team2';
@@ -6469,7 +6475,7 @@ Descumprimento: desclassificação imediata.`;
     // Reset all stats to zero
     state.playerStats = {};
     state.teams.forEach(function (t) {
-      state.playerStats[t.id] = { trophies: 0, finals: 0, semifinals: 0, goals: 0, goalsTaken: 0, goalDiff: 0 };
+      state.playerStats[t.id] = { trophies: 0, finals: 0, thirdPlace: 0, semifinals: 0, goals: 0, goalsTaken: 0, goalDiff: 0 };
     });
 
     // Iterate current bracket
@@ -6522,6 +6528,30 @@ Descumprimento: desclassificação imediata.`;
       });
     });
 
+    // Count Third Place match
+    if (bracket.thirdPlaceMatch && bracket.thirdPlaceMatch.winner) {
+      const match = bracket.thirdPlaceMatch;
+      const t1Id = getTeamIdGlobal(match.team1);
+      const t2Id = getTeamIdGlobal(match.team2);
+      const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
+      const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
+
+      if (t1Id) {
+        ensureStats(t1Id);
+        state.playerStats[t1Id].goals += s1;
+        state.playerStats[t1Id].goalsTaken += s2;
+        state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+        if (match.winner === 1) state.playerStats[t1Id].thirdPlace = 1;
+      }
+      if (t2Id) {
+        ensureStats(t2Id);
+        state.playerStats[t2Id].goals += s2;
+        state.playerStats[t2Id].goalsTaken += s1;
+        state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+        if (match.winner === 2) state.playerStats[t2Id].thirdPlace = 1;
+      }
+    }
+
     // Also iterate history brackets
     if (state.tournamentsHistory) {
       state.tournamentsHistory.forEach(function (hist) {
@@ -6557,6 +6587,29 @@ Descumprimento: desclassificação imediata.`;
             }
           });
         });
+
+        // History Third Place
+        if (hist.bracket.thirdPlaceMatch && hist.bracket.thirdPlaceMatch.winner) {
+          const match = hist.bracket.thirdPlaceMatch;
+          const t1Id = getTeamIdGlobal(match.team1);
+          const t2Id = getTeamIdGlobal(match.team2);
+          const s1 = match.team1 ? (match.team1.score ?? 0) : 0;
+          const s2 = match.team2 ? (match.team2.score ?? 0) : 0;
+          if (t1Id) {
+            ensureStats(t1Id);
+            state.playerStats[t1Id].goals += s1;
+            state.playerStats[t1Id].goalsTaken += s2;
+            state.playerStats[t1Id].goalDiff = state.playerStats[t1Id].goals - state.playerStats[t1Id].goalsTaken;
+            if (match.winner === 1) state.playerStats[t1Id].thirdPlace += 1;
+          }
+          if (t2Id) {
+            ensureStats(t2Id);
+            state.playerStats[t2Id].goals += s2;
+            state.playerStats[t2Id].goalsTaken += s1;
+            state.playerStats[t2Id].goalDiff = state.playerStats[t2Id].goals - state.playerStats[t2Id].goalsTaken;
+            if (match.winner === 2) state.playerStats[t2Id].thirdPlace += 1;
+          }
+        }
       });
     }
 
@@ -7297,6 +7350,7 @@ Descumprimento: desclassificação imediata.`;
           team: t,
           trophies: stats.trophies || 0,
           finals: stats.finals || 0,
+          thirdPlace: stats.thirdPlace || 0,
           semifinals: stats.semifinals || 0
         };
       })
@@ -7304,6 +7358,7 @@ Descumprimento: desclassificação imediata.`;
       .sort((a, b) => {
         if (b.trophies !== a.trophies) return b.trophies - a.trophies;
         if (b.finals !== a.finals) return b.finals - a.finals;
+        if (b.thirdPlace !== a.thirdPlace) return b.thirdPlace - a.thirdPlace;
         return b.semifinals - a.semifinals;
       })
       .slice(0, 3);

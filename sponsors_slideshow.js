@@ -60,9 +60,9 @@ const sponsorsConfig = [
     name: 'Bruno Leite Assessoria Contábil',
     logo: 'PATROCINADORES/BRUNO%20LEITE.png',
     images: [
-      'SLIDES/Brunos-Leite/slide%201.jpeg',
-      'SLIDES/Brunos-Leite/slide%202.jpeg',
-      'SLIDES/Brunos-Leite/slide%203.jpeg'
+      'SLIDES/Bruno-Leite/slide%201.jpeg',
+      'SLIDES/Bruno-Leite/slide%202.jpeg',
+      'SLIDES/Bruno-Leite/slide%203.jpeg'
     ],
     link: 'https://www.instagram.com/brunoleite.contador',
     linkFile: null
@@ -83,7 +83,11 @@ const sponsorsConfig = [
     id: 'central-bebidas',
     name: 'Central de Bebidas',
     logo: 'PATROCINADORES/CENTRAL%20ATACADISTA.png',
-    images: [],
+    images: [
+      'SLIDES/Central%20de%20Bebidas/Foto%201.jpeg',
+      'SLIDES/Central%20de%20Bebidas/foto%202.jpeg',
+      'SLIDES/Central%20de%20Bebidas/foto%203.jpeg'
+    ],
     link: 'https://www.instagram.com/gerson.rios',
     linkFile: null
   },
@@ -103,7 +107,9 @@ const sponsorsConfig = [
     id: 'daby-gourmet',
     name: 'Daby Gourmet',
     logo: 'PATROCINADORES/daby%20gourmet.png',
-    images: [],
+    images: [
+      {type: 'video', src: 'SLIDES/Daby-Gourmet/video1.mp4'}
+    ],
     link: 'https://www.instagram.com/dabygourmet',
     linkFile: null
   },
@@ -251,7 +257,11 @@ const sponsorsConfig = [
     id: 'ws-bar',
     name: 'WS Bar',
     logo: 'PATROCINADORES/WS%20BAR.png',
-    images: [],
+    images: [
+      'SLIDES/WS-BAR/l.jpeg',
+      'SLIDES/WS-BAR/IMG_20260417_155018.jpg.jpeg',
+      'SLIDES/WS-BAR/WhatsApp%20Image%202026-04-14%20at%2017.42.33.jpeg'
+    ],
     link: 'https://www.instagram.com/ws_bar_12',
     linkFile: null
   },
@@ -283,7 +293,11 @@ const sponsorsConfig = [
     id: 'ancore',
     name: 'Ancore Seguradora',
     logo: 'PATROCINADORES/ANCORE.png',
-    images: [],
+    images: [
+      'SLIDES/Ancore/foto%201.jpeg',
+      'SLIDES/Ancore/foto2.jpeg',
+      'SLIDES/Ancore/foto3.jpeg'
+    ],
     link: 'https://www.instagram.com/gerson.rios',
     linkFile: null
   }
